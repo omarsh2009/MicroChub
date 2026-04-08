@@ -70,7 +70,7 @@ export function Header() {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/dashboard">Dashboard</Link>
+                <Link href="/admin">Admin</Link>
               </DropdownMenuItem>
               <DropdownMenuItem>Logout</DropdownMenuItem>
             </DropdownMenuContent>

@@ -1,0 +1,74 @@
+'use client';
+import { useState } from 'react';
+import { PlusCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Product } from '@/lib/types';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { ProductForm } from './components/product-form';
+import { ProductTable } from './components/product-table';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+export function ProductClientPage({ products }: { products: Product[] }) {
+  const [open, setOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | undefined>(undefined);
+
+  const handleAdd = () => {
+    setSelectedProduct(undefined);
+    setOpen(true);
+  };
+
+  const handleEdit = (product: Product) => {
+    setSelectedProduct(product);
+    setOpen(true);
+  };
+
+  return (
+    <>
+       <div className="flex items-center">
+          <h1 className="text-lg font-semibold md:text-2xl">Products</h1>
+          <div className="ml-auto flex items-center gap-2">
+            <Button size="sm" onClick={handleAdd}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add Product
+            </Button>
+          </div>
+        </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Manage Products</CardTitle>
+          <CardDescription>View, edit, and add new products to your store.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <ProductTable products={products} onEdit={handleEdit} />
+        </CardContent>
+         <CardFooter>
+          <div className="text-xs text-muted-foreground">
+            Showing <strong>1-{products.length}</strong> of <strong>{products.length}</strong> products
+          </div>
+        </CardFooter>
+      </Card>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-[625px]">
+          <DialogHeader>
+            <DialogTitle>{selectedProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+          </DialogHeader>
+          <ProductForm product={selectedProduct} onFinished={() => setOpen(false)} />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
