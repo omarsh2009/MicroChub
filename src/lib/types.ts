@@ -16,4 +16,5 @@ export type Product = {
   useCases: string[];
   featured?: boolean;
   configurable?: boolean;
+  customizationOptions?: string[];
 };

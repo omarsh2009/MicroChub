@@ -56,6 +56,7 @@ export const products: Product[] = [
     ],
     featured: true,
     configurable: true,
+    customizationOptions: ["Case Color", "LED Color", "Pre-loaded Software"],
   },
   {
     id: "prod-002",
@@ -144,6 +145,7 @@ export const products: Product[] = [
     },
     useCases: ["Streaming", "Video editing shortcuts", "Productivity tool"],
     configurable: true,
+    customizationOptions: ["Switch Type (Gateron Red, Blue, Brown)", "Keycap Style", "LED Color"],
   },
 ];
 

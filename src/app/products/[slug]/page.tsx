@@ -11,14 +11,14 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
   TableCell,
   TableRow,
 } from "@/components/ui/table";
-import { CheckCircle, ShoppingCart } from "lucide-react";
+import { CheckCircle, ShoppingCart, Wrench } from "lucide-react";
 
 export function generateStaticParams() {
   return products.map((product) => ({
@@ -77,16 +77,33 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
               EGP {product.price.toLocaleString()}
             </div>
 
+            {product.configurable && product.customizationOptions && product.customizationOptions.length > 0 && (
+              <Card>
+                <CardHeader className="flex-row items-center gap-3 space-y-0">
+                   <Wrench className="w-6 h-6 text-primary"/>
+                   <CardTitle className="text-xl m-0">Customize Your {product.name}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    This product can be customized. Full configuration options coming soon.
+                  </p>
+                  <ul className="space-y-2">
+                    {product.customizationOptions.map((option, index) => (
+                      <li key={index} className="flex items-start gap-3">
+                        <CheckCircle className="w-5 h-5 mt-1 text-green-500" />
+                        <span>{option}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
+
             <div className="flex flex-col sm:flex-row gap-4">
               <Button size="lg" className="flex-1">
                 <ShoppingCart className="mr-2" />
                 Add to Cart
               </Button>
-              {product.configurable && (
-                <Button size="lg" variant="outline" className="flex-1">
-                  Configure
-                </Button>
-              )}
             </div>
 
             <div>
