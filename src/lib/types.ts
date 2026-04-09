@@ -65,6 +65,7 @@ export type Order = {
   totalPrice: number;
   status: 'Pending Payment Proof' | 'Under Review' | 'Confirmed' | 'In Production' | 'Ready' | 'Completed/Delivered';
   paymentProofUrl: string;
+  paymentMethod: 'instapay' | 'telda';
   legalAgreementUrl?: string;
   requiresLegalApproval?: boolean;
   legalAgreementApproved?: boolean;

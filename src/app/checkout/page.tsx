@@ -116,6 +116,7 @@ export default function CheckoutPage() {
             notes: values.notes,
             paymentProofFile: values.paymentProof[0],
             phoneNumber: values.phoneNumber,
+            paymentMethod: values.paymentMethod,
             hasRestrictedItem,
             legalAgreementFile: values.legalAgreement?.[0],
         });

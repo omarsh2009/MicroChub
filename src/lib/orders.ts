@@ -10,6 +10,7 @@ interface OrderPayload {
   notes?: string;
   paymentProofFile: File;
   phoneNumber: string;
+  paymentMethod: 'instapay' | 'telda';
   hasRestrictedItem: boolean;
   legalAgreementFile?: File;
 }
@@ -19,7 +20,7 @@ export async function createOrder(
   storage: FirebaseStorage,
   payload: OrderPayload
 ): Promise<string> {
-  const { userId, cart, totalPrice, notes, paymentProofFile, phoneNumber, hasRestrictedItem, legalAgreementFile } = payload;
+  const { userId, cart, totalPrice, notes, paymentProofFile, phoneNumber, paymentMethod, hasRestrictedItem, legalAgreementFile } = payload;
 
   // 1. Upload payment proof to storage
   const paymentProofPath = `payment-proofs/${userId}/${Date.now()}-${paymentProofFile.name}`;
@@ -48,6 +49,7 @@ export async function createOrder(
     totalPrice,
     notes: notes || '',
     paymentProofUrl,
+    paymentMethod,
     legalAgreementUrl,
     requiresLegalApproval,
     legalAgreementApproved: false, // Default to not approved
