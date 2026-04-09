@@ -1,6 +1,7 @@
 'use client';
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -17,30 +18,66 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
+import { useAuth, useFirestore } from "@/firebase";
+import { signUpWithEmail } from "@/lib/auth";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Please enter a valid email." }),
   password: z.string().min(8, { message: "Password must be at least 8 characters." }),
+  phoneNumber: z.string().min(10, { message: "Please enter a valid phone number." }),
 });
+
+export type SignUpFormValues = z.infer<typeof formSchema>;
 
 export default function SignupPage() {
   const { toast } = useToast();
-  const form = useForm<z.infer<typeof formSchema>>({
+  const router = useRouter();
+  const auth = useAuth();
+  const firestore = useFirestore();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const form = useForm<SignUpFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       email: "",
       password: "",
+      phoneNumber: "",
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    toast({
-      title: "Signup Submitted",
-      description: "This is a demo. No actual account is created.",
-    });
+  async function onSubmit(values: SignUpFormValues) {
+    if (!auth || !firestore) {
+        toast({
+            variant: "destructive",
+            title: "Firebase not initialized",
+            description: "Please try again in a moment.",
+        });
+        return;
+    }
+    setIsLoading(true);
+    try {
+      await signUpWithEmail(auth, firestore, values);
+      toast({
+        title: "Account Created!",
+        description: "Welcome to the MicroChub community.",
+      });
+      router.push("/");
+    } catch (error: any) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Signup Failed",
+        description: error.code === 'auth/email-already-in-use' 
+          ? 'This email is already registered.' 
+          : (error.message || "An unknown error occurred."),
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -82,6 +119,19 @@ export default function SignupPage() {
                   </FormItem>
                 )}
               />
+               <FormField
+                control={form.control}
+                name="phoneNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. 01234567890" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="password"
@@ -95,7 +145,8 @@ export default function SignupPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Account
               </Button>
             </form>

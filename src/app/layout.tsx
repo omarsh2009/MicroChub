@@ -3,6 +3,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
 import { MainLayout } from "@/components/main-layout";
+import { FirebaseClientProvider } from "@/firebase/client-provider";
 
 export const metadata: Metadata = {
   title: "MicroChub - Electronics for Makers",
@@ -38,7 +39,9 @@ export default function RootLayout({
           "font-body antialiased",
         )}
       >
-        <MainLayout>{children}</MainLayout>
+        <FirebaseClientProvider>
+          <MainLayout>{children}</MainLayout>
+        </FirebaseClientProvider>
         <Toaster />
       </body>
     </html>

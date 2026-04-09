@@ -1,6 +1,7 @@
 'use client';
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -17,15 +18,26 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
+import { useAuth } from "@/firebase";
+import { signInWithEmail } from "@/lib/auth";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
+
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email." }),
   password: z.string().min(1, { message: "Password is required." }),
 });
 
+type LoginFormValues = z.infer<typeof formSchema>;
+
 export default function LoginPage() {
   const { toast } = useToast();
-  const form = useForm<z.infer<typeof formSchema>>({
+  const router = useRouter();
+  const auth = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const form = useForm<LoginFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
@@ -33,12 +45,37 @@ export default function LoginPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    toast({
-      title: "Login Submitted",
-      description: "This is a demo. No actual login is performed.",
-    });
+  async function onSubmit(values: LoginFormValues) {
+     if (!auth) {
+        toast({
+            variant: "destructive",
+            title: "Firebase not initialized",
+            description: "Please try again in a moment.",
+        });
+        return;
+    }
+    setIsLoading(true);
+    try {
+      await signInWithEmail(auth, values);
+      toast({
+        title: "Logged In Successfully!",
+        description: "Welcome back.",
+      });
+      router.push("/");
+    } catch (error: any) {
+      console.error(error);
+      let description = "Please check your credentials and try again.";
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        description = "Invalid email or password.";
+      }
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -80,7 +117,8 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Login
               </Button>
             </form>

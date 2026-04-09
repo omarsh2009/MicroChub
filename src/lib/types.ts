@@ -29,3 +29,10 @@ export type Product = {
   featured?: boolean;
   customizationGroups?: CustomizationGroup[];
 };
+
+export type UserProfile = {
+  name: string;
+  email: string;
+  phoneNumber: string;
+  wishlist: string[];
+};
