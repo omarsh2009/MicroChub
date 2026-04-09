@@ -21,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle, ShoppingCart, Wrench, AlertTriangle } from "lucide-react";
+import { CheckCircle, ShoppingCart, Wrench, AlertTriangle, Clock } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -133,19 +133,31 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
               <Link href="/products" className="text-sm text-muted-foreground hover:text-primary">
                 &larr; Back to Products
               </Link>
-              <Badge variant="outline" className="mt-4">{product.category}</Badge>
+              <div className="flex items-center gap-2 mt-4">
+                <Badge variant="outline">{product.category}</Badge>
+                <Badge variant="secondary">Made to Order</Badge>
+              </div>
               <h1 className="font-headline text-4xl lg:text-5xl font-bold mt-2">{product.name}</h1>
               <p className="text-muted-foreground text-lg mt-4">{product.description}</p>
             </div>
             
+            <Alert variant="default" className="bg-primary/5 border-primary/20">
+                <Clock className="h-4 w-4 text-primary" />
+                <AlertTitle className="text-primary">Heads Up!</AlertTitle>
+                <AlertDescription>
+                    This is a made-to-order item. Estimated production time is 7-14 business days.
+                </AlertDescription>
+            </Alert>
+
             {product.isRestricted && (
                 <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertTitle>Restricted Product</AlertTitle>
                     <AlertDescription>
                         This product may be sensitive or regulated. You must complete and upload a signed legal agreement during checkout before purchase.
-                        {/* This button is a placeholder for now */}
-                        <Button variant="link" className="p-0 h-auto ml-1 text-inherit hover:underline">Download Agreement</Button>
+                        <Button variant="link" asChild className="p-0 h-auto ml-1 text-inherit hover:underline">
+                            <a href="/legal-agreement-template.pdf" download>Download Agreement</a>
+                        </Button>
                     </AlertDescription>
                 </Alert>
             )}
