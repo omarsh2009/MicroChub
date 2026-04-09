@@ -4,6 +4,18 @@ export type Category = {
   description: string;
 };
 
+export type CustomizationOption = {
+  name: string;
+  priceAdjustment: number;
+};
+
+export type CustomizationGroup = {
+  name: string;
+  type: 'single' | 'multi';
+  required: boolean;
+  options: CustomizationOption[];
+};
+
 export type Product = {
   id: string;
   slug: string;
@@ -15,6 +27,5 @@ export type Product = {
   specs: Record<string, string>;
   useCases: string[];
   featured?: boolean;
-  configurable?: boolean;
-  customizationOptions?: string[];
+  customizationGroups?: CustomizationGroup[];
 };

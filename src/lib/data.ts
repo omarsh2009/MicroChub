@@ -55,8 +55,28 @@ export const products: Product[] = [
       "Desktop automation tool",
     ],
     featured: true,
-    configurable: true,
-    customizationOptions: ["Case Color", "LED Color", "Pre-loaded Software"],
+    customizationGroups: [
+      {
+        name: "Case Color",
+        type: "single",
+        required: true,
+        options: [
+          { name: "Stealth Black", priceAdjustment: 0 },
+          { name: "Arctic White", priceAdjustment: 0 },
+          { name: "Cyber Purple", priceAdjustment: 50 },
+        ],
+      },
+      {
+        name: "Included Add-ons",
+        type: "multi",
+        required: false,
+        options: [
+          { name: "LiPo Battery", priceAdjustment: 250 },
+          { name: "Extra USB-C Cable", priceAdjustment: 100 },
+          { name: "Sticker Pack", priceAdjustment: 40 },
+        ],
+      },
+    ],
   },
   {
     id: "prod-002",
@@ -144,8 +164,37 @@ export const products: Product[] = [
       Connectivity: "USB-C",
     },
     useCases: ["Streaming", "Video editing shortcuts", "Productivity tool"],
-    configurable: true,
-    customizationOptions: ["Switch Type (Gateron Red, Blue, Brown)", "Keycap Style", "LED Color"],
+    customizationGroups: [
+       {
+        name: "Assembly Type",
+        type: "single",
+        required: true,
+        options: [
+          { name: "DIY Kit", priceAdjustment: 0 },
+          { name: "Fully Assembled", priceAdjustment: 200 },
+        ],
+      },
+      {
+        name: "Switch Type",
+        type: "single",
+        required: true,
+        options: [
+          { name: "Gateron Red (Linear)", priceAdjustment: 0 },
+          { name: "Gateron Blue (Clicky)", priceAdjustment: 50 },
+          { name: "Gateron Brown (Tactile)", priceAdjustment: 50 },
+        ],
+      },
+      {
+        name: "Keycap Style",
+        type: "single",
+        required: true,
+        options: [
+          { name: "Blank White", priceAdjustment: 0 },
+          { name: "Blank Black", priceAdjustment: 0 },
+          { name: "Custom Printed", priceAdjustment: 250 },
+        ],
+      },
+    ],
   },
 ];
 

@@ -19,6 +19,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CheckCircle, ShoppingCart, Wrench } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export function generateStaticParams() {
   return products.map((product) => ({
@@ -76,28 +79,54 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
             <div className="text-4xl font-bold">
               EGP {product.price.toLocaleString()}
             </div>
-
-            {product.configurable && product.customizationOptions && product.customizationOptions.length > 0 && (
-              <Card>
-                <CardHeader className="flex-row items-center gap-3 space-y-0">
-                   <Wrench className="w-6 h-6 text-primary"/>
-                   <CardTitle className="text-xl m-0">Customize Your {product.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    This product can be customized. Full configuration options coming soon.
-                  </p>
-                  <ul className="space-y-2">
-                    {product.customizationOptions.map((option, index) => (
-                      <li key={index} className="flex items-start gap-3">
-                        <CheckCircle className="w-5 h-5 mt-1 text-green-500" />
-                        <span>{option}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
+            
+            {product.customizationGroups && product.customizationGroups.length > 0 && (
+              <div className="space-y-6">
+                <h2 className="font-headline text-2xl font-bold flex items-center gap-2">
+                  <Wrench className="w-6 h-6 text-primary"/>
+                  Customize Your {product.name}
+                </h2>
+                {product.customizationGroups.map((group) => (
+                  <Card key={group.name}>
+                    <CardHeader>
+                      <CardTitle className="text-xl">{group.name} {group.required && <span className="text-destructive text-sm ml-1">*</span>}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {group.type === 'single' ? (
+                        <RadioGroup>
+                          {group.options.map(option => (
+                            <div key={option.name} className="flex items-center space-x-2">
+                              <RadioGroupItem value={option.name} id={`${group.name}-${option.name}`} />
+                              <Label htmlFor={`${group.name}-${option.name}`} className="flex-grow flex justify-between items-center cursor-pointer">
+                                <span>{option.name}</span>
+                                {option.priceAdjustment > 0 && (
+                                    <span className="text-sm text-muted-foreground">+ EGP {option.priceAdjustment}</span>
+                                )}
+                              </Label>
+                            </div>
+                          ))}
+                        </RadioGroup>
+                      ) : (
+                        <div className="space-y-2">
+                          {group.options.map(option => (
+                            <div key={option.name} className="flex items-center space-x-3">
+                              <Checkbox id={`${group.name}-${option.name}`} />
+                               <Label htmlFor={`${group.name}-${option.name}`} className="flex-grow flex justify-between items-center cursor-pointer">
+                                <span>{option.name}</span>
+                                {option.priceAdjustment > 0 && (
+                                    <span className="text-sm text-muted-foreground">+ EGP {option.priceAdjustment}</span>
+                                )}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             )}
+
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Button size="lg" className="flex-1">
