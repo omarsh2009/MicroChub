@@ -27,6 +27,43 @@
         }
       },
       "required": ["name", "email", "phoneNumber"]
+    },
+    "CartItem": {
+      "title": "Cart Item",
+      "description": "Represents a single item in a shopping cart or order.",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string" },
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "image": { "type": "string" },
+        "quantity": { "type": "number" },
+        "price": { "type": "number" },
+        "configuration": { "type": "object" }
+      },
+      "required": ["productId", "name", "slug", "quantity", "price", "configuration"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Represents a customer's order.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The ID of the user who placed the order." },
+        "items": { 
+          "type": "array",
+          "items": { "$ref": "#/entities/CartItem" }
+        },
+        "totalPrice": { "type": "number" },
+        "status": {
+          "type": "string",
+          "enum": ["Pending Payment Proof", "Under Review", "Confirmed", "In Production", "Ready", "Completed/Delivered"]
+        },
+        "paymentProofUrl": { "type": "string", "description": "URL to the payment proof screenshot in Firebase Storage." },
+        "legalAgreementUrl": { "type": "string", "description": "URL to the signed legal agreement in Firebase Storage." },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "items", "totalPrice", "status", "paymentProofUrl", "createdAt"]
     }
   },
   "auth": {
@@ -38,6 +75,12 @@
         "$ref": "#/entities/UserProfile"
       },
       "description": "Stores public information for each user."
+    },
+    "/users/{userId}/orders/{orderId}": {
+      "schema": {
+        "$ref": "#/entities/Order"
+      },
+      "description": "Stores orders for each user."
     }
   }
 }

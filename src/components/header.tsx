@@ -7,6 +7,7 @@ import {
   ShoppingCart,
   UserCircle,
   Menu,
+  Package,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -104,7 +105,12 @@ export function Header() {
                   <DropdownMenuLabel>Hi, {user.profile?.name || user.email?.split('@')[0]}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>My Account</DropdownMenuItem>
-                  <DropdownMenuItem>Order History</DropdownMenuItem>
+                   <DropdownMenuItem asChild>
+                    <Link href="/orders">
+                      <Package className="mr-2 h-4 w-4" />
+                      My Orders
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link href="/admin">Admin</Link>

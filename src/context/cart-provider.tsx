@@ -20,6 +20,7 @@ interface CartContextType {
   ) => void;
   removeFromCart: (itemId: string) => void;
   updateItemQuantity: (itemId: string, quantity: number) => void;
+  clearCart: () => void;
   itemCount: number;
   totalPrice: number;
 }
@@ -44,7 +45,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const updateCart = (newCart: CartItem[]) => {
     setCart(newCart);
-    localStorage.setItem('microchub-cart', JSON.stringify(newCart));
+    try {
+      localStorage.setItem('microchub-cart', JSON.stringify(newCart));
+    } catch (e) {
+      console.error('Failed to save cart to localStorage', e);
+    }
   };
 
   const addToCart = useCallback(
@@ -129,6 +134,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [cart, toast]
   );
   
+  const clearCart = useCallback(() => {
+    updateCart([]);
+  }, []);
+
   const itemCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
   const totalPrice = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
 
@@ -137,6 +146,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     addToCart,
     removeFromCart,
     updateItemQuantity,
+    clearCart,
     itemCount,
     totalPrice,
   };

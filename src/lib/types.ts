@@ -49,3 +49,18 @@ export type CartItem = {
     price: number; // The calculated price for ONE unit at the time of adding to cart
     configuration: SelectedConfiguration;
 };
+
+export type Order = {
+  id: string; // Firestore document ID
+  userId: string;
+  items: CartItem[];
+  totalPrice: number;
+  status: 'Pending Payment Proof' | 'Under Review' | 'Confirmed' | 'In Production' | 'Ready' | 'Completed/Delivered';
+  paymentProofUrl: string;
+  legalAgreementUrl?: string;
+  notes?: string;
+  createdAt: {
+    seconds: number;
+    nanoseconds: number;
+  };
+};
