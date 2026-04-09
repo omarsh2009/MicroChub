@@ -1,3 +1,5 @@
+'use client';
+
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -22,12 +24,7 @@ import { CheckCircle, ShoppingCart, Wrench } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-
-export function generateStaticParams() {
-  return products.map((product) => ({
-    slug: product.slug,
-  }));
-}
+import { useState, useMemo } from "react";
 
 export default function ProductPage({ params }: { params: { slug: string } }) {
   const product = products.find((p) => p.slug === params.slug);
@@ -36,7 +33,64 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
     notFound();
   }
 
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string | string[]>>({});
+
   const productImages = product.images.map(id => placeholderImagesById[id]).filter(Boolean);
+
+  const calculatedPrice = useMemo(() => {
+    let price = product.price;
+    if (!product.customizationGroups) {
+      return price;
+    }
+
+    Object.entries(selectedOptions).forEach(([groupName, selection]) => {
+      const group = product.customizationGroups?.find(g => g.name === groupName);
+      if (!group) return;
+      
+      if (group.type === 'single' && typeof selection === 'string') {
+          const option = group.options.find(o => o.name === selection);
+          if (option) {
+              price += option.priceAdjustment;
+          }
+      } else if (group.type === 'multi' && Array.isArray(selection)) {
+          selection.forEach(optionName => {
+              const option = group.options.find(o => o.name === optionName);
+              if (option) {
+                  price += option.priceAdjustment;
+              }
+          });
+      }
+    });
+
+    return price;
+  }, [selectedOptions, product]);
+
+
+  const handleSingleSelectChange = (groupName: string, optionName: string) => {
+    setSelectedOptions(prev => ({
+        ...prev,
+        [groupName]: optionName,
+    }));
+  };
+
+  const handleMultiSelectChange = (groupName:string, optionName: string) => (isChecked: boolean | 'indeterminate') => {
+      if (isChecked === 'indeterminate') return;
+      setSelectedOptions(prev => {
+          const currentSelection = (prev[groupName] as string[] | undefined) || [];
+          let newSelection: string[];
+
+          if (isChecked) {
+              newSelection = [...currentSelection, optionName];
+          } else {
+              newSelection = currentSelection.filter(name => name !== optionName);
+          }
+          
+          return {
+              ...prev,
+              [groupName]: newSelection,
+          };
+      });
+  };
 
   return (
     <div className="py-12 md:py-20">
@@ -77,7 +131,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
             </div>
 
             <div className="text-4xl font-bold">
-              EGP {product.price.toLocaleString()}
+              EGP {calculatedPrice.toLocaleString()}
             </div>
             
             {product.customizationGroups && product.customizationGroups.length > 0 && (
@@ -93,14 +147,17 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                     </CardHeader>
                     <CardContent>
                       {group.type === 'single' ? (
-                        <RadioGroup>
+                        <RadioGroup 
+                          onValueChange={(value) => handleSingleSelectChange(group.name, value)}
+                          value={selectedOptions[group.name] as string | undefined}
+                        >
                           {group.options.map(option => (
                             <div key={option.name} className="flex items-center space-x-2">
                               <RadioGroupItem value={option.name} id={`${group.name}-${option.name}`} />
                               <Label htmlFor={`${group.name}-${option.name}`} className="flex-grow flex justify-between items-center cursor-pointer">
                                 <span>{option.name}</span>
                                 {option.priceAdjustment > 0 && (
-                                    <span className="text-sm text-muted-foreground">+ EGP {option.priceAdjustment}</span>
+                                    <span className="text-sm text-muted-foreground">+ EGP {option.priceAdjustment.toLocaleString()}</span>
                                 )}
                               </Label>
                             </div>
@@ -110,11 +167,15 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                         <div className="space-y-2">
                           {group.options.map(option => (
                             <div key={option.name} className="flex items-center space-x-3">
-                              <Checkbox id={`${group.name}-${option.name}`} />
+                              <Checkbox 
+                                id={`${group.name}-${option.name}`} 
+                                onCheckedChange={handleMultiSelectChange(group.name, option.name)}
+                                checked={((selectedOptions[group.name] as string[]) || []).includes(option.name)}
+                              />
                                <Label htmlFor={`${group.name}-${option.name}`} className="flex-grow flex justify-between items-center cursor-pointer">
                                 <span>{option.name}</span>
                                 {option.priceAdjustment > 0 && (
-                                    <span className="text-sm text-muted-foreground">+ EGP {option.priceAdjustment}</span>
+                                    <span className="text-sm text-muted-foreground">+ EGP {option.priceAdjustment.toLocaleString()}</span>
                                 )}
                               </Label>
                             </div>
