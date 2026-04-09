@@ -6,11 +6,12 @@ import {
   updateProfile,
 } from 'firebase/auth';
 import { doc, setDoc, Firestore } from 'firebase/firestore';
+import { type SignUpFormValues } from '@/app/signup/page';
 
 export async function signUpWithEmail(
   auth: Auth,
   firestore: Firestore,
-  values: { name: string; email: string; password: string; phoneNumber: string }
+  values: SignUpFormValues
 ) {
   const { name, email, password, phoneNumber } = values;
 
@@ -24,6 +25,7 @@ export async function signUpWithEmail(
     email,
     phoneNumber,
     wishlist: [],
+    role: 'user',
   };
 
   // Use setDoc with the user's UID as the document ID

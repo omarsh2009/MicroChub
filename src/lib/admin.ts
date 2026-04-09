@@ -3,14 +3,15 @@
 import {
   collectionGroup,
   getDocs,
-  query,
+  query as firestoreQuery,
   orderBy,
   doc,
   getDoc,
   updateDoc,
   Firestore,
+  collection,
 } from 'firebase/firestore';
-import type { Order, UserProfile, OrderWithUserData } from './types';
+import type { Order, UserProfile, OrderWithUserData, UserWithId } from './types';
 
 // Helper function to get user profiles for a set of user IDs
 async function getUserProfiles(firestore: Firestore, userIds: string[]): Promise<Map<string, UserProfile>> {
@@ -33,7 +34,7 @@ async function getUserProfiles(firestore: Firestore, userIds: string[]): Promise
 
 
 export async function getAllOrders(firestore: Firestore): Promise<OrderWithUserData[]> {
-  const ordersQuery = query(collectionGroup(firestore, 'orders'), orderBy('createdAt', 'desc'));
+  const ordersQuery = firestoreQuery(collectionGroup(firestore, 'orders'), orderBy('createdAt', 'desc'));
   const querySnapshot = await getDocs(ordersQuery);
 
   const orders = querySnapshot.docs.map(doc => ({
@@ -68,4 +69,23 @@ export async function updateOrderStatus(
 ): Promise<void> {
     const orderRef = doc(firestore, 'users', userId, 'orders', orderId);
     await updateDoc(orderRef, { status });
+}
+
+export async function getAllUsers(firestore: Firestore): Promise<UserWithId[]> {
+    const usersQuery = firestoreQuery(collection(firestore, 'users'));
+    const querySnapshot = await getDocs(usersQuery);
+    
+    return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...(doc.data() as UserProfile),
+    }));
+}
+
+export async function updateUserRole(
+    firestore: Firestore,
+    userId: string,
+    role: UserProfile['role']
+): Promise<void> {
+    const userRef = doc(firestore, 'users', userId);
+    await updateDoc(userRef, { role });
 }

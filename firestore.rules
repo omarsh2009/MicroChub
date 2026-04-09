@@ -2,23 +2,42 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function isSuperAdmin() {
+      // Check the user's role from their profile document in Firestore
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super_admin';
+    }
+
     function isAdmin() {
-      // This will check for a custom claim on the user's token.
-      // We will need to create a mechanism to grant this claim.
-      return request.auth.token.admin == true;
+      // Admins and Super Admins have admin privileges
+      let userRole = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      return userRole == 'admin' || userRole == 'super_admin';
     }
 
     match /users/{userId} {
-      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+      allow read, delete: if request.auth != null && request.auth.uid == userId;
       allow create: if request.auth != null;
-      // Admins can read any user's profile to display order information
+
+      // A user can update their own profile, but cannot change their own role.
+      allow update: if request.auth != null && request.auth.uid == userId && request.resource.data.role == resource.data.role;
+      
+      // Admins can read any user's profile to display order/user information
       allow get: if isAdmin();
+      
+      // Super Admins can update any user's profile (specifically to change their role)
+      allow update: if isSuperAdmin();
+
+      // Admins can list all users for the management dashboard
+      allow list: if isAdmin();
     }
 
     match /users/{userId}/orders/{orderId} {
+      // A user can create and read their own orders
       allow read, create: if request.auth != null && request.auth.uid == userId;
-      // Admins can update any order (e.g., change status)
-      allow update: if isAdmin();
+
+      // Admins can read and update any order (e.g., to change its status)
+      allow read, update: if isAdmin();
+      
+      // Nobody can delete orders
       allow delete: if false; 
     }
 

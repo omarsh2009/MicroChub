@@ -35,6 +35,11 @@ export type UserProfile = {
   email: string;
   phoneNumber: string;
   wishlist: string[];
+  role: 'user' | 'admin' | 'super_admin';
+};
+
+export type UserWithId = UserProfile & {
+  id: string;
 };
 
 export type SelectedConfiguration = Record<string, string | string[]>;

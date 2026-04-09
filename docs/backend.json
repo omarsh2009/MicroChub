@@ -24,9 +24,14 @@
           "items": {
             "type": "string"
           }
+        },
+        "role": {
+          "type": "string",
+          "enum": ["user", "admin", "super_admin"],
+          "description": "The user's role in the system."
         }
       },
-      "required": ["name", "email", "phoneNumber"]
+      "required": ["name", "email", "phoneNumber", "role"]
     },
     "CartItem": {
       "title": "Cart Item",

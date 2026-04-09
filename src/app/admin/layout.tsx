@@ -1,7 +1,13 @@
+'use client';
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Package,
   ShoppingCart,
+  Users,
+  UserCircle,
+  Menu,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,16 +18,39 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { UserCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
 import { Logo } from "@/components/logo";
+import { useUser } from "@/firebase";
+import { useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const user = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user === undefined) return; // Still loading
+
+    if (user === null) {
+      router.replace('/login?redirect=/admin');
+    } else if (!user.profile?.role || !['admin', 'super_admin'].includes(user.profile.role)) {
+      router.replace('/');
+    }
+  }, [user, router]);
+
+  if (user === undefined || !user || !user.profile?.role || !['admin', 'super_admin'].includes(user.profile.role)) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
       <div className="hidden border-r bg-card md:block">
@@ -48,6 +77,15 @@ export default function AdminLayout({
                 <ShoppingCart className="h-4 w-4" />
                 Orders
               </Link>
+              {user.profile.role === 'super_admin' && (
+                <Link
+                  href="/admin/users"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                >
+                  <Users className="h-4 w-4" />
+                  Users
+                </Link>
+              )}
             </nav>
           </div>
         </div>
@@ -88,6 +126,15 @@ export default function AdminLayout({
                   <ShoppingCart className="h-5 w-5" />
                   Orders
                 </Link>
+                {user.profile.role === 'super_admin' && (
+                  <Link
+                    href="/admin/users"
+                    className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
+                  >
+                    <Users className="h-5 w-5" />
+                    Users
+                  </Link>
+                )}
               </nav>
             </SheetContent>
           </Sheet>
