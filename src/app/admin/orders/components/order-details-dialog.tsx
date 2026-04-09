@@ -43,7 +43,7 @@ export function OrderDetailsDialog({ isOpen, onClose, order, onOrderUpdate }: Or
         if (!firestore) return;
         setIsSaving(true);
         try {
-            await updateOrderStatus(firestore, order.userId, order.id, newStatus);
+            await updateOrderStatus(firestore, order.id, newStatus);
             toast({
                 title: 'Order Updated',
                 description: `Order #${order.id.slice(0, 7)} status changed to ${newStatus}.`,

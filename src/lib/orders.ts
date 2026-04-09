@@ -1,3 +1,4 @@
+'use client';
 import { addDoc, collection, serverTimestamp, Firestore, doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, FirebaseStorage } from 'firebase/storage';
 import type { CartItem } from './types';
@@ -24,8 +25,8 @@ export async function createOrder(
   const uploadResult = await uploadBytes(storageRef, paymentProofFile);
   const paymentProofUrl = await getDownloadURL(uploadResult.ref);
 
-  // 2. Create order document in Firestore
-  const ordersCollectionRef = collection(firestore, 'users', userId, 'orders');
+  // 2. Create order document in Firestore's top-level 'orders' collection
+  const ordersCollectionRef = collection(firestore, 'orders');
   const newOrderDoc = await addDoc(ordersCollectionRef, {
     userId,
     items: cart,

@@ -34,7 +34,7 @@ async function getUserProfiles(firestore: Firestore, userIds: string[]): Promise
 
 
 export async function getAllOrders(firestore: Firestore): Promise<OrderWithUserData[]> {
-  const ordersQuery = firestoreQuery(collectionGroup(firestore, 'orders'), orderBy('createdAt', 'desc'));
+  const ordersQuery = firestoreQuery(collection(firestore, 'orders'), orderBy('createdAt', 'desc'));
   const querySnapshot = await getDocs(ordersQuery);
 
   const orders = querySnapshot.docs.map(doc => ({
@@ -63,11 +63,10 @@ export async function getAllOrders(firestore: Firestore): Promise<OrderWithUserD
 
 export async function updateOrderStatus(
     firestore: Firestore,
-    userId: string,
     orderId: string,
     status: Order['status']
 ): Promise<void> {
-    const orderRef = doc(firestore, 'users', userId, 'orders', orderId);
+    const orderRef = doc(firestore, 'orders', orderId);
     await updateDoc(orderRef, { status });
 }
 

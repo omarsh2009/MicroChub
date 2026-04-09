@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
 import { useUser, useFirestore, useCollection } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, where, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ export default function OrdersPage() {
 
   const ordersQuery = useMemo(() => {
     if (!user || !firestore) return null;
-    return query(collection(firestore, 'users', user.uid, 'orders'), orderBy('createdAt', 'desc'));
+    return query(collection(firestore, 'orders'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
   }, [user, firestore]);
 
   const { data: orders, loading, error } = useCollection<Order>(ordersQuery);
