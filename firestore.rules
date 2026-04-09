@@ -1,15 +1,30 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    function isAdmin() {
+      // This will check for a custom claim on the user's token.
+      // We will need to create a mechanism to grant this claim.
+      return request.auth.token.admin == true;
+    }
+
     match /users/{userId} {
       allow read, update, delete: if request.auth != null && request.auth.uid == userId;
       allow create: if request.auth != null;
+      // Admins can read any user's profile to display order information
+      allow get: if isAdmin();
     }
 
     match /users/{userId}/orders/{orderId} {
       allow read, create: if request.auth != null && request.auth.uid == userId;
-      // Users cannot update or delete their own orders. This should be an admin-only action.
-      allow update, delete: if false; 
+      // Admins can update any order (e.g., change status)
+      allow update: if isAdmin();
+      allow delete: if false; 
+    }
+
+    // This rule allows admins to perform a collection group query on all 'orders'
+    match /{path=**}/orders/{orderId} {
+      allow get, list: if isAdmin();
     }
   }
 }

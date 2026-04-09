@@ -1,0 +1,71 @@
+'use client';
+
+import {
+  collectionGroup,
+  getDocs,
+  query,
+  orderBy,
+  doc,
+  getDoc,
+  updateDoc,
+  Firestore,
+} from 'firebase/firestore';
+import type { Order, UserProfile, OrderWithUserData } from './types';
+
+// Helper function to get user profiles for a set of user IDs
+async function getUserProfiles(firestore: Firestore, userIds: string[]): Promise<Map<string, UserProfile>> {
+  const userProfiles = new Map<string, UserProfile>();
+  const userIdsToFetch = Array.from(new Set(userIds)); // Deduplicate
+
+  // Firestore 'in' queries are limited to 30 items. 
+  // For a larger scale app, this would need batching.
+  if (userIdsToFetch.length > 0) {
+    const userDocs = await Promise.all(userIdsToFetch.map(id => getDoc(doc(firestore, 'users', id))));
+    userDocs.forEach(userDoc => {
+      if (userDoc.exists()) {
+        userProfiles.set(userDoc.id, userDoc.data() as UserProfile);
+      }
+    });
+  }
+
+  return userProfiles;
+}
+
+
+export async function getAllOrders(firestore: Firestore): Promise<OrderWithUserData[]> {
+  const ordersQuery = query(collectionGroup(firestore, 'orders'), orderBy('createdAt', 'desc'));
+  const querySnapshot = await getDocs(ordersQuery);
+
+  const orders = querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Order[];
+
+  const userIds = orders.map(order => order.userId);
+  const userProfiles = await getUserProfiles(firestore, userIds);
+
+  const ordersWithUserData: OrderWithUserData[] = orders.map(order => {
+    const userProfile = userProfiles.get(order.userId);
+    return {
+      ...order,
+      user: {
+        id: order.userId,
+        name: userProfile?.name || 'Unknown User',
+        email: userProfile?.email || 'N/A',
+        phoneNumber: userProfile?.phoneNumber || 'N/A',
+      }
+    };
+  });
+  
+  return ordersWithUserData;
+}
+
+export async function updateOrderStatus(
+    firestore: Firestore,
+    userId: string,
+    orderId: string,
+    status: Order['status']
+): Promise<void> {
+    const orderRef = doc(firestore, 'users', userId, 'orders', orderId);
+    await updateDoc(orderRef, { status });
+}

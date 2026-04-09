@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   Package,
+  ShoppingCart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,10 +36,17 @@ export default function AdminLayout({
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
               <Link
                 href="/admin/products"
-                className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2 text-primary transition-all hover:text-primary"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
               >
                 <Package className="h-4 w-4" />
                 Products
+              </Link>
+              <Link
+                href="/admin/orders"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                Orders
               </Link>
             </nav>
           </div>
@@ -68,10 +76,17 @@ export default function AdminLayout({
                 </Link>
                 <Link
                   href="/admin/products"
-                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl bg-muted px-3 py-2 text-foreground hover:text-foreground"
+                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
                 >
                   <Package className="h-5 w-5" />
                   Products
+                </Link>
+                 <Link
+                  href="/admin/orders"
+                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  Orders
                 </Link>
               </nav>
             </SheetContent>

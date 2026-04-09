@@ -64,3 +64,12 @@ export type Order = {
     nanoseconds: number;
   };
 };
+
+export type OrderWithUserData = Order & {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    phoneNumber: string;
+  }
+};
