@@ -23,6 +23,8 @@ import { useUser, useAuth } from "@/firebase";
 import { signOut } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "./ui/skeleton";
+import { useCart } from "@/hooks/use-cart";
+import { Badge } from "@/components/ui/badge";
 
 
 const navLinks = [
@@ -37,6 +39,7 @@ export function Header() {
   const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const { itemCount } = useCart();
 
   const handleLogout = async () => {
     if (!auth) return;
@@ -74,8 +77,15 @@ export function Header() {
           <Button variant="ghost" size="icon" aria-label="Wishlist">
             <Heart className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" aria-label="Cart">
-            <ShoppingCart className="h-5 w-5" />
+          <Button asChild variant="ghost" size="icon" aria-label="Cart" className="relative">
+            <Link href="/cart">
+              <ShoppingCart className="h-5 w-5" />
+              {itemCount > 0 && (
+                <Badge variant="default" className="absolute -right-2 -top-2 h-5 w-5 justify-center rounded-full p-0 text-xs">
+                  {itemCount}
+                </Badge>
+              )}
+            </Link>
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

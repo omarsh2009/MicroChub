@@ -36,3 +36,16 @@ export type UserProfile = {
   phoneNumber: string;
   wishlist: string[];
 };
+
+export type SelectedConfiguration = Record<string, string | string[]>;
+
+export type CartItem = {
+    id: string; // Unique ID for the cart item, e.g., `${productId}-${configHash}`
+    productId: string;
+    name: string;
+    slug: string;
+    image: string;
+    quantity: number;
+    price: number; // The calculated price for ONE unit at the time of adding to cart
+    configuration: SelectedConfiguration;
+};

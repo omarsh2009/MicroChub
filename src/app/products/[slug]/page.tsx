@@ -25,15 +25,18 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useMemo } from "react";
+import { useCart } from '@/hooks/use-cart';
 
 export default function ProductPage({ params }: { params: { slug: string } }) {
   const product = products.find((p) => p.slug === params.slug);
+  const { addToCart } = useCart();
 
   if (!product) {
     notFound();
   }
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string | string[]>>({});
+  const [quantity, setQuantity] = useState(1);
 
   const productImages = product.images.map(id => placeholderImagesById[id]).filter(Boolean);
 
@@ -90,6 +93,10 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
               [groupName]: newSelection,
           };
       });
+  };
+  
+  const handleAddToCart = () => {
+    addToCart(product, quantity, selectedOptions, calculatedPrice);
   };
 
   return (
@@ -150,14 +157,15 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                         <RadioGroup 
                           onValueChange={(value) => handleSingleSelectChange(group.name, value)}
                           value={selectedOptions[group.name] as string | undefined}
+                          required={group.required}
                         >
                           {group.options.map(option => (
                             <div key={option.name} className="flex items-center space-x-2">
                               <RadioGroupItem value={option.name} id={`${group.name}-${option.name}`} />
                               <Label htmlFor={`${group.name}-${option.name}`} className="flex-grow flex justify-between items-center cursor-pointer">
                                 <span>{option.name}</span>
-                                {option.priceAdjustment > 0 && (
-                                    <span className="text-sm text-muted-foreground">+ EGP {option.priceAdjustment.toLocaleString()}</span>
+                                {option.priceAdjustment !== 0 && (
+                                    <span className="text-sm text-muted-foreground">{option.priceAdjustment > 0 ? '+':''}{'EGP'} {option.priceAdjustment.toLocaleString()}</span>
                                 )}
                               </Label>
                             </div>
@@ -174,8 +182,8 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                               />
                                <Label htmlFor={`${group.name}-${option.name}`} className="flex-grow flex justify-between items-center cursor-pointer">
                                 <span>{option.name}</span>
-                                {option.priceAdjustment > 0 && (
-                                    <span className="text-sm text-muted-foreground">+ EGP {option.priceAdjustment.toLocaleString()}</span>
+                                {option.priceAdjustment !== 0 && (
+                                    <span className="text-sm text-muted-foreground">{option.priceAdjustment > 0 ? '+':''}{'EGP'} {option.priceAdjustment.toLocaleString()}</span>
                                 )}
                               </Label>
                             </div>
@@ -190,7 +198,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
 
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="flex-1">
+              <Button size="lg" className="flex-1" onClick={handleAddToCart}>
                 <ShoppingCart className="mr-2" />
                 Add to Cart
               </Button>
