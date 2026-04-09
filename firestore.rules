@@ -301,6 +301,19 @@ service cloud.firestore {
       allow update: if (isExistingOwner(resource.data.userId) || (isAdmin() && resource != null)) && isUpdatingOwnChildDoc();
       allow delete: if isExistingOwner(resource.data.userId) || (isAdmin() && resource != null);
     }
+
+    /**
+     * @description User-submitted quote requests. Readable by owner or admin.
+     * @path /quote_requests/{quoteRequestId}
+     * @principle Denormalized ownership (`userId` field) for shared data access.
+     */
+    match /quote_requests/{quoteRequestId} {
+      allow get: if isOwner(resource.data.userId) || isAdmin();
+      allow list: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if (isOwner(resource.data.userId) || (isAdmin() && resource != null));
+      allow delete: if isOwner(resource.data.userId) || (isAdmin() && resource != null);
+    }
     
     // -------------------------------------------------------------------------
     // Administrative Collections

@@ -8,6 +8,7 @@ import {
   Users,
   UserCircle,
   Menu,
+  FileQuestion,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -77,6 +78,13 @@ export default function AdminLayout({
                 <ShoppingCart className="h-4 w-4" />
                 Orders
               </Link>
+              <Link
+                href="/admin/quotes"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+              >
+                <FileQuestion className="h-4 w-4" />
+                Quote Requests
+              </Link>
               {user.profile.role === 'super_admin' && (
                 <Link
                   href="/admin/users"
@@ -125,6 +133,13 @@ export default function AdminLayout({
                 >
                   <ShoppingCart className="h-5 w-5" />
                   Orders
+                </Link>
+                 <Link
+                  href="/admin/quotes"
+                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
+                >
+                  <FileQuestion className="h-5 w-5" />
+                  Quote Requests
                 </Link>
                 {user.profile.role === 'super_admin' && (
                   <Link

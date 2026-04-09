@@ -7,6 +7,7 @@ export type Category = {
 export type CustomizationOption = {
   name: string;
   priceAdjustment: number;
+  requestQuote?: boolean;
 };
 
 export type CustomizationGroup = {
@@ -75,6 +76,35 @@ export type Order = {
 };
 
 export type OrderWithUserData = Order & {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    phoneNumber: string;
+  }
+};
+
+export type QuoteRequest = {
+  id: string;
+  userId: string;
+  items: CartItem[]; // Using CartItem to represent the product and configuration
+  userNotes?: string;
+  fileUrl?: string; // Single file for simplicity
+  status: 'Pending Review' | 'Quoted' | 'Accepted' | 'Rejected' | 'Ordered';
+  quotedPrice?: number;
+  adminNotes?: string;
+  createdAt: {
+    seconds: number;
+    nanoseconds: number;
+  };
+  quotedAt?: {
+    seconds: number;
+    nanoseconds: number;
+  };
+};
+
+
+export type QuoteRequestWithUserData = QuoteRequest & {
   user: {
     id: string;
     name: string;

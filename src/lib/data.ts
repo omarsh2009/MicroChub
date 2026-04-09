@@ -192,7 +192,7 @@ export const products: Product[] = [
         options: [
           { name: "Blank White", priceAdjustment: 0 },
           { name: "Blank Black", priceAdjustment: 0 },
-          { name: "Custom Printed", priceAdjustment: 250 },
+          { name: "Custom Printed", priceAdjustment: 250, requestQuote: true },
         ],
       },
     ],

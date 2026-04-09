@@ -1,6 +1,6 @@
 'use client';
 
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { products, placeholderImagesById } from "@/lib/data";
@@ -21,23 +21,32 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle, ShoppingCart, Wrench, AlertTriangle, Clock } from "lucide-react";
+import { CheckCircle, ShoppingCart, Wrench, AlertTriangle, Clock, FileQuestion, Loader2 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useMemo } from "react";
 import { useCart } from '@/hooks/use-cart';
+import { useUser, useFirestore, useStorage } from "@/firebase";
+import { createQuoteRequest } from "@/lib/quotes";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ProductPage({ params }: { params: { slug: string } }) {
+  const router = useRouter();
+  const { toast } = useToast();
   const product = products.find((p) => p.slug === params.slug);
   const { addToCart } = useCart();
+  const user = useUser();
+  const firestore = useFirestore();
+  const storage = useStorage();
+
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string | string[]>>({});
+  const [quantity, setQuantity] = useState(1);
+  const [isRequestingQuote, setIsRequestingQuote] = useState(false);
 
   if (!product) {
     notFound();
   }
-
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, string | string[]>>({});
-  const [quantity, setQuantity] = useState(1);
 
   const productImages = product.images.map(id => placeholderImagesById[id]).filter(Boolean);
 
@@ -50,24 +59,44 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
     Object.entries(selectedOptions).forEach(([groupName, selection]) => {
       const group = product.customizationGroups?.find(g => g.name === groupName);
       if (!group) return;
+
+      const processOption = (optionName: string) => {
+        const option = group.options.find(o => o.name === optionName);
+        if (option && !option.requestQuote) {
+            price += option.priceAdjustment;
+        }
+      }
       
-      if (group.type === 'single' && typeof selection === 'string') {
-          const option = group.options.find(o => o.name === selection);
-          if (option) {
-              price += option.priceAdjustment;
-          }
-      } else if (group.type === 'multi' && Array.isArray(selection)) {
-          selection.forEach(optionName => {
-              const option = group.options.find(o => o.name === optionName);
-              if (option) {
-                  price += option.priceAdjustment;
-              }
-          });
+      if (Array.isArray(selection)) {
+          selection.forEach(processOption);
+      } else if (typeof selection === 'string') {
+          processOption(selection);
       }
     });
 
     return price;
   }, [selectedOptions, product]);
+  
+  const needsQuote = useMemo(() => {
+    if (!product.customizationGroups) return false;
+
+    return Object.entries(selectedOptions).some(([groupName, selection]) => {
+      const group = product.customizationGroups?.find(g => g.name === groupName);
+      if (!group) return false;
+
+      const checkOptionForQuote = (optionName: string) => {
+          const option = group.options.find(o => o.name === optionName);
+          return option?.requestQuote;
+      }
+
+      if (Array.isArray(selection)) {
+          return selection.some(checkOptionForQuote);
+      } else if (typeof selection === 'string') {
+          return checkOptionForQuote(selection);
+      }
+      return false;
+    });
+  }, [selectedOptions, product.customizationGroups]);
 
 
   const handleSingleSelectChange = (groupName: string, optionName: string) => {
@@ -99,6 +128,41 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   const handleAddToCart = () => {
     addToCart(product, quantity, selectedOptions, calculatedPrice);
   };
+  
+  const handleRequestQuote = async () => {
+      if (!user) {
+          toast({ variant: 'destructive', title: 'Please log in', description: 'You need to be logged in to request a quote.'});
+          router.push(`/login?redirect=/products/${product.slug}`);
+          return;
+      }
+      if (!firestore || !storage) {
+          toast({ variant: 'destructive', title: 'Error', description: 'Services not available. Please try again.'});
+          return;
+      }
+
+      setIsRequestingQuote(true);
+      try {
+        await createQuoteRequest(firestore, storage, {
+            userId: user.uid,
+            product,
+            quantity,
+            configuration: selectedOptions,
+            basePrice: product.price,
+        });
+        toast({
+            title: 'Quote Request Sent!',
+            description: "We've received your request and will get back to you with a quote shortly.",
+        });
+        router.push('/quotes');
+      } catch (error: any) {
+          console.error("Failed to create quote request:", error);
+          toast({ variant: 'destructive', title: 'Request Failed', description: error.message || 'Could not send your quote request.' });
+      } finally {
+          setIsRequestingQuote(false);
+      }
+  };
+
+  const priceSuffix = needsQuote ? '+' : '';
 
   return (
     <div className="py-12 md:py-20">
@@ -163,7 +227,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
             )}
 
             <div className="text-4xl font-bold">
-              EGP {calculatedPrice.toLocaleString()}
+              EGP {calculatedPrice.toLocaleString()}{priceSuffix}
             </div>
             
             {product.customizationGroups && product.customizationGroups.length > 0 && (
@@ -189,7 +253,9 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                               <RadioGroupItem value={option.name} id={`${group.name}-${option.name}`} />
                               <Label htmlFor={`${group.name}-${option.name}`} className="flex-grow flex justify-between items-center cursor-pointer">
                                 <span>{option.name}</span>
-                                {option.priceAdjustment !== 0 && (
+                                {option.requestQuote ? (
+                                    <Badge variant="outline">Request Quote</Badge>
+                                ) : option.priceAdjustment !== 0 && (
                                     <span className="text-sm text-muted-foreground">{option.priceAdjustment > 0 ? '+':''}{'EGP'} {option.priceAdjustment.toLocaleString()}</span>
                                 )}
                               </Label>
@@ -207,7 +273,9 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                               />
                                <Label htmlFor={`${group.name}-${option.name}`} className="flex-grow flex justify-between items-center cursor-pointer">
                                 <span>{option.name}</span>
-                                {option.priceAdjustment !== 0 && (
+                                {option.requestQuote ? (
+                                    <Badge variant="outline">Request Quote</Badge>
+                                ) : option.priceAdjustment !== 0 && (
                                     <span className="text-sm text-muted-foreground">{option.priceAdjustment > 0 ? '+':''}{'EGP'} {option.priceAdjustment.toLocaleString()}</span>
                                 )}
                               </Label>
@@ -223,10 +291,17 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
 
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="flex-1" onClick={handleAddToCart}>
-                <ShoppingCart className="mr-2" />
-                Add to Cart
-              </Button>
+               {needsQuote ? (
+                  <Button size="lg" className="flex-1" onClick={handleRequestQuote} disabled={isRequestingQuote}>
+                     {isRequestingQuote ? <Loader2 className="mr-2 animate-spin" /> : <FileQuestion className="mr-2" />}
+                     Request a Quote
+                  </Button>
+               ) : (
+                  <Button size="lg" className="flex-1" onClick={handleAddToCart}>
+                     <ShoppingCart className="mr-2" />
+                     Add to Cart
+                  </Button>
+               )}
             </div>
 
             <div>

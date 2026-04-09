@@ -10,8 +10,9 @@ import {
   updateDoc,
   Firestore,
   collection,
+  serverTimestamp,
 } from 'firebase/firestore';
-import type { Order, UserProfile, OrderWithUserData, UserWithId } from './types';
+import type { Order, UserProfile, OrderWithUserData, UserWithId, QuoteRequest, QuoteRequestWithUserData } from './types';
 
 // Helper function to get user profiles for a set of user IDs
 async function getUserProfiles(firestore: Firestore, userIds: string[]): Promise<Map<string, UserProfile>> {
@@ -96,4 +97,47 @@ export async function updateUserRole(
 ): Promise<void> {
     const userRef = doc(firestore, 'users', userId);
     await updateDoc(userRef, { role });
+}
+
+export async function getAllQuoteRequests(firestore: Firestore): Promise<QuoteRequestWithUserData[]> {
+  const quotesQuery = firestoreQuery(collection(firestore, 'quote_requests'), orderBy('createdAt', 'desc'));
+  const querySnapshot = await getDocs(quotesQuery);
+
+  const quotes = querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as QuoteRequest[];
+
+  const userIds = quotes.map(quote => quote.userId);
+  const userProfiles = await getUserProfiles(firestore, userIds);
+
+  const quotesWithUserData: QuoteRequestWithUserData[] = quotes.map(quote => {
+    const userProfile = userProfiles.get(quote.userId);
+    return {
+      ...quote,
+      user: {
+        id: quote.userId,
+        name: userProfile?.name || 'Unknown User',
+        email: userProfile?.email || 'N/A',
+        phoneNumber: userProfile?.phoneNumber || 'N/A',
+      }
+    };
+  });
+  
+  return quotesWithUserData;
+}
+
+export async function submitQuote(
+  firestore: Firestore,
+  quoteId: string,
+  price: number,
+  notes: string,
+): Promise<void> {
+  const quoteRef = doc(firestore, 'quote_requests', quoteId);
+  await updateDoc(quoteRef, {
+    status: 'Quoted',
+    quotedPrice: price,
+    adminNotes: notes,
+    quotedAt: serverTimestamp(),
+  });
 }

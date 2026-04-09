@@ -8,6 +8,7 @@ import {
   UserCircle,
   Menu,
   Package,
+  FileQuestion,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -109,6 +110,12 @@ export function Header() {
                     <Link href="/orders">
                       <Package className="mr-2 h-4 w-4" />
                       My Orders
+                    </Link>
+                  </DropdownMenuItem>
+                   <DropdownMenuItem asChild>
+                    <Link href="/quotes">
+                      <FileQuestion className="mr-2 h-4 w-4" />
+                      My Quotes
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />

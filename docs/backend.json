@@ -574,6 +574,66 @@
         "serviceType",
         "status"
       ]
+    },
+    "QuoteRequest": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "QuoteRequest",
+      "type": "object",
+      "description": "Represents a user's request for a price quote on a custom or configurable product.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/backend/entities/CartItem"
+          }
+        },
+        "userNotes": {
+          "type": "string"
+        },
+        "fileUrls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "Pending Review",
+            "Quoted",
+            "Accepted",
+            "Rejected",
+            "Ordered"
+          ]
+        },
+        "quotedPrice": {
+          "type": "number"
+        },
+        "adminNotes": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "quotedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "items",
+        "status",
+        "createdAt"
+      ]
     }
   },
   "auth": {
@@ -807,8 +867,24 @@
             }
           ]
         }
+      },
+      {
+        "path": "/quote_requests/{quoteRequestId}",
+        "definition": {
+          "entityName": "QuoteRequest",
+          "schema": {
+            "$ref": "#/backend/entities/QuoteRequest"
+          },
+          "description": "Top-level collection for all quote requests. Each request includes a 'userId' field (denormalized ownership) for security.",
+          "params": [
+            {
+              "name": "quoteRequestId",
+              "description": "Unique identifier for the quote request document."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore data structure for MicroChub is designed with a strong emphasis on Authorization Independence, debuggability, and support for QAPs (Queries as Policies), following the mandated design principles.\n\n**Authorization Independence (CRITICAL):**\nThis principle is achieved primarily through two strategies:\n1.  **Path-Based Ownership:** For truly private user data like `Addresses`, `WishlistItems`, and `CartItems`, entities are nested directly under the `/users/{userId}` path (e.g., `/users/{userId}/addresses/{addressId}`). This means the `{userId}` wildcard in the path directly corresponds to `request.auth.uid`, making authorization checks atomic (`request.auth.uid == userId`) without requiring any `get()` operations. This completely eliminates hierarchical authorization dependencies for these critical user-specific subcollections.\n2.  **Denormalization of Ownership Fields:** For collections that need to be accessible by a user *and* administrators, or subcollections whose security depends on a grandparent document, the `userId` (owner) is explicitly denormalized into the document itself. For example, `Order` documents in `/orders/{orderId}` contain a `userId` field. Similarly, `CustomServiceRequest` documents in `/custom_service_requests/{customServiceRequestId}` include a `userId`. Most crucially, `OrderItem` documents, which are subcollections of `Order` (`/orders/{orderId}/order_items/{orderItemId}`), also include the `userId` from their parent order. This denormalization allows rules on `OrderItem` to directly check `resource.data.userId == request.auth.uid` without ever needing to `get()` the parent `Order` document, thus maintaining Authorization Independence even for nested data and enabling atomic writes (e.g., creating an Order and its OrderItems in a single batch).\n\n**Clarity of Intent & Debuggability:**\nCollection names and wildcards are semantic and explicit (e.g., `products`, `custom_service_requests`, `{productId}`). Authorization fields are consistently named (`userId`). The structure itself makes the security posture clear: data under `/users/{userId}` is user-specific, global collections like `/products` are public, and `/orders` are shared but secured by denormalized `userId`.\n\n**DBAC (Database Access Control - No Custom Claims):**\nGlobal roles, specifically admin access, are managed via the `/roles_admin/{adminId}` collection. The existence of a document for a user's UID in this collection grants admin privileges. Firebase Security Rules can easily check `exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid))` for efficient and clear role-based authorization.\n\n**QAPs (Queries as Policies):**\n1.  **Public Collections:** Collections like `/categories`, `/products`, `/product_configuration_options`, and `/product_configuration_values` are designed for public read access. `list` operations here naturally serve as QAPs, allowing any user to read all public items.\n2.  **User-Owned Subcollections:** For paths like `/users/{userId}/addresses` or `/users/{userId}/wishlist_items`, rules will enforce that `request.auth.uid == userId` (from the path wildcard) for both `read` and `list` operations. This ensures that users can only query their own data, and the Firestore engine can optimize these queries as a policy.\n3.  **Shared Top-Level Collections with Denormalized `userId`:** For `Orders` and `CustomServiceRequests`, `list` operations for regular users are secured by requiring a query filter like `where('userId', '==', request.auth.uid)`. The security rules will explicitly allow `list` only if this filter is present and matches the authenticated user. Administrators, identified via the `/roles_admin` collection, will be granted `list` access to these top-level collections, enabling them to query all orders or requests without user-specific filters, as required by the admin dashboard.\n4.  **`OrderItem` Subcollection:** For `order_items` under `/orders/{orderId}/order_items/{orderItemId}`, `list` operations are implicitly secured by the parent `Order`'s rules and the denormalized `userId` within the `OrderItem` document itself. Users can only list items if they have access to the parent order, which is verified through the denormalized `userId` matching `request.auth.uid`.\n\n**Structural Segregation (Homogeneous Security Posture):**\nData with different access requirements is separated into distinct collections. For example, public product information is in `/products`, while private user data is under `/users/{userId}/`. This simplifies security rules significantly as each collection (or subcollection) inherently has a consistent security profile."
+    "reasoning": "The Firestore data structure for MicroChub is designed with a strong emphasis on Authorization Independence, debuggability, and support for QAPs (Queries as Policies), following the mandated design principles.\n\n**Authorization Independence (CRITICAL):**\nThis principle is achieved primarily through two strategies:\n1.  **Path-Based Ownership:** For truly private user data like `Addresses`, `WishlistItems`, and `CartItems`, entities are nested directly under the `/users/{userId}` path (e.g., `/users/{userId}/addresses/{addressId}`). This means the `{userId}` wildcard in the path directly corresponds to `request.auth.uid`, making authorization checks atomic (`request.auth.uid == userId`) without requiring any `get()` operations. This completely eliminates hierarchical authorization dependencies for these critical user-specific subcollections.\n2.  **Denormalization of Ownership Fields:** For collections that need to be accessible by a user *and* administrators, or subcollections whose security depends on a grandparent document, the `userId` (owner) is explicitly denormalized into the document itself. For example, `Order` documents in `/orders/{orderId}` contain a `userId` field. Similarly, `CustomServiceRequest` documents in `/custom_service_requests/{customServiceRequestId}` include a `userId`. Most crucially, `OrderItem` documents, which are subcollections of `Order` (`/orders/{orderId}/order_items/{orderItemId}`), also include the `userId` from their parent order. This denormalization allows rules on `OrderItem` to directly check `resource.data.userId == request.auth.uid` without ever needing to `get()` the parent `Order` document, thus maintaining Authorization Independence and enabling atomic writes (e.g., creating an Order and its OrderItems in a single batch).\n\n**Clarity of Intent & Debuggability:**\nCollection names and wildcards are semantic and explicit (e.g., `products`, `custom_service_requests`, `{productId}`). Authorization fields are consistently named (`userId`). The structure itself makes the security posture clear: data under `/users/{userId}` is user-specific, global collections like `/products` are public, and `/orders` are shared but secured by denormalized `userId`.\n\n**DBAC (Database Access Control - No Custom Claims):**\nGlobal roles, specifically admin access, are managed via the `/roles_admin/{adminId}` collection. The existence of a document for a user's UID in this collection grants admin privileges. Firebase Security Rules can easily check `exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid))` for efficient and clear role-based authorization.\n\n**QAPs (Queries as Policies):**\n1.  **Public Collections:** Collections like `/categories`, `/products`, `/product_configuration_options`, and `/product_configuration_values` are designed for public read access. `list` operations here naturally serve as QAPs, allowing any user to read all public items.\n2.  **User-Owned Subcollections:** For paths like `/users/{userId}/addresses` or `/users/{userId}/wishlist_items`, rules will enforce that `request.auth.uid == userId` (from the path wildcard) for both `read` and `list` operations. This ensures that users can only query their own data, and the Firestore engine can optimize these queries as a policy.\n3.  **Shared Top-Level Collections with Denormalized `userId`:** For `Orders` and `CustomServiceRequests`, `list` operations for regular users are secured by requiring a query filter like `where('userId', '==', request.auth.uid)`. The security rules will explicitly allow `list` only if this filter is present and matches the authenticated user. Administrators, identified via the `/roles_admin` collection, will be granted `list` access to these top-level collections, enabling them to query all orders or requests without user-specific filters, as required by the admin dashboard.\n4.  **`OrderItem` Subcollection:** For `order_items` under `/orders/{orderId}/order_items/{orderItemId}`, `list` operations are implicitly secured by the parent `Order`'s rules and the denormalized `userId` within the `OrderItem` document itself. Users can only list items if they have access to the parent order, which is verified through the denormalized `userId` matching `request.auth.uid`.\n\n**Structural Segregation (Homogeneous Security Posture):**\nData with different access requirements is separated into distinct collections. For example, public product information is in `/products`, while private user data is under `/users/{userId}/`. This simplifies security rules significantly as each collection (or subcollection) inherently has a consistent security profile."
   }
 }

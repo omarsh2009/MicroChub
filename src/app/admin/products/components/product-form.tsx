@@ -23,10 +23,12 @@ import { adminProductDescriptionGenerator } from '@/ai/flows/admin-product-descr
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const customizationOptionSchema = z.object({
   name: z.string().min(1, 'Option name is required.'),
   priceAdjustment: z.coerce.number().default(0),
+  requestQuote: z.boolean().default(false),
 });
 
 const customizationGroupSchema = z.object({
@@ -288,7 +290,7 @@ export function ProductForm({
                     variant="outline"
                     size="sm"
                     className="mt-4"
-                    onClick={() => append({ name: '', type: 'single', required: false, options: [{name: '', priceAdjustment: 0}] })}
+                    onClick={() => append({ name: '', type: 'single', required: false, options: [{name: '', priceAdjustment: 0, requestQuote: false}] })}
                 >
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add Customization Group
@@ -305,46 +307,66 @@ export function ProductForm({
 }
 
 function OptionFieldArray({ groupIndex }: { groupIndex: number }) {
-  const { control } = useFormContext();
+  const { control, watch } = useFormContext();
   const { fields, append, remove } = useFieldArray({
     control,
     name: `customizationGroups.${groupIndex}.options`
   });
 
+  const requestQuoteValues = watch(`customizationGroups.${groupIndex}.options`);
+
   return (
     <div className="space-y-2">
       <FormLabel>Options</FormLabel>
-      {fields.map((option, optionIndex) => (
-        <div key={option.id} className="flex items-end gap-2">
-          <FormField
-            control={control}
-            name={`customizationGroups.${groupIndex}.options.${optionIndex}.name`}
-            render={({ field }) => (
-              <FormItem className="flex-grow">
-                <FormControl><Input {...field} placeholder="Option Name" /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={control}
-            name={`customizationGroups.${groupIndex}.options.${optionIndex}.priceAdjustment`}
-            render={({ field }) => (
-              <FormItem>
-                <FormControl><Input type="number" {...field} placeholder="Price Adj." /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button variant="ghost" size="icon" onClick={() => remove(optionIndex)}><Trash2 className="h-4 w-4"/></Button>
-        </div>
-      ))}
+      {fields.map((option, optionIndex) => {
+        const isQuoteRequested = requestQuoteValues?.[optionIndex]?.requestQuote;
+        return (
+            <div key={option.id} className="flex items-end gap-2">
+            <FormField
+                control={control}
+                name={`customizationGroups.${groupIndex}.options.${optionIndex}.name`}
+                render={({ field }) => (
+                <FormItem className="flex-grow">
+                    <FormControl><Input {...field} placeholder="Option Name" /></FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+            <FormField
+                control={control}
+                name={`customizationGroups.${groupIndex}.options.${optionIndex}.priceAdjustment`}
+                render={({ field }) => (
+                <FormItem>
+                    <FormControl><Input type="number" {...field} placeholder="Price Adj." disabled={isQuoteRequested} /></FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+             <FormField
+                control={control}
+                name={`customizationGroups.${groupIndex}.options.${optionIndex}.requestQuote`}
+                render={({ field }) => (
+                    <FormItem className="flex flex-row items-center space-x-2 pb-2">
+                        <FormControl>
+                            <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            />
+                        </FormControl>
+                        <FormLabel className="text-sm font-normal">Quote?</FormLabel>
+                    </FormItem>
+                )}
+                />
+            <Button variant="ghost" size="icon" onClick={() => remove(optionIndex)}><Trash2 className="h-4 w-4"/></Button>
+            </div>
+        )
+      })}
       <Button
         type="button"
         variant="outline"
         size="sm"
         className="mt-2"
-        onClick={() => append({ name: '', priceAdjustment: 0 })}
+        onClick={() => append({ name: '', priceAdjustment: 0, requestQuote: false })}
       >
         <PlusCircle className="mr-2 h-4 w-4" />
         Add Option
