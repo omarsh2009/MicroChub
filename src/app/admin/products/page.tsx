@@ -1,5 +1,10 @@
 import { products } from "@/lib/data";
-import { ProductClientPage } from "./client";
+import dynamic from 'next/dynamic';
+
+const ProductClientPage = dynamic(
+  () => import('./client').then(mod => mod.ProductClientPage), 
+  { ssr: false }
+);
 
 export default function AdminProductsPage() {
   return <ProductClientPage products={products} />;
