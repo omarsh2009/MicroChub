@@ -10,6 +10,8 @@ interface OrderPayload {
   notes?: string;
   paymentProofFile: File;
   phoneNumber: string;
+  hasRestrictedItem: boolean;
+  legalAgreementFile?: File;
 }
 
 export async function createOrder(
@@ -17,15 +19,28 @@ export async function createOrder(
   storage: FirebaseStorage,
   payload: OrderPayload
 ): Promise<string> {
-  const { userId, cart, totalPrice, notes, paymentProofFile, phoneNumber } = payload;
+  const { userId, cart, totalPrice, notes, paymentProofFile, phoneNumber, hasRestrictedItem, legalAgreementFile } = payload;
 
   // 1. Upload payment proof to storage
-  const filePath = `payment-proofs/${userId}/${Date.now()}-${paymentProofFile.name}`;
-  const storageRef = ref(storage, filePath);
-  const uploadResult = await uploadBytes(storageRef, paymentProofFile);
-  const paymentProofUrl = await getDownloadURL(uploadResult.ref);
+  const paymentProofPath = `payment-proofs/${userId}/${Date.now()}-${paymentProofFile.name}`;
+  const paymentStorageRef = ref(storage, paymentProofPath);
+  const paymentUploadResult = await uploadBytes(paymentStorageRef, paymentProofFile);
+  const paymentProofUrl = await getDownloadURL(paymentUploadResult.ref);
 
-  // 2. Create order document in Firestore's top-level 'orders' collection
+  let legalAgreementUrl: string | undefined = undefined;
+  let requiresLegalApproval = false;
+
+  // 2. Upload legal agreement if it exists
+  if (hasRestrictedItem && legalAgreementFile) {
+    const legalAgreementPath = `legal-agreements/${userId}/${Date.now()}-${legalAgreementFile.name}`;
+    const legalStorageRef = ref(storage, legalAgreementPath);
+    const legalUploadResult = await uploadBytes(legalStorageRef, legalAgreementFile);
+    legalAgreementUrl = await getDownloadURL(legalUploadResult.ref);
+    requiresLegalApproval = true;
+  }
+
+
+  // 3. Create order document in Firestore's top-level 'orders' collection
   const ordersCollectionRef = collection(firestore, 'orders');
   const newOrderDoc = await addDoc(ordersCollectionRef, {
     userId,
@@ -33,11 +48,14 @@ export async function createOrder(
     totalPrice,
     notes: notes || '',
     paymentProofUrl,
+    legalAgreementUrl,
+    requiresLegalApproval,
+    legalAgreementApproved: false, // Default to not approved
     status: 'Pending Payment Proof',
     createdAt: serverTimestamp(),
   });
   
-  // 3. Update user's phone number if it has changed
+  // 4. Update user's phone number if it has changed
   const userDocRef = doc(firestore, 'users', userId);
   await updateDoc(userDocRef, { phoneNumber });
 

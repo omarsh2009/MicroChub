@@ -20,7 +20,8 @@ import {
   TableCell,
   TableRow,
 } from "@/components/ui/table";
-import { CheckCircle, ShoppingCart, Wrench } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CheckCircle, ShoppingCart, Wrench, AlertTriangle } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -136,6 +137,18 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
               <h1 className="font-headline text-4xl lg:text-5xl font-bold mt-2">{product.name}</h1>
               <p className="text-muted-foreground text-lg mt-4">{product.description}</p>
             </div>
+            
+            {product.isRestricted && (
+                <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Restricted Product</AlertTitle>
+                    <AlertDescription>
+                        This product may be sensitive or regulated. You must complete and upload a signed legal agreement during checkout before purchase.
+                        {/* This button is a placeholder for now */}
+                        <Button variant="link" className="p-0 h-auto ml-1 text-inherit hover:underline">Download Agreement</Button>
+                    </AlertDescription>
+                </Alert>
+            )}
 
             <div className="text-4xl font-bold">
               EGP {calculatedPrice.toLocaleString()}

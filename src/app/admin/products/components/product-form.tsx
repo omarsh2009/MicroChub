@@ -42,6 +42,7 @@ const formSchema = z.object({
   price: z.coerce.number().positive(),
   technicalSpecs: z.string().min(10, { message: 'Please provide some technical specs.' }),
   description: z.string().optional(),
+  isRestricted: z.boolean().optional(),
   customizationGroups: z.array(customizationGroupSchema).optional(),
 });
 
@@ -62,6 +63,7 @@ export function ProductForm({
       price: product?.price || 0,
       technicalSpecs: product ? Object.entries(product.specs).map(([k, v]) => `${k}: ${v}`).join('\n') : '',
       description: product?.description || '',
+      isRestricted: product?.isRestricted || false,
       customizationGroups: product?.customizationGroups || [],
     },
   });
@@ -197,6 +199,30 @@ export function ProductForm({
             </FormItem>
           )}
         />
+
+        <FormField
+          control={form.control}
+          name="isRestricted"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">
+                  Restricted Product
+                </FormLabel>
+                <FormDescription>
+                  Requires user to upload a signed legal agreement at checkout.
+                </FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
 
         <Card>
             <CardHeader>

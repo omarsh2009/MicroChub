@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/hooks/use-cart';
@@ -26,6 +26,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, UploadCloud } from 'lucide-react';
 import { createOrder } from '@/lib/orders';
+import { products } from '@/lib/data';
 
 const formSchema = z.object({
   phoneNumber: z.string().min(10, 'Please enter a valid phone number.'),
@@ -41,6 +42,7 @@ const formSchema = z.object({
       (files) => ['image/jpeg', 'image/png', 'image/gif'].includes(files?.[0]?.type),
       'Only .jpg, .png, and .gif formats are supported.'
     ),
+    legalAgreement: z.custom<FileList>().optional(),
 });
 
 type CheckoutFormValues = z.infer<typeof formSchema>;
@@ -55,8 +57,28 @@ export default function CheckoutPage() {
 
   const [isLoading, setIsLoading] = useState(false);
 
+  const hasRestrictedItem = useMemo(() => {
+    return cart.some(item => {
+      const product = products.find(p => p.id === item.productId);
+      return product?.isRestricted;
+    });
+  }, [cart]);
+
+  const dynamicFormSchema = useMemo(() => {
+    if (hasRestrictedItem) {
+      return formSchema.extend({
+        legalAgreement: z
+          .custom<FileList>()
+          .refine((files) => files?.length === 1, 'Signed legal agreement is required.')
+          .refine((files) => files?.[0]?.size <= 5 * 1024 * 1024, `Max file size is 5MB.`)
+      });
+    }
+    return formSchema;
+  }, [hasRestrictedItem]);
+
+
   const form = useForm<CheckoutFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(dynamicFormSchema),
     defaultValues: {
       phoneNumber: '',
       notes: '',
@@ -94,6 +116,8 @@ export default function CheckoutPage() {
             notes: values.notes,
             paymentProofFile: values.paymentProof[0],
             phoneNumber: values.phoneNumber,
+            hasRestrictedItem,
+            legalAgreementFile: values.legalAgreement?.[0],
         });
 
         toast({ title: 'Order Placed!', description: 'Your order has been received and is pending review.' });
@@ -170,7 +194,7 @@ export default function CheckoutPage() {
                             name="paymentProof"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Payment Proof</FormLabel>
+                                    <FormLabel>Payment Proof Screenshot</FormLabel>
                                     <FormControl>
                                         <div className="flex items-center justify-center w-full">
                                             <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted">
@@ -189,6 +213,40 @@ export default function CheckoutPage() {
                         />
                     </CardContent>
                 </Card>
+
+                {hasRestrictedItem && (
+                    <Card>
+                        <CardHeader><CardTitle>Legal Documents</CardTitle></CardHeader>
+                        <CardContent>
+                            <FormField
+                                control={form.control}
+                                name="legalAgreement"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Signed Legal Agreement</FormLabel>
+                                        <FormDescription>
+                                            Please upload the signed legal agreement for the restricted item(s) in your cart.
+                                        </FormDescription>
+                                        <FormControl>
+                                            <div className="flex items-center justify-center w-full">
+                                                <label htmlFor="legal-dropzone-file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted">
+                                                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                                        <UploadCloud className="w-8 h-8 mb-2 text-muted-foreground" />
+                                                        <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                                                        <p className="text-xs text-muted-foreground">{field.value?.[0]?.name || 'PDF, PNG, JPG (MAX. 5MB)'}</p>
+                                                    </div>
+                                                    <Input id="legal-dropzone-file" type="file" className="hidden" onChange={(e) => field.onChange(e.target.files)} />
+                                                </label>
+                                            </div> 
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </CardContent>
+                    </Card>
+                )}
+
                 <Card>
                     <CardHeader><CardTitle>Additional Notes</CardTitle></CardHeader>
                     <CardContent>

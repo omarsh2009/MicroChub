@@ -95,6 +95,7 @@ export const products: Product[] = [
     },
     useCases: ["Wi-Fi penetration testing", "Network analysis", "Educational tool"],
     featured: true,
+    isRestricted: true,
   },
   {
     id: "prod-003",

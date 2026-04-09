@@ -13,11 +13,11 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { updateOrderStatus } from '@/lib/admin';
+import { updateOrderStatus, approveLegalAgreement } from '@/lib/admin';
 import { useFirestore } from '@/firebase';
 import type { OrderWithUserData, Order } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ExternalLink } from 'lucide-react';
+import { Loader2, ExternalLink, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface OrderDetailsDialogProps {
@@ -32,6 +32,7 @@ export function OrderDetailsDialog({ isOpen, onClose, order, onOrderUpdate }: Or
     const { toast } = useToast();
     const [newStatus, setNewStatus] = useState<Order['status']>(order.status);
     const [isSaving, setIsSaving] = useState(false);
+    const [isApprovingLegal, setIsApprovingLegal] = useState(false);
 
     const orderStatuses: Order['status'][] = ['Pending Payment Proof', 'Under Review', 'Confirmed', 'In Production', 'Ready', 'Completed/Delivered'];
     
@@ -40,7 +41,7 @@ export function OrderDetailsDialog({ isOpen, onClose, order, onOrderUpdate }: Or
     };
     
     const handleSaveChanges = async () => {
-        if (!firestore) return;
+        if (!firestore || newStatus === order.status) return;
         setIsSaving(true);
         try {
             await updateOrderStatus(firestore, order.id, newStatus);
@@ -61,6 +62,28 @@ export function OrderDetailsDialog({ isOpen, onClose, order, onOrderUpdate }: Or
             setIsSaving(false);
         }
     };
+
+     const handleApproveLegal = async () => {
+        if (!firestore) return;
+        setIsApprovingLegal(true);
+        try {
+            await approveLegalAgreement(firestore, order.id);
+            toast({
+                title: 'Legal Agreement Approved',
+                description: `Agreement for order #${order.id.slice(0, 7)} has been approved.`,
+            });
+            onOrderUpdate({ ...order, legalAgreementApproved: true });
+        } catch (error: any) {
+            console.error('Failed to approve legal agreement:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Approval Failed',
+                description: 'Could not approve legal agreement. Please try again.',
+            });
+        } finally {
+            setIsApprovingLegal(false);
+        }
+    };
     
     const renderConfiguration = (config: Record<string, string | string[]>) => {
         const entries = Object.entries(config);
@@ -73,6 +96,8 @@ export function OrderDetailsDialog({ isOpen, onClose, order, onOrderUpdate }: Or
             </div>
         ));
     };
+
+    const canBeConfirmed = !order.requiresLegalApproval || order.legalAgreementApproved;
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -123,13 +148,41 @@ export function OrderDetailsDialog({ isOpen, onClose, order, onOrderUpdate }: Or
                          </Card>
                          <Card>
                              <CardHeader><CardTitle>Files</CardTitle></CardHeader>
-                             <CardContent>
+                             <CardContent className="space-y-2">
                                  <a href={order.paymentProofUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm text-primary hover:underline">
                                      Payment Proof <ExternalLink className="w-4 h-4 ml-2" />
                                  </a>
-                                 {/* Placeholder for legal document */}
+                                 {order.legalAgreementUrl && (
+                                     <a href={order.legalAgreementUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm text-primary hover:underline">
+                                        Legal Agreement <ExternalLink className="w-4 h-4 ml-2" />
+                                     </a>
+                                 )}
                              </CardContent>
                          </Card>
+                         {order.requiresLegalApproval && (
+                            <Card>
+                                <CardHeader><CardTitle>Legal Approval</CardTitle></CardHeader>
+                                <CardContent>
+                                    {order.legalAgreementApproved ? (
+                                        <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">
+                                            <ShieldCheck className="mr-2 h-4 w-4" />
+                                            Approved
+                                        </Badge>
+                                    ) : (
+                                        <div className="flex flex-col gap-2">
+                                            <div className="flex items-center text-destructive">
+                                                 <ShieldAlert className="mr-2 h-4 w-4" />
+                                                 <span className="text-sm font-medium">Pending Approval</span>
+                                            </div>
+                                            <Button size="sm" onClick={handleApproveLegal} disabled={isApprovingLegal}>
+                                                {isApprovingLegal && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                Approve Agreement
+                                            </Button>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                         )}
                          <Card>
                              <CardHeader><CardTitle>Order Status</CardTitle></CardHeader>
                              <CardContent>
@@ -139,10 +192,19 @@ export function OrderDetailsDialog({ isOpen, onClose, order, onOrderUpdate }: Or
                                      </SelectTrigger>
                                      <SelectContent>
                                          {orderStatuses.map(status => (
-                                             <SelectItem key={status} value={status}>{status}</SelectItem>
+                                             <SelectItem 
+                                                key={status} 
+                                                value={status}
+                                                disabled={status === 'Confirmed' && !canBeConfirmed}
+                                              >
+                                                {status}
+                                             </SelectItem>
                                          ))}
                                      </SelectContent>
                                  </Select>
+                                 {!canBeConfirmed && (
+                                     <p className="text-xs text-destructive mt-2">Legal agreement must be approved before confirming.</p>
+                                 )}
                              </CardContent>
                          </Card>
                     </div>

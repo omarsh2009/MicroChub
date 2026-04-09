@@ -27,6 +27,7 @@ export type Product = {
   specs: Record<string, string>;
   useCases: string[];
   featured?: boolean;
+  isRestricted?: boolean;
   customizationGroups?: CustomizationGroup[];
 };
 
@@ -64,6 +65,8 @@ export type Order = {
   status: 'Pending Payment Proof' | 'Under Review' | 'Confirmed' | 'In Production' | 'Ready' | 'Completed/Delivered';
   paymentProofUrl: string;
   legalAgreementUrl?: string;
+  requiresLegalApproval?: boolean;
+  legalAgreementApproved?: boolean;
   notes?: string;
   createdAt: {
     seconds: number;

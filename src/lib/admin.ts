@@ -70,6 +70,15 @@ export async function updateOrderStatus(
     await updateDoc(orderRef, { status });
 }
 
+export async function approveLegalAgreement(
+    firestore: Firestore,
+    orderId: string
+): Promise<void> {
+    const orderRef = doc(firestore, 'orders', orderId);
+    await updateDoc(orderRef, { legalAgreementApproved: true });
+}
+
+
 export async function getAllUsers(firestore: Firestore): Promise<UserWithId[]> {
     const usersQuery = firestoreQuery(collection(firestore, 'users'));
     const querySnapshot = await getDocs(usersQuery);
