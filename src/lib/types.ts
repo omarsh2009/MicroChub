@@ -31,6 +31,7 @@ export type Product = {
 };
 
 export type UserProfile = {
+  id: string;
   name: string;
   email: string;
   phoneNumber: string;
