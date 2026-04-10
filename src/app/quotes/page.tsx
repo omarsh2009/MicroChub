@@ -1,9 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useUser, useFirestore, useCollection } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy, doc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -24,7 +23,7 @@ export default function QuotesPage() {
   const { toast } = useToast();
   const { addToCart } = useCart();
 
-  const quotesQuery = useMemo(() => {
+  const quotesQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return query(collection(firestore, 'quote_requests'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
   }, [user, firestore]);

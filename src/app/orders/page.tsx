@@ -1,8 +1,7 @@
 'use client';
 
-import { useMemo } from 'react';
 import Link from 'next/link';
-import { useUser, useFirestore, useCollection } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +15,7 @@ export default function OrdersPage() {
   const user = useUser();
   const firestore = useFirestore();
 
-  const ordersQuery = useMemo(() => {
+  const ordersQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return query(collection(firestore, 'orders'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
   }, [user, firestore]);
