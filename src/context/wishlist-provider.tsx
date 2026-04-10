@@ -12,6 +12,7 @@ import { collection, addDoc, serverTimestamp, query, where, getDocs, deleteDoc, 
 export interface WishlistItem {
     id: string;
     productId: string;
+    userId: string;
     addedAt: {
         seconds: number;
         nanoseconds: number;
@@ -41,7 +42,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const { data: wishlist, loading } = useCollection<WishlistItem>(wishlistCollectionRef);
 
   const addToWishlist = useCallback(async (productId: string) => {
-    if (!wishlistCollectionRef) {
+    if (!wishlistCollectionRef || !user) {
         toast({ variant: 'destructive', title: 'You must be logged in.' });
         return;
     }
@@ -58,6 +59,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     try {
         await addDoc(wishlistCollectionRef, {
             productId,
+            userId: user.uid,
             addedAt: serverTimestamp()
         });
         toast({ title: 'Added to Wishlist', description: 'The item has been added to your wishlist.' });
@@ -65,7 +67,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         console.error("Error adding to wishlist:", error);
         toast({ variant: 'destructive', title: 'Error', description: 'Could not add item to wishlist.' });
     }
-  }, [wishlistCollectionRef, toast]);
+  }, [wishlistCollectionRef, user, toast]);
 
   const removeFromWishlist = useCallback(async (productId: string) => {
      if (!wishlistCollectionRef) {
