@@ -42,14 +42,20 @@ export async function createQuoteRequest(
 
 
   const quotesCollectionRef = collection(firestore, 'quote_requests');
-  const newQuoteDoc = await addDoc(quotesCollectionRef, {
+  
+  const quoteData: any = {
     userId,
-    items: [quoteItem], // Store as an array to be consistent with Order `items`
+    items: [quoteItem],
     userNotes: userNotes || '',
-    fileUrl,
     status: 'Pending Review',
     createdAt: serverTimestamp(),
-  });
+  };
+
+  if (fileUrl) {
+    quoteData.fileUrl = fileUrl;
+  }
+
+  const newQuoteDoc = await addDoc(quotesCollectionRef, quoteData);
 
   return newQuoteDoc.id;
 }

@@ -43,19 +43,25 @@ export async function createOrder(
 
   // 3. Create order document in Firestore's top-level 'orders' collection
   const ordersCollectionRef = collection(firestore, 'orders');
-  const newOrderDoc = await addDoc(ordersCollectionRef, {
+
+  const orderData: any = {
     userId,
     items: cart,
     totalPrice,
     notes: notes || '',
     paymentProofUrl,
     paymentMethod,
-    legalAgreementUrl,
     requiresLegalApproval,
-    legalAgreementApproved: false, // Default to not approved
+    legalAgreementApproved: false,
     status: 'Pending Payment Proof',
     createdAt: serverTimestamp(),
-  });
+  };
+
+  if (legalAgreementUrl) {
+    orderData.legalAgreementUrl = legalAgreementUrl;
+  }
+  
+  const newOrderDoc = await addDoc(ordersCollectionRef, orderData);
   
   // 4. Update user's phone number if it has changed
   const userDocRef = doc(firestore, 'users', userId);
