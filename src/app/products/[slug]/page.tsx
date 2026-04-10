@@ -13,7 +13,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -30,6 +30,8 @@ import { useCart } from '@/hooks/use-cart';
 import { useUser, useFirestore, useStorage } from "@/firebase";
 import { createQuoteRequest } from "@/lib/quotes";
 import { useToast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 
 export default function ProductPage({ params }: { params: { slug: string } }) {
   const router = useRouter();
@@ -43,6 +45,11 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string | string[]>>({});
   const [quantity, setQuantity] = useState(1);
   const [isRequestingQuote, setIsRequestingQuote] = useState(false);
+  
+  const [customNotes, setCustomNotes] = useState('');
+  const [customFile, setCustomFile] = useState<File | null>(null);
+  const [isRequestingCustomQuote, setIsRequestingCustomQuote] = useState(false);
+
 
   if (!product) {
     notFound();
@@ -162,6 +169,46 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
       }
   };
 
+  const handleCustomQuoteRequest = async () => {
+    if (!user) {
+      toast({ variant: 'destructive', title: 'Please log in', description: 'You need to be logged in to request a quote.' });
+      router.push(`/login?redirect=/products/${product.slug}`);
+      return;
+    }
+    if (!firestore || !storage) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Services not available. Please try again.' });
+      return;
+    }
+    if (!customNotes) {
+      toast({ variant: 'destructive', title: 'Description needed', description: 'Please describe your custom modification.' });
+      return;
+    }
+
+    setIsRequestingCustomQuote(true);
+    try {
+      await createQuoteRequest(firestore, storage, {
+        userId: user.uid,
+        product,
+        quantity: 1, // Default to 1 for custom requests
+        configuration: { Customization: 'See Notes' },
+        basePrice: product.price,
+        userNotes: customNotes,
+        file: customFile || undefined,
+      });
+      toast({
+        title: 'Custom Quote Request Sent!',
+        description: "We've received your request and will get back to you shortly.",
+      });
+      router.push('/quotes');
+    } catch (error: any) {
+      console.error("Failed to create custom quote request:", error);
+      toast({ variant: 'destructive', title: 'Request Failed', description: error.message || 'Could not send your quote request.' });
+    } finally {
+      setIsRequestingCustomQuote(false);
+    }
+  };
+
+
   const priceSuffix = needsQuote ? '+' : '';
 
   return (
@@ -220,7 +267,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                     <AlertDescription>
                         This product may be sensitive or regulated. You must complete and upload a signed legal agreement during checkout before purchase.
                         <Button variant="link" asChild className="p-0 h-auto ml-1 text-inherit hover:underline">
-                            <a href="/legal-agreement-template.pdf" download>Download Agreement</a>
+                            <a href="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" target="_blank" rel="noopener noreferrer">Download Agreement</a>
                         </Button>
                     </AlertDescription>
                 </Alert>
@@ -303,6 +350,40 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                   </Button>
                )}
             </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-2xl flex items-center gap-2">
+                        <Wrench className="w-6 h-6 text-primary"/>
+                        Request a Custom Modification
+                    </CardTitle>
+                    <CardDescription>
+                        Need something special? Describe your desired changes, and we'll send you a custom quote.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid w-full gap-1.5">
+                        <Label htmlFor="custom-notes">Modification Details</Label>
+                        <Textarea
+                            id="custom-notes"
+                            placeholder="e.g., 'I need this with a different MCU', or 'Can you add a GPS module?'"
+                            value={customNotes}
+                            onChange={(e) => setCustomNotes(e.target.value)}
+                        />
+                    </div>
+                    <div className="grid w-full max-w-sm items-center gap-1.5">
+                        <Label htmlFor="custom-file">Reference File (Optional)</Label>
+                        <Input id="custom-file" type="file" onChange={(e) => setCustomFile(e.target.files ? e.target.files[0] : null)} />
+                    </div>
+                </CardContent>
+                <CardFooter>
+                    <Button onClick={handleCustomQuoteRequest} disabled={isRequestingCustomQuote} className="w-full">
+                        {isRequestingCustomQuote ? <Loader2 className="mr-2 animate-spin" /> : <FileQuestion className="mr-2" />}
+                        Request Quote for Customization
+                    </Button>
+                </CardFooter>
+            </Card>
+
 
             <div>
               <h3 className="font-headline text-xl font-bold mb-4">Specifications</h3>
