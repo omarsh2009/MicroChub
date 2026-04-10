@@ -254,11 +254,7 @@ service cloud.firestore {
      * @principle Denormalized ownership (`userId` field) for shared data access.
      */
     match /orders/{orderId} {
-      allow get: if isOwner(resource.data.userId) || isAdmin();
-      // FIX: Changed request.query.get('userId') to rely on resource.data.userId for list,
-      // ensuring that any document returned by a list query must satisfy the ownership condition
-      // for a non-admin, implicitly requiring a userId filter for users.
-      allow list: if isOwner(resource.data.userId) || isAdmin();
+      allow read: if isOwner(resource.data.userId) || isAdmin();
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update: if (isExistingOwner(resource.data.userId) || (isAdmin() && resource != null)) && isUpdatingOwnChildDoc();
       // Deleting orders is restricted to admins to preserve purchase history.
@@ -292,11 +288,7 @@ service cloud.firestore {
      * @principle Denormalized ownership (`userId` field) for shared data access.
      */
     match /custom_service_requests/{customServiceRequestId} {
-      allow get: if isOwner(resource.data.userId) || isAdmin();
-      // FIX: Proactively changed request.query.get('userId') to rely on resource.data.userId for list,
-      // consistent with the fix for /orders, ensuring any document returned by a list query
-      // must satisfy the ownership condition for a non-admin.
-      allow list: if isOwner(resource.data.userId) || isAdmin();
+      allow read: if isOwner(resource.data.userId) || isAdmin();
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update: if (isExistingOwner(resource.data.userId) || (isAdmin() && resource != null)) && isUpdatingOwnChildDoc();
       allow delete: if isExistingOwner(resource.data.userId) || (isAdmin() && resource != null);
@@ -308,8 +300,7 @@ service cloud.firestore {
      * @principle Denormalized ownership (`userId` field) for shared data access.
      */
     match /quote_requests/{quoteRequestId} {
-      allow get: if isOwner(resource.data.userId) || isAdmin();
-      allow list: if isOwner(resource.data.userId) || isAdmin();
+      allow read: if isOwner(resource.data.userId) || isAdmin();
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update: if (isOwner(resource.data.userId) || (isAdmin() && resource != null));
       allow delete: if isOwner(resource.data.userId) || (isAdmin() && resource != null);
