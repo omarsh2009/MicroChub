@@ -9,6 +9,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import type { CartItem, Product, SelectedConfiguration } from '@/lib/types';
 import { placeholderImagesById } from '@/lib/data';
+import { useUser } from '@/firebase';
 
 interface CartContextType {
   cart: CartItem[];
@@ -27,26 +28,73 @@ interface CartContextType {
 
 export const CartContext = createContext<CartContextType | null>(null);
 
+const GUEST_CART_KEY = 'microchub-cart-guest';
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const { toast } = useToast();
+  const user = useUser();
 
+  const cartKey = useMemo(() => {
+    return user ? `microchub-cart-${user.uid}` : GUEST_CART_KEY;
+  }, [user]);
+
+  // Effect to load cart from localStorage when user/cartKey changes
   useEffect(() => {
     try {
-      const storedCart = localStorage.getItem('microchub-cart');
+      const storedCart = localStorage.getItem(cartKey);
       if (storedCart) {
         setCart(JSON.parse(storedCart));
+      } else {
+        setCart([]); // Clear cart if no stored cart found for the current key
       }
     } catch (e) {
       console.error('Failed to load cart from localStorage', e);
       setCart([]);
     }
-  }, []);
+  }, [cartKey]);
+
+  // Effect to handle merging guest cart to user cart on login
+  useEffect(() => {
+    if (user) {
+      try {
+        const guestCartJSON = localStorage.getItem(GUEST_CART_KEY);
+        if (guestCartJSON) {
+          const guestCart: CartItem[] = JSON.parse(guestCartJSON);
+          if (guestCart.length > 0) {
+            const userCartJSON = localStorage.getItem(cartKey);
+            const userCart: CartItem[] = userCartJSON ? JSON.parse(userCartJSON) : [];
+            
+            // Simple merge: add all guest items to user cart, handling duplicates
+            const mergedCart = [...userCart];
+            guestCart.forEach(guestItem => {
+              const existingItemIndex = mergedCart.findIndex(userItem => userItem.id === guestItem.id);
+              if (existingItemIndex !== -1) {
+                // Item exists, update quantity
+                mergedCart[existingItemIndex].quantity += guestItem.quantity;
+              } else {
+                // New item, add to cart
+                mergedCart.push(guestItem);
+              }
+            });
+
+            setCart(mergedCart);
+            localStorage.setItem(cartKey, JSON.stringify(mergedCart));
+            localStorage.removeItem(GUEST_CART_KEY);
+            toast({ title: 'Cart Merged', description: 'Your guest cart has been merged with your account.' });
+          }
+        }
+      } catch (e) {
+        console.error('Failed to merge carts on login', e);
+      }
+    }
+  }, [user, cartKey, toast]);
+
 
   const updateCart = (newCart: CartItem[]) => {
     setCart(newCart);
     try {
-      localStorage.setItem('microchub-cart', JSON.stringify(newCart));
+      localStorage.setItem(cartKey, JSON.stringify(newCart));
     } catch (e) {
       console.error('Failed to save cart to localStorage', e);
     }
@@ -69,14 +117,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       );
       const cartItemId = `${product.id}-${btoa(configString)}`;
 
-      const existingItem = cart.find((item) => item.id === cartItemId);
+      const currentCart = JSON.parse(localStorage.getItem(cartKey) || '[]') as CartItem[];
+      const existingItem = currentCart.find((item) => item.id === cartItemId);
+      
       const primaryImageId = product.images[0];
       const placeholderImage = placeholderImagesById[primaryImageId];
 
       let newCart: CartItem[];
 
       if (existingItem) {
-        newCart = cart.map((item) =>
+        newCart = currentCart.map((item) =>
           item.id === cartItemId
             ? { ...item, quantity: item.quantity + quantity }
             : item
@@ -92,7 +142,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           price, // This is the price per unit
           configuration,
         };
-        newCart = [...cart, newItem];
+        newCart = [...currentCart, newItem];
       }
 
       updateCart(newCart);
@@ -101,42 +151,44 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         description: `${quantity} x ${product.name} was added.`,
       });
     },
-    [cart, toast]
+    [cartKey, toast]
   );
 
   const removeFromCart = useCallback((itemId: string) => {
-    const newCart = cart.filter((item) => item.id !== itemId);
+    const currentCart = JSON.parse(localStorage.getItem(cartKey) || '[]') as CartItem[];
+    const newCart = currentCart.filter((item) => item.id !== itemId);
     updateCart(newCart);
     toast({
       variant: 'default',
       title: 'Item Removed',
       description: 'The item has been removed from your cart.',
     });
-  }, [cart, toast]);
+  }, [cartKey, toast]);
 
   const updateItemQuantity = useCallback(
     (itemId: string, newQuantity: number) => {
+      const currentCart = JSON.parse(localStorage.getItem(cartKey) || '[]') as CartItem[];
       let newCart;
       if (newQuantity < 1) {
-        newCart = cart.filter((item) => item.id !== itemId);
+        newCart = currentCart.filter((item) => item.id !== itemId);
          toast({
           variant: 'default',
           title: 'Item Removed',
           description: 'The item has been removed from your cart.',
         });
       } else {
-        newCart = cart.map((item) =>
+        newCart = currentCart.map((item) =>
           item.id === itemId ? { ...item, quantity: newQuantity } : item
         );
       }
       updateCart(newCart);
     },
-    [cart, toast]
+    [cartKey, toast]
   );
   
   const clearCart = useCallback(() => {
     updateCart([]);
-  }, []);
+  }, [cartKey]);
 
   const itemCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
   const totalPrice = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);

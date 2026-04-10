@@ -9,6 +9,7 @@ import {
   Menu,
   Package,
   FileQuestion,
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,6 +55,8 @@ export function Header() {
     }
   };
 
+  const isAdmin = user?.profile?.role === 'admin' || user?.profile?.role === 'super_admin';
+
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -76,8 +79,10 @@ export function Header() {
         </nav>
 
         <div className="flex flex-1 items-center justify-end gap-2">
-          <Button variant="ghost" size="icon" aria-label="Wishlist">
-            <Heart className="h-5 w-5" />
+          <Button asChild variant="ghost" size="icon" aria-label="Wishlist">
+            <Link href="/wishlist">
+              <Heart className="h-5 w-5" />
+            </Link>
           </Button>
           <Button asChild variant="ghost" size="icon" aria-label="Cart" className="relative">
             <Link href="/cart">
@@ -119,9 +124,14 @@ export function Header() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/admin">Admin</Link>
-                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin">
+                        <Shield className="mr-2 h-4 w-4" />
+                        Admin
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
                 </>
               ) : (

@@ -21,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle, ShoppingCart, Wrench, AlertTriangle, Clock, FileQuestion, Loader2 } from "lucide-react";
+import { CheckCircle, ShoppingCart, Wrench, AlertTriangle, Clock, FileQuestion, Loader2, Heart } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -32,6 +32,8 @@ import { createQuoteRequest } from "@/lib/quotes";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { useWishlist } from "@/hooks/use-wishlist";
+import { cn } from "@/lib/utils";
 
 export default function ProductPage({ params }: { params: { slug: string } }) {
   const router = useRouter();
@@ -41,6 +43,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   const user = useUser();
   const firestore = useFirestore();
   const storage = useStorage();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string | string[]>>({});
   const [quantity, setQuantity] = useState(1);
@@ -54,6 +57,8 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   if (!product) {
     notFound();
   }
+  
+  const inWishlist = isInWishlist(product.id);
 
   const productImages = product.images.map(id => placeholderImagesById[id]).filter(Boolean);
 
@@ -208,6 +213,19 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
     }
   };
 
+  const handleWishlistToggle = () => {
+    if (!user) {
+      toast({ variant: 'destructive', title: 'Please log in', description: 'You need to be logged in to manage your wishlist.' });
+      router.push(`/login?redirect=/products/${product.slug}`);
+      return;
+    }
+    if (inWishlist) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(product.id);
+    }
+  };
+
 
   const priceSuffix = needsQuote ? '+' : '';
 
@@ -267,7 +285,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                     <AlertDescription>
                         This product may be sensitive or regulated. You must complete and upload a signed legal agreement during checkout before purchase.
                         <Button variant="link" asChild className="p-0 h-auto ml-1 text-inherit hover:underline">
-                            <a href="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" target="_blank" rel="noopener noreferrer">Download Agreement</a>
+                            <a href="/MicroChub-Restricted-Item-Agreement.pdf" target="_blank" rel="noopener noreferrer" download>Download Agreement</a>
                         </Button>
                     </AlertDescription>
                 </Alert>
@@ -349,6 +367,10 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                      Add to Cart
                   </Button>
                )}
+               <Button size="lg" variant="outline" onClick={handleWishlistToggle} className="w-full sm:w-auto">
+                    <Heart className={cn("mr-2", inWishlist && "fill-current text-red-500")} />
+                    {inWishlist ? 'In Wishlist' : 'Add to Wishlist'}
+                </Button>
             </div>
 
             <Card>

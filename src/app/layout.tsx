@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { MainLayout } from "@/components/main-layout";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
 import { CartProvider } from "@/context/cart-provider";
+import { WishlistProvider } from "@/context/wishlist-provider";
 
 export const metadata: Metadata = {
   title: "MicroChub - Electronics for Makers",
@@ -42,7 +43,9 @@ export default function RootLayout({
       >
         <FirebaseClientProvider>
           <CartProvider>
-            <MainLayout>{children}</MainLayout>
+            <WishlistProvider>
+              <MainLayout>{children}</MainLayout>
+            </WishlistProvider>
           </CartProvider>
         </FirebaseClientProvider>
         <Toaster />
