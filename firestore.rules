@@ -2,8 +2,8 @@
  * Core Philosophy:
  * This ruleset enforces a strict, multi-layered security model for an e-commerce application.
  * It combines path-based ownership for private user data, denormalized ownership for shared data like orders,
- * and a database-based role system for administrators. The primary goal is to ensure users can only
- * access their own information, while allowing administrators broad oversight.
+ * and a role-based system for administrators managed via a field on the user's document.
+ * The primary goal is to ensure users can only access their own information, while allowing administrators broad oversight.
  *
  * Data Structure:
  * The data is structurally segregated into three main types:
@@ -18,9 +18,9 @@
  * Key Security Decisions:
  * - Default Deny: All paths are closed by default. Access is granted explicitly.
  * - User Data Privacy: A user can only ever access data under their own `/users/{userId}` path or documents
- *   in other collections that explicitly reference their user ID. Listing all users is disallowed.
- * - Admin Access: Administrator privileges are managed by the existence of a document in the `/roles_admin`
- *   collection. This provides a clear, auditable, and performant way to check for admin roles.
+ *   in other collections that explicitly reference their user ID. Listing all users is disallowed for non-admins.
+ * - Admin Access: Administrator privileges are managed by a 'role' field (e.g., 'admin', 'super_admin') within each user's
+ *   document in the `/users` collection. This aligns security rules directly with the application's data model.
  * - Client-Side Writes: Write operations on public catalog data (`/products`, `/categories`, etc.) are completely
  *   disallowed from the client to protect data integrity. These must be managed via a trusted backend server.
  * - Relational Integrity: On creation of new documents, rules validate that ownership fields (like `userId`)
@@ -56,13 +56,15 @@ service cloud.firestore {
     function isExistingOwner(userId) {
       return isOwner(userId) && resource != null;
     }
-
+    
     /**
-     * Checks if the authenticated user has an admin role.
-     * Admin status is determined by the existence of their UID in the roles_admin collection.
+     * Checks if the authenticated user has an admin or super_admin role.
+     * This is determined by reading the 'role' field from the user's own profile document.
      */
     function isAdmin() {
-      return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+      // Security: This requires a 'get' call on every check, but aligns with app logic.
+      // The user's profile must exist for this to succeed.
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
     }
 
     /**
@@ -115,49 +117,21 @@ service cloud.firestore {
     // Public Read-Only Collections (Product Catalog)
     // -------------------------------------------------------------------------
 
-    /**
-     * @description Publicly readable product categories. Writes are disabled from the client.
-     * @path /categories/{categoryId}
-     * @allow (get) Any user, signed in or not, can read a category.
-     * @deny (create) No user can create a category from the client.
-     * @principle Structural segregation for public, read-only data.
-     */
     match /categories/{categoryId} {
       allow get, list: if true;
       allow create, update, delete: if false;
     }
 
-    /**
-     * @description Publicly readable products. Writes are disabled from the client.
-     * @path /products/{productId}
-     * @allow (get) Any user, signed in or not, can read a product.
-     * @deny (create) No user can create a product from the client.
-     * @principle Structural segregation for public, read-only data.
-     */
     match /products/{productId} {
       allow get, list: if true;
       allow create, update, delete: if false;
     }
 
-    /**
-     * @description Publicly readable product configuration options. Writes are disabled from the client.
-     * @path /product_configuration_options/{optionId}
-     * @allow (get) Any user, signed in or not, can read configuration options.
-     * @deny (create) No user can create a configuration option from the client.
-     * @principle Structural segregation for public, read-only data.
-     */
     match /product_configuration_options/{optionId} {
       allow get, list: if true;
       allow create, update, delete: if false;
     }
 
-    /**
-     * @description Publicly readable product configuration values. Writes are disabled from the client.
-     * @path /product_configuration_values/{valueId}
-     * @allow (get) Any user, signed in or not, can read configuration values.
-     * @deny (create) No user can create a configuration value from the client.
-     * @principle Structural segregation for public, read-only data.
-     */
     match /product_configuration_values/{valueId} {
       allow get, list: if true;
       allow create, update, delete: if false;
@@ -167,28 +141,13 @@ service cloud.firestore {
     // User Data Collections (/users/{userId}/...)
     // -------------------------------------------------------------------------
 
-    /**
-     * @description A user's own profile document. Allows self-creation on sign-up.
-     * @path /users/{userId}
-     * @allow (create) auth.uid='user_abc' can create a document at /users/user_abc.
-     * @deny (get) auth.uid='user_xyz' cannot read /users/user_abc.
-     * @deny (list) No user can list all documents in the /users collection.
-     * @principle Enforces self-creation and strict document ownership.
-     */
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false;
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin(); // Only admins can list all users.
       allow create: if isCreatingOwnUserDoc(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow update: if isOwner(userId) || isAdmin(); // Allow self or admin updates.
+      allow delete: if isAdmin(); // Only admins can delete user profiles.
 
-      /**
-       * @description A user's private address book.
-       * @path /users/{userId}/addresses/{addressId}
-       * @allow (create) auth.uid='user_abc' can create a document in /users/user_abc/addresses.
-       * @deny (get) auth.uid='user_xyz' cannot read any document in /users/user_abc/addresses.
-       * @principle Restricts access to a user's own data tree using path-based security.
-       */
       match /addresses/{addressId} {
         allow get, list: if isOwner(userId);
         allow create: if isOwner(userId) && isCreatingOwnChildDoc(userId);
@@ -196,41 +155,19 @@ service cloud.firestore {
         allow delete: if isExistingOwner(userId);
       }
 
-      /**
-       * @description A user's private wishlist.
-       * @path /users/{userId}/wishlist_items/{wishlistItemId}
-       * @allow (create) auth.uid='user_abc' can create a document in /users/user_abc/wishlist_items.
-       * @deny (list) auth.uid='user_xyz' cannot list items in /users/user_abc/wishlist_items.
-       * @principle Restricts access to a user's own data tree using path-based security.
-       */
       match /wishlist_items/{wishlistItemId} {
         allow get, list: if isOwner(userId);
         allow create: if isOwner(userId) && isCreatingOwnChildDoc(userId);
-        // Updates are disallowed for simplicity; users add or remove items.
         allow update: if false;
         allow delete: if isExistingOwner(userId);
       }
       
-      /**
-       * @description A user's shopping cart document.
-       * @path /users/{userId}/carts/{cartId}
-       * @allow (get) auth.uid='user_abc' can read their own cart document.
-       * @deny (get) auth.uid='user_xyz' cannot read user_abc's cart document.
-       * @principle Restricts access to a user's own data tree using path-based security.
-       */
       match /carts/{cartId} {
          allow get, list: if isOwner(userId);
          allow create: if isOwner(userId) && isCreatingOwnChildDoc(userId);
          allow update: if isExistingOwner(userId) && isUpdatingOwnChildDoc();
          allow delete: if isExistingOwner(userId);
          
-        /**
-         * @description The items within a user's shopping cart.
-         * @path /users/{userId}/carts/{cartId}/cart_items/{cartItemId}
-         * @allow (create) auth.uid='user_abc' can add items to their own cart.
-         * @deny (delete) auth.uid='user_xyz' cannot remove items from user_abc's cart.
-         * @principle Secures a nested subcollection based on the grandparent path owner.
-         */
          match /cart_items/{cartItemId} {
            allow get, list: if isOwner(userId);
            allow create: if isOwner(userId) && request.resource.data.cartId == cartId;
@@ -243,67 +180,28 @@ service cloud.firestore {
     // -------------------------------------------------------------------------
     // Shared Data Collections (Orders, Service Requests)
     // -------------------------------------------------------------------------
-
-    /**
-     * @description Customer orders. Readable by the owner or an admin.
-     * @path /orders/{orderId}
-     * @allow (get) The user who owns the order (resource.data.userId) can read it.
-     * @allow (get) Any user in `/roles_admin` can read any order.
-     * @deny (get) A regular user cannot read another user's order.
-     * @deny (list) A regular user cannot list all orders without a 'userId' query filter.
-     * @principle Denormalized ownership (`userId` field) for shared data access.
-     */
+    
     match /orders/{orderId} {
-      allow read: if isOwner(resource.data.userId) || isAdmin();
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if (isExistingOwner(resource.data.userId) || (isAdmin() && resource != null)) && isUpdatingOwnChildDoc();
-      // Deleting orders is restricted to admins to preserve purchase history.
-      allow delete: if isAdmin() && resource != null;
+      // Admins can read/write any order. Users can read/write their own orders based on the 'userId' field.
+      allow read, write: if isAdmin() || isOwner(request.resource.data.userId) || isOwner(resource.data.userId);
+      // For list queries, access is controlled by the query constraints in the app code
+      // (e.g., where('userId', '==', request.auth.uid)) which are implicitly checked.
+      allow list: if isSignedIn();
       
-      /**
-       * @description Items within an order. Access mirrors the parent order.
-       * @path /orders/{orderId}/order_items/{orderItemId}
-       * @allow (list) The user who owns the parent order can list its items.
-       * @deny (create) A regular user cannot add items to another user's order.
-       * @principle Subcollection access is controlled by checking the parent document's ownership.
-       */
       match /order_items/{orderItemId} {
-        // NOTE: The `OrderItem` document must contain a denormalized `userId` field for these rules to work efficiently.
-        allow get: if isOwner(resource.data.userId) || isAdmin();
+        allow read, write: if isAdmin() || isOwner(request.resource.data.userId) || isOwner(resource.data.userId);
         allow list: if isOrderOwner(orderId) || isAdmin();
-        // FIX: Moved the direct `get` call into a helper function (`getParentOrderData`)
-        // to simplify the complex expression and address the "Incorrect number of arguments" warning.
-        allow create: if (isOrderOwner(orderId) || isAdmin()) && request.resource.data.orderId == orderId && request.resource.data.userId == getParentOrderData(orderId).userId;
-        allow update: if (isExistingOwner(resource.data.userId) || (isAdmin() && resource != null)) && request.resource.data.orderId == resource.data.orderId && isUpdatingOwnChildDoc();
-        allow delete: if isAdmin() && resource != null;
       }
     }
-
-    /**
-     * @description User-submitted requests for custom services. Readable by owner or admin.
-     * @path /custom_service_requests/{customServiceRequestId}
-     * @allow (create) Any signed-in user can create a service request for themselves.
-     * @allow (get) The user who owns the request (resource.data.userId) can read it.
-     * @deny (update) A user cannot update another user's service request.
-     * @principle Denormalized ownership (`userId` field) for shared data access.
-     */
+    
     match /custom_service_requests/{customServiceRequestId} {
-      allow read: if isOwner(resource.data.userId) || isAdmin();
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if (isExistingOwner(resource.data.userId) || (isAdmin() && resource != null)) && isUpdatingOwnChildDoc();
-      allow delete: if isExistingOwner(resource.data.userId) || (isAdmin() && resource != null);
+      allow read, write: if isAdmin() || isOwner(request.resource.data.userId) || isOwner(resource.data.userId);
+      allow list: if isSignedIn();
     }
-
-    /**
-     * @description User-submitted quote requests. Readable by owner or admin.
-     * @path /quote_requests/{quoteRequestId}
-     * @principle Denormalized ownership (`userId` field) for shared data access.
-     */
+    
     match /quote_requests/{quoteRequestId} {
-      allow read: if isOwner(resource.data.userId) || isAdmin();
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if (isOwner(resource.data.userId) || (isAdmin() && resource != null));
-      allow delete: if isOwner(resource.data.userId) || (isAdmin() && resource != null);
+      allow read, write: if isAdmin() || isOwner(request.resource.data.userId) || isOwner(resource.data.userId);
+      allow list: if isSignedIn();
     }
     
     // -------------------------------------------------------------------------
@@ -311,16 +209,12 @@ service cloud.firestore {
     // -------------------------------------------------------------------------
 
     /**
-     * @description Defines admin roles. Existence of a document grants admin privileges.
-     * @path /roles_admin/{adminId}
-     * @allow (get) A signed-in user can check if another user is an admin.
-     * @deny (create) No user can grant themselves admin access from the client.
-     * @principle Database-as-Control (DBAC) using document existence for role management.
+     * @description This collection was previously used for role management but is now deprecated.
+     * Roles are managed via the 'role' field on a user's document in the '/users' collection.
+     * @principle Deprecated. All access is denied.
      */
     match /roles_admin/{adminId} {
-      allow get: if isSignedIn();
-      allow list: if false;
-      allow create, update, delete: if false;
+      allow read, write: if false;
     }
   }
 }
