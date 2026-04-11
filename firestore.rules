@@ -1,78 +1,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // --- Helper Functions ---
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    // --- Public & Admin-Managed Collections ---
-    // Temporarily locking down admin writes to debug list issues.
-    match /categories/{categoryId} {
-      allow read: if true;
-      allow write: if false; // LOCKED FOR DEBUGGING
-    }
-    match /products/{productId} {
-      allow read: if true;
-      allow write: if false; // LOCKED FOR DEBUGGING
-    }
-    match /payment_methods/{paymentMethodId} {
-      allow read: if true;
-      allow write: if false; // LOCKED FOR DEBUGGING
-    }
-
-    // --- User-Specific Data ---
-    match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false; // Admin list functionality disabled for debugging.
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId) && request.resource.data.role == resource.data.role;
-      allow delete: if false; // Deletes disabled for debugging.
-
-      // Subcollections
-      match /addresses/{addressId} {
-        allow read, write: if isOwner(userId);
-      }
-      match /wishlist_items/{wishlistItemId} {
-        allow read, write: if isOwner(userId);
-      }
-    }
-    
-    // --- Shared Data Collections ---
-    // These rules are designed to allow users to access their own data.
-    
-    match /orders/{orderId} {
-      // A user can list their own orders. Client query MUST constrain by userId.
-      allow list: if isSignedIn();
-      // A user can get their own specific order.
-      allow get: if isOwner(resource.data.userId);
-      // A user can create an order for themselves.
-      allow create: if isOwner(request.resource.data.userId);
-      // Updates and Deletes are locked for this debugging step.
-      allow update: if false;
-      allow delete: if false;
-    }
-    
-    match /quote_requests/{quoteRequestId} {
-      allow list: if isSignedIn();
-      allow get: if isOwner(resource.data.userId);
-      allow create: if isOwner(request.resource.data.userId);
-      // User needs to update to accept/reject
-      allow update: if isOwner(resource.data.userId);
-      allow delete: if false;
-    }
-    
-    match /custom_service_requests/{customServiceRequestId} {
-      allow list: if isSignedIn();
-      allow get: if isOwner(resource.data.userId);
-      allow create: if isOwner(request.resource.data.userId);
-      allow update: if false;
-      allow delete: if false;
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }
