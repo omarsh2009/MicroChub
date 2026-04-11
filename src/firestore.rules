@@ -15,8 +15,9 @@ service cloud.firestore {
        return isSignedIn() && request.auth.uid == request.resource.data.userId;
     }
 
-    // Admin check uses get(), so it cannot be used in `list` rules.
     function isAdmin() {
+      // Note: This function uses get() and cannot be used in rules for queries (list operations).
+      // It should only be used for get, create, update, delete on single documents.
       return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
              && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
     }
@@ -24,7 +25,7 @@ service cloud.firestore {
     // --- Public & Admin-Managed Collections ---
     match /categories/{categoryId} {
       allow get, list: if true;
-      allow write: if isAdmin(); // write = create, update, delete
+      allow write: if isAdmin();
     }
 
     match /products/{productId} {
@@ -40,14 +41,12 @@ service cloud.firestore {
     // --- User-Specific Data ---
     match /users/{userId} {
       allow get: if request.auth.uid == userId || isAdmin();
-      // Admin list query is not possible with doc-based roles. This will fail if called.
-      allow list: if isAdmin();
+      allow list: if isAdmin(); // Only admins can list users.
       allow create: if request.auth.uid == userId;
-      // Users can't change their own role. Admins can change anything.
       allow update: if (request.auth.uid == userId && !("role" in request.resource.data)) || isAdmin();
       allow delete: if isAdmin();
 
-      // Subcollections inherit userId from the parent path.
+      // Subcollections can be read/written by the parent user.
       match /addresses/{addressId} {
         allow read, write: if request.auth.uid == userId;
       }
@@ -58,26 +57,30 @@ service cloud.firestore {
     
     // --- Shared Data Collections ---
     match /orders/{orderId} {
-      // User can read their own orders. A `list` query must have `where('userId', '==', request.auth.uid)`.
-      allow read: if isResourceOwner();
+      // User can get their own order. Admin can get any order.
+      allow get: if isResourceOwner() || isAdmin();
+      // User can list their own orders (query must include `where('userId', '==', request.auth.uid)`).
+      // Admin CANNOT list all orders from the client.
+      allow list: if isSignedIn();
       allow create: if isRequestOwner();
-      allow update: if isResourceOwner();
-      // Admins can GET, UPDATE, DELETE any single order. They CANNOT list all orders.
-      allow get, update, delete: if isAdmin();
+      allow update: if isResourceOwner() || isAdmin();
+      allow delete: if isAdmin();
     }
     
     match /custom_service_requests/{customServiceRequestId} {
-      allow read: if isResourceOwner();
+      allow get: if isResourceOwner() || isAdmin();
+      allow list: if isSignedIn();
       allow create: if isRequestOwner();
-      allow update: if isResourceOwner();
-      allow get, update, delete: if isAdmin();
+      allow update: if isResourceOwner() || isAdmin();
+      allow delete: if isAdmin();
     }
     
     match /quote_requests/{quoteRequestId} {
-      allow read: if isResourceOwner();
+      allow get: if isResourceOwner() || isAdmin();
+      allow list: if isSignedIn();
       allow create: if isRequestOwner();
-      allow update: if isResourceOwner();
-      allow get, update, delete: if isAdmin();
+      allow update: if isResourceOwner() || isAdmin();
+      allow delete: if isAdmin();
     }
   }
 }
