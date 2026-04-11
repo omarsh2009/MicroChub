@@ -69,8 +69,7 @@ service cloud.firestore {
       // These rules CAN use `get` because they operate on a single document.
       allow get, update: if isResourceOwner();
       
-      // Admin-specific rules. These use `get` and will only be evaluated for admins.
-      // Because they are in separate allow statements, they will not block the user's `list` query.
+      // Admin-specific rules. `list` is NOT included here to prevent `get` in `isAdmin` from blocking user queries.
       allow get, update, delete: if isAdmin();
     }
     
@@ -79,6 +78,8 @@ service cloud.firestore {
       allow list: if isSignedIn();
       allow create: if isRequestOwner();
       allow get, update: if isResourceOwner();
+      
+      // Admin-specific rules. `list` is NOT included here.
       allow get, update, delete: if isAdmin();
     }
     
@@ -87,6 +88,8 @@ service cloud.firestore {
       allow list: if isSignedIn();
       allow create: if isRequestOwner();
       allow get, update: if isResourceOwner();
+
+      // Admin-specific rules. `list` is NOT included here.
       allow get, update, delete: if isAdmin();
     }
   }
