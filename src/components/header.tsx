@@ -20,7 +20,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Logo } from "./logo";
 import { useUser, useAuth } from "@/firebase";
 import { signOut } from "@/lib/auth";
@@ -157,12 +163,16 @@ export function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left">
-              <Link href="/" className="mr-6 flex items-center gap-2 mb-6">
-                <Logo />
-                <span className="font-headline text-lg font-bold">
-                  MicroChub
-                </span>
-              </Link>
+              <SheetHeader>
+                <SheetTitle>
+                  <Link href="/" className="mr-6 flex items-center gap-2 mb-6">
+                    <Logo />
+                    <span className="font-headline text-lg font-bold">
+                      MicroChub
+                    </span>
+                  </Link>
+                </SheetTitle>
+              </SheetHeader>
               <nav className="grid gap-4 text-lg font-medium">
                 {navLinks.map((link) => (
                   <Link
