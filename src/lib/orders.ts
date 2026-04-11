@@ -1,16 +1,16 @@
 'use client';
 import { addDoc, collection, serverTimestamp, Firestore, doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, FirebaseStorage } from 'firebase/storage';
-import type { CartItem } from './types';
+import type { CartItem, PaymentMethod, ShippingAddress } from './types';
 
 interface OrderPayload {
   userId: string;
   cart: CartItem[];
   totalPrice: number;
   notes?: string;
-  paymentProofFile: File;
-  phoneNumber: string;
-  paymentMethod: 'instapay' | 'telda';
+  shippingAddress: ShippingAddress;
+  paymentMethod: PaymentMethod;
+  transactionId: string;
   hasRestrictedItem: boolean;
   legalAgreementFile?: File;
 }
@@ -20,18 +20,22 @@ export async function createOrder(
   storage: FirebaseStorage,
   payload: OrderPayload
 ): Promise<string> {
-  const { userId, cart, totalPrice, notes, paymentProofFile, phoneNumber, paymentMethod, hasRestrictedItem, legalAgreementFile } = payload;
-
-  // 1. Upload payment proof to storage
-  const paymentProofPath = `payment-proofs/${userId}/${Date.now()}-${paymentProofFile.name}`;
-  const paymentStorageRef = ref(storage, paymentProofPath);
-  const paymentUploadResult = await uploadBytes(paymentStorageRef, paymentProofFile);
-  const paymentProofUrl = await getDownloadURL(paymentUploadResult.ref);
+  const { 
+    userId, 
+    cart, 
+    totalPrice, 
+    notes, 
+    shippingAddress, 
+    paymentMethod,
+    transactionId,
+    hasRestrictedItem, 
+    legalAgreementFile 
+  } = payload;
 
   let legalAgreementUrl: string | undefined = undefined;
   let requiresLegalApproval = false;
 
-  // 2. Upload legal agreement if it exists
+  // Upload legal agreement if it exists
   if (hasRestrictedItem && legalAgreementFile) {
     const legalAgreementPath = `legal-agreements/${userId}/${Date.now()}-${legalAgreementFile.name}`;
     const legalStorageRef = ref(storage, legalAgreementPath);
@@ -40,8 +44,7 @@ export async function createOrder(
     requiresLegalApproval = true;
   }
 
-
-  // 3. Create order document in Firestore's top-level 'orders' collection
+  // Create order document in Firestore's top-level 'orders' collection
   const ordersCollectionRef = collection(firestore, 'orders');
 
   const orderData: any = {
@@ -49,11 +52,15 @@ export async function createOrder(
     items: cart,
     totalPrice,
     notes: notes || '',
-    paymentProofUrl,
-    paymentMethod,
+    shippingAddress,
+    paymentMethod: {
+      id: paymentMethod.id,
+      name: paymentMethod.name,
+    },
+    transactionId,
     requiresLegalApproval,
     legalAgreementApproved: false,
-    status: 'Pending Payment Proof',
+    status: 'Pending Verification',
     createdAt: serverTimestamp(),
   };
 
@@ -63,10 +70,12 @@ export async function createOrder(
   
   const newOrderDoc = await addDoc(ordersCollectionRef, orderData);
   
-  // 4. Update user's phone number if it has changed
+  // Update user's phone number if it has changed
   const userDocRef = doc(firestore, 'users', userId);
-  await updateDoc(userDocRef, { phoneNumber });
+  await updateDoc(userDocRef, { phoneNumber: shippingAddress.phoneNumber });
 
 
   return newOrderDoc.id;
 }
+
+    

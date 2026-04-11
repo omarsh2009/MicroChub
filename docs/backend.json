@@ -411,15 +411,15 @@
         },
         "status": {
           "type": "string",
-          "description": "The current status of the order (e.g., 'Pending', 'Confirmed', 'Processing', 'Ready', 'Completed', 'Cancelled')."
+          "description": "The current status of the order (e.g., 'Pending Verification', 'Confirmed', 'Processing', 'Ready', 'Completed', 'Cancelled')."
         },
         "paymentMethod": {
-          "type": "string",
-          "description": "The payment method chosen by the user (e.g., 'Instapay', 'Telda')."
+          "type": "object",
+          "description": "Details of the payment method chosen by the user."
         },
-        "paymentProofImageUrl": {
+        "transactionId": {
           "type": "string",
-          "description": "URL to the screenshot uploaded by the user as proof of payment."
+          "description": "The transaction ID or reference number provided by the user."
         },
         "isDepositPayment": {
           "type": "boolean",
@@ -429,9 +429,9 @@
           "type": "number",
           "description": "The remaining balance due if 'isDepositPayment' is true, otherwise 0."
         },
-        "shippingAddressId": {
-          "type": "string",
-          "description": "Reference to the Address entity used for shipping this order. (Relationship: Address 1:N Order)"
+        "shippingAddress": {
+          "type": "object",
+          "description": "The shipping address for this order."
         },
         "trackingNumber": {
           "type": "string",
@@ -455,10 +455,8 @@
         "totalAmount",
         "status",
         "paymentMethod",
-        "paymentProofImageUrl",
-        "isDepositPayment",
-        "remainingAmountDue",
-        "shippingAddressId",
+        "transactionId",
+        "shippingAddress",
         "lastStatusUpdateDate"
       ]
     },
@@ -634,6 +632,45 @@
         "status",
         "createdAt"
       ]
+    },
+    "PaymentMethod": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PaymentMethod",
+      "type": "object",
+      "description": "Defines a payment method available at checkout.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "description": "The display name of the payment method (e.g., 'Instapay')."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["phoneNumber", "username", "paymentLink"],
+          "description": "The type of credential for the payment method."
+        },
+        "value": {
+          "type": "string",
+          "description": "The actual phone number, username, or URL for the payment."
+        },
+        "instructions": {
+          "type": "string",
+          "description": "Optional instructions for the user on how to complete the payment."
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether the payment method is currently active."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "type",
+        "value",
+        "enabled"
+      ]
     }
   },
   "auth": {
@@ -651,13 +688,8 @@
           "schema": {
             "$ref": "#/backend/entities/Category"
           },
-          "description": "Top-level collection for all product categories. This data is public and read-only for all users, primarily used for product catalog navigation. Adheres to structural segregation for homogeneous security posture (public read).",
-          "params": [
-            {
-              "name": "categoryId",
-              "description": "Unique identifier for the category document."
-            }
-          ]
+          "description": "Top-level collection for all product categories.",
+          "params": []
         }
       },
       {
@@ -667,45 +699,19 @@
           "schema": {
             "$ref": "#/backend/entities/Product"
           },
-          "description": "Top-level collection for all products available in the store. This data is public and read-only for all users. Supports QAPs for listing products without user-specific filters, aligning with structural segregation.",
-          "params": [
-            {
-              "name": "productId",
-              "description": "Unique identifier for the product document."
-            }
-          ]
+          "description": "Top-level collection for all products available in the store.",
+          "params": []
         }
       },
       {
-        "path": "/product_configuration_options/{optionId}",
+        "path": "/payment_methods/{paymentMethodId}",
         "definition": {
-          "entityName": "ProductConfigurationOption",
+          "entityName": "PaymentMethod",
           "schema": {
-            "$ref": "#/backend/entities/ProductConfigurationOption"
+            "$ref": "#/backend/entities/PaymentMethod"
           },
-          "description": "Top-level collection for all product configuration options. These options are public and read-only, linking to products. Enables efficient querying and structural segregation for public data.",
-          "params": [
-            {
-              "name": "optionId",
-              "description": "Unique identifier for the product configuration option document."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/product_configuration_values/{valueId}",
-        "definition": {
-          "entityName": "ProductConfigurationValue",
-          "schema": {
-            "$ref": "#/backend/entities/ProductConfigurationValue"
-          },
-          "description": "Top-level collection for all specific configuration values associated with options. This data is public and read-only, used to define product customizations. Aligns with structural segregation for public data.",
-          "params": [
-            {
-              "name": "valueId",
-              "description": "Unique identifier for the product configuration value document."
-            }
-          ]
+          "description": "Collection for storing admin-managed payment methods available at checkout.",
+          "params": []
         }
       },
       {
@@ -715,7 +721,7 @@
           "schema": {
             "$ref": "#/backend/entities/User"
           },
-          "description": "Top-level collection storing user profiles. Access is restricted to the authenticated user whose UID matches '{userId}'. This structure enforces private data access via path-based ownership, ensuring Authorization Independence without 'get()' calls.",
+          "description": "Top-level collection storing user profiles.",
           "params": [
             {
               "name": "userId",
@@ -731,7 +737,7 @@
           "schema": {
             "$ref": "#/backend/entities/Address"
           },
-          "description": "Subcollection under a user's profile for storing their physical addresses. Access is restricted to the owner user (whose UID matches the parent '{userId}'). This path-based ownership guarantees Authorization Independence for addresses and simplifies security rules for user-specific lists (QAP).",
+          "description": "Subcollection under a user's profile for storing their physical addresses.",
           "params": [
             {
               "name": "userId",
@@ -751,7 +757,7 @@
           "schema": {
             "$ref": "#/backend/entities/WishlistItem"
           },
-          "description": "Subcollection under a user's profile for storing their wishlist items. Access is restricted to the owner user (whose UID matches the parent '{userId}'). This path-based ownership ensures Authorization Independence and supports QAPs for listing user's wishlist.",
+          "description": "Subcollection under a user's profile for storing their wishlist items.",
           "params": [
             {
               "name": "userId",
@@ -765,73 +771,17 @@
         }
       },
       {
-        "path": "/users/{userId}/cart",
-        "definition": {
-          "entityName": "Cart",
-          "schema": {
-            "$ref": "#/backend/entities/Cart"
-          },
-          "description": "Document representing a user's single shopping cart. Located as a sub-document directly under the user's profile. Access is restricted to the owner user, providing Authorization Independence through path-based ownership. Its ID will typically be a fixed string like 'current_cart'.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user, matching Firebase Authentication UID."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/cart/cart_items/{cartItemId}",
-        "definition": {
-          "entityName": "CartItem",
-          "schema": {
-            "$ref": "#/backend/entities/CartItem"
-          },
-          "description": "Subcollection under a user's cart for individual items within the cart. Access is restricted to the owner user (whose UID matches the grandparent '{userId}'). The hierarchical path provides Authorization Independence, simplifying rules and supporting QAPs for cart item listings.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user, matching Firebase Authentication UID."
-            },
-            {
-              "name": "cartItemId",
-              "description": "Unique identifier for the cart item document."
-            }
-          ]
-        }
-      },
-      {
         "path": "/orders/{orderId}",
         "definition": {
           "entityName": "Order",
           "schema": {
             "$ref": "#/backend/entities/Order"
           },
-          "description": "Top-level collection for all customer orders. Each order document includes a 'userId' field (denormalized ownership). This design ensures Authorization Independence for individual users (request.auth.uid == resource.data.userId) and allows admins to list all orders (QAP for admin) without relying on 'get()' calls across user subcollections.",
+          "description": "Top-level collection for all customer orders.",
           "params": [
             {
               "name": "orderId",
               "description": "Unique identifier for the order document."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/orders/{orderId}/order_items/{orderItemId}",
-        "definition": {
-          "entityName": "OrderItem",
-          "schema": {
-            "$ref": "#/backend/entities/OrderItem"
-          },
-          "description": "Subcollection for items within a specific order. Each order item document MUST include the 'userId' denormalized from its parent 'Order' document. This is CRITICAL for Authorization Independence, enabling direct ownership checks (request.auth.uid == resource.data.userId) without a 'get()' call to the parent order, thereby supporting atomic operations and QAPs.",
-          "params": [
-            {
-              "name": "orderId",
-              "description": "Unique identifier for the parent order document."
-            },
-            {
-              "name": "orderItemId",
-              "description": "Unique identifier for the order item document."
             }
           ]
         }
@@ -843,27 +793,11 @@
           "schema": {
             "$ref": "#/backend/entities/CustomServiceRequest"
           },
-          "description": "Top-level collection for custom hardware service requests. Each request document includes a 'userId' field (denormalized ownership). This ensures Authorization Independence for users submitting requests and allows admins to efficiently list all requests (QAP for admin) without complex rules or 'get()' dependencies.",
+          "description": "Top-level collection for custom hardware service requests.",
           "params": [
             {
               "name": "customServiceRequestId",
               "description": "Unique identifier for the custom service request document."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/roles_admin/{adminId}",
-        "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Top-level collection for defining administrative roles. The mere existence of a document at this path signifies that the user identified by '{adminId}' (which must match request.auth.uid) possesses admin privileges. This uses the 'Existence over Content' principle for DBAC, making admin role checks simple and independent. Documents are typically empty or contain minimal metadata, but conceptually link to a User.",
-          "params": [
-            {
-              "name": "adminId",
-              "description": "The unique identifier of the user who is an administrator, matching Firebase Authentication UID."
             }
           ]
         }
@@ -875,7 +809,7 @@
           "schema": {
             "$ref": "#/backend/entities/QuoteRequest"
           },
-          "description": "Top-level collection for all quote requests. Each request includes a 'userId' field (denormalized ownership) for security.",
+          "description": "Top-level collection for all quote requests.",
           "params": [
             {
               "name": "quoteRequestId",
@@ -884,7 +818,8 @@
           ]
         }
       }
-    ],
-    "reasoning": "The Firestore data structure for MicroChub is designed with a strong emphasis on Authorization Independence, debuggability, and support for QAPs (Queries as Policies), following the mandated design principles.\n\n**Authorization Independence (CRITICAL):**\nThis principle is achieved primarily through two strategies:\n1.  **Path-Based Ownership:** For truly private user data like `Addresses`, `WishlistItems`, and `CartItems`, entities are nested directly under the `/users/{userId}` path (e.g., `/users/{userId}/addresses/{addressId}`). This means the `{userId}` wildcard in the path directly corresponds to `request.auth.uid`, making authorization checks atomic (`request.auth.uid == userId`) without requiring any `get()` operations. This completely eliminates hierarchical authorization dependencies for these critical user-specific subcollections.\n2.  **Denormalization of Ownership Fields:** For collections that need to be accessible by a user *and* administrators, or subcollections whose security depends on a grandparent document, the `userId` (owner) is explicitly denormalized into the document itself. For example, `Order` documents in `/orders/{orderId}` contain a `userId` field. Similarly, `CustomServiceRequest` documents in `/custom_service_requests/{customServiceRequestId}` include a `userId`. Most crucially, `OrderItem` documents, which are subcollections of `Order` (`/orders/{orderId}/order_items/{orderItemId}`), also include the `userId` from their parent order. This denormalization allows rules on `OrderItem` to directly check `resource.data.userId == request.auth.uid` without ever needing to `get()` the parent `Order` document, thus maintaining Authorization Independence and enabling atomic writes (e.g., creating an Order and its OrderItems in a single batch).\n\n**Clarity of Intent & Debuggability:**\nCollection names and wildcards are semantic and explicit (e.g., `products`, `custom_service_requests`, `{productId}`). Authorization fields are consistently named (`userId`). The structure itself makes the security posture clear: data under `/users/{userId}` is user-specific, global collections like `/products` are public, and `/orders` are shared but secured by denormalized `userId`.\n\n**DBAC (Database Access Control - No Custom Claims):**\nGlobal roles, specifically admin access, are managed via the `/roles_admin/{adminId}` collection. The existence of a document for a user's UID in this collection grants admin privileges. Firebase Security Rules can easily check `exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid))` for efficient and clear role-based authorization.\n\n**QAPs (Queries as Policies):**\n1.  **Public Collections:** Collections like `/categories`, `/products`, `/product_configuration_options`, and `/product_configuration_values` are designed for public read access. `list` operations here naturally serve as QAPs, allowing any user to read all public items.\n2.  **User-Owned Subcollections:** For paths like `/users/{userId}/addresses` or `/users/{userId}/wishlist_items`, rules will enforce that `request.auth.uid == userId` (from the path wildcard) for both `read` and `list` operations. This ensures that users can only query their own data, and the Firestore engine can optimize these queries as a policy.\n3.  **Shared Top-Level Collections with Denormalized `userId`:** For `Orders` and `CustomServiceRequests`, `list` operations for regular users are secured by requiring a query filter like `where('userId', '==', request.auth.uid)`. The security rules will explicitly allow `list` only if this filter is present and matches the authenticated user. Administrators, identified via the `/roles_admin` collection, will be granted `list` access to these top-level collections, enabling them to query all orders or requests without user-specific filters, as required by the admin dashboard.\n4.  **`OrderItem` Subcollection:** For `order_items` under `/orders/{orderId}/order_items/{orderItemId}`, `list` operations are implicitly secured by the parent `Order`'s rules and the denormalized `userId` within the `OrderItem` document itself. Users can only list items if they have access to the parent order, which is verified through the denormalized `userId` matching `request.auth.uid`.\n\n**Structural Segregation (Homogeneous Security Posture):**\nData with different access requirements is separated into distinct collections. For example, public product information is in `/products`, while private user data is under `/users/{userId}/`. This simplifies security rules significantly as each collection (or subcollection) inherently has a consistent security profile."
+    ]
   }
 }
+
+    

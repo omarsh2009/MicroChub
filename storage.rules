@@ -9,14 +9,11 @@ service firebase.storage {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Allow users to upload payment proofs for orders.
-    match /payment-proofs/{userId}/{fileId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-
     // Allow users to upload signed legal agreements for restricted products.
     match /legal-agreements/{userId}/{fileId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
+
+    

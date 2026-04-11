@@ -11,23 +11,32 @@ import {
   Firestore,
   collection,
   serverTimestamp,
+  addDoc,
+  deleteDoc,
+  where,
 } from 'firebase/firestore';
-import type { Order, UserProfile, OrderWithUserData, UserWithId, QuoteRequest, QuoteRequestWithUserData } from './types';
+import type { Order, UserProfile, OrderWithUserData, UserWithId, QuoteRequest, QuoteRequestWithUserData, PaymentMethod } from './types';
 
 // Helper function to get user profiles for a set of user IDs
 async function getUserProfiles(firestore: Firestore, userIds: string[]): Promise<Map<string, UserProfile>> {
   const userProfiles = new Map<string, UserProfile>();
   const userIdsToFetch = Array.from(new Set(userIds)); // Deduplicate
 
-  // Firestore 'in' queries are limited to 30 items. 
-  // For a larger scale app, this would need batching.
   if (userIdsToFetch.length > 0) {
-    const userDocs = await Promise.all(userIdsToFetch.map(id => getDoc(doc(firestore, 'users', id))));
-    userDocs.forEach(userDoc => {
-      if (userDoc.exists()) {
-        userProfiles.set(userDoc.id, userDoc.data() as UserProfile);
-      }
-    });
+    // Firestore 'in' queries are limited to 30 items at a time.
+    // Batch the requests if necessary.
+    const batches = [];
+    for (let i = 0; i < userIdsToFetch.length; i += 30) {
+        batches.push(userIdsToFetch.slice(i, i + 30));
+    }
+
+    for (const batch of batches) {
+        const q = firestoreQuery(collection(firestore, 'users'), where('id', 'in', batch));
+        const userDocsSnapshot = await getDocs(q);
+        userDocsSnapshot.forEach(userDoc => {
+            userProfiles.set(userDoc.id, userDoc.data() as UserProfile);
+        });
+    }
   }
 
   return userProfiles;
@@ -141,3 +150,27 @@ export async function submitQuote(
     quotedAt: serverTimestamp(),
   });
 }
+
+// Payment Methods
+export async function getPaymentMethods(firestore: Firestore): Promise<PaymentMethod[]> {
+  const methodsQuery = firestoreQuery(collection(firestore, 'payment_methods'), orderBy('name'));
+  const querySnapshot = await getDocs(methodsQuery);
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PaymentMethod));
+}
+
+export async function addPaymentMethod(firestore: Firestore, data: Omit<PaymentMethod, 'id'>): Promise<string> {
+  const docRef = await addDoc(collection(firestore, 'payment_methods'), data);
+  return docRef.id;
+}
+
+export async function updatePaymentMethod(firestore: Firestore, id: string, data: Partial<PaymentMethod>): Promise<void> {
+  const methodRef = doc(firestore, 'payment_methods', id);
+  await updateDoc(methodRef, data);
+}
+
+export async function deletePaymentMethod(firestore: Firestore, id: string): Promise<void> {
+  const methodRef = doc(firestore, 'payment_methods', id);
+  await deleteDoc(methodRef);
+}
+
+    

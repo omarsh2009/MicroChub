@@ -34,7 +34,7 @@ export function OrderDetailsDialog({ isOpen, onClose, order, onOrderUpdate }: Or
     const [isSaving, setIsSaving] = useState(false);
     const [isApprovingLegal, setIsApprovingLegal] = useState(false);
 
-    const orderStatuses: Order['status'][] = ['Pending Payment Proof', 'Under Review', 'Confirmed', 'In Production', 'Ready', 'Completed/Delivered'];
+    const orderStatuses: Order['status'][] = ['Pending Verification', 'Confirmed', 'In Production', 'Ready', 'Completed/Delivered', 'Cancelled'];
     
     const handleStatusChange = (value: string) => {
         setNewStatus(value as Order['status']);
@@ -101,7 +101,7 @@ export function OrderDetailsDialog({ isOpen, onClose, order, onOrderUpdate }: Or
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-3xl">
+            <DialogContent className="sm:max-w-4xl">
                 <DialogHeader>
                     <DialogTitle>Order Details: #{order.id.slice(0,7)}</DialogTitle>
                 </DialogHeader>
@@ -129,6 +129,17 @@ export function OrderDetailsDialog({ isOpen, onClose, order, onOrderUpdate }: Or
                                 </div>
                            </CardContent>
                        </Card>
+
+                       <Card>
+                            <CardHeader><CardTitle>Shipping Address</CardTitle></CardHeader>
+                            <CardContent className="text-sm space-y-1">
+                                <p className="font-medium">{order.shippingAddress.fullName}</p>
+                                <p className="text-muted-foreground">{order.shippingAddress.address}</p>
+                                <p className="text-muted-foreground">{order.shippingAddress.city}</p>
+                                <p className="text-muted-foreground">{order.shippingAddress.phoneNumber}</p>
+                            </CardContent>
+                       </Card>
+                       
                        {order.notes && (
                            <Card>
                                <CardHeader><CardTitle>Customer Notes</CardTitle></CardHeader>
@@ -142,43 +153,45 @@ export function OrderDetailsDialog({ isOpen, onClose, order, onOrderUpdate }: Or
                              <CardContent className="text-sm space-y-1">
                                  <p className="font-medium">{order.user.name}</p>
                                  <p className="text-muted-foreground">{order.user.email}</p>
-                                 <p className="text-muted-foreground">{order.user.phoneNumber}</p>
                                  <p className="text-xs text-muted-foreground pt-2">Placed on {order.createdAt ? format(new Date(order.createdAt.seconds * 1000), 'PPp') : 'N/A'}</p>
                              </CardContent>
                          </Card>
+
                          <Card>
-                             <CardHeader><CardTitle>Files</CardTitle></CardHeader>
-                             <CardContent className="space-y-2">
-                                 <a href={order.paymentProofUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm text-primary hover:underline">
-                                     Payment Proof <ExternalLink className="w-4 h-4 ml-2" />
-                                 </a>
-                                 {order.legalAgreementUrl && (
-                                     <a href={order.legalAgreementUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm text-primary hover:underline">
-                                        Legal Agreement <ExternalLink className="w-4 h-4 ml-2" />
-                                     </a>
-                                 )}
-                             </CardContent>
+                            <CardHeader><CardTitle>Payment Details</CardTitle></CardHeader>
+                            <CardContent className="text-sm space-y-2">
+                                <div className="flex justify-between"><span>Method:</span> <span className="font-medium">{order.paymentMethod.name}</span></div>
+                                <div className="flex justify-between"><span>Transaction ID:</span> <span className="font-mono text-xs bg-muted p-1 rounded">{order.transactionId}</span></div>
+                            </CardContent>
                          </Card>
+
                          {order.requiresLegalApproval && (
                             <Card>
                                 <CardHeader><CardTitle>Legal Approval</CardTitle></CardHeader>
                                 <CardContent>
-                                    {order.legalAgreementApproved ? (
-                                        <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">
-                                            <ShieldCheck className="mr-2 h-4 w-4" />
-                                            Approved
-                                        </Badge>
-                                    ) : (
-                                        <div className="flex flex-col gap-2">
+                                    <div className="flex items-center justify-between">
+                                        {order.legalAgreementApproved ? (
+                                            <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">
+                                                <ShieldCheck className="mr-2 h-4 w-4" />
+                                                Approved
+                                            </Badge>
+                                        ) : (
                                             <div className="flex items-center text-destructive">
-                                                 <ShieldAlert className="mr-2 h-4 w-4" />
-                                                 <span className="text-sm font-medium">Pending Approval</span>
+                                                <ShieldAlert className="mr-2 h-4 w-4" />
+                                                <span className="text-sm font-medium">Pending Approval</span>
                                             </div>
-                                            <Button size="sm" onClick={handleApproveLegal} disabled={isApprovingLegal}>
-                                                {isApprovingLegal && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                                Approve Agreement
-                                            </Button>
-                                        </div>
+                                        )}
+                                        {order.legalAgreementUrl && (
+                                            <a href={order.legalAgreementUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm text-primary hover:underline">
+                                                View File <ExternalLink className="w-4 h-4 ml-2" />
+                                            </a>
+                                        )}
+                                    </div>
+                                    {!order.legalAgreementApproved && (
+                                        <Button size="sm" onClick={handleApproveLegal} disabled={isApprovingLegal} className="mt-4 w-full">
+                                            {isApprovingLegal && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                            Approve Agreement
+                                        </Button>
                                     )}
                                 </CardContent>
                             </Card>
@@ -222,3 +235,5 @@ export function OrderDetailsDialog({ isOpen, onClose, order, onOrderUpdate }: Or
         </Dialog>
     );
 }
+
+    

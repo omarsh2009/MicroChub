@@ -58,14 +58,34 @@ export type CartItem = {
     configuration: SelectedConfiguration;
 };
 
+export type ShippingAddress = {
+  fullName: string;
+  phoneNumber: string;
+  address: string;
+  city: string;
+};
+
+export type PaymentMethod = {
+  id: string;
+  name: string;
+  type: 'phoneNumber' | 'username' | 'paymentLink';
+  value: string;
+  instructions?: string;
+  enabled: boolean;
+};
+
 export type Order = {
   id: string; // Firestore document ID
   userId: string;
   items: CartItem[];
   totalPrice: number;
-  status: 'Pending Payment Proof' | 'Under Review' | 'Confirmed' | 'In Production' | 'Ready' | 'Completed/Delivered';
-  paymentProofUrl: string;
-  paymentMethod: 'instapay' | 'telda';
+  status: 'Pending Verification' | 'Confirmed' | 'In Production' | 'Ready' | 'Completed/Delivered' | 'Cancelled';
+  shippingAddress: ShippingAddress;
+  paymentMethod: {
+    id: string;
+    name: string;
+  };
+  transactionId: string;
   legalAgreementUrl?: string;
   requiresLegalApproval?: boolean;
   legalAgreementApproved?: boolean;
@@ -113,3 +133,5 @@ export type QuoteRequestWithUserData = QuoteRequest & {
     phoneNumber: string;
   }
 };
+
+    

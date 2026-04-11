@@ -36,8 +36,7 @@ export default function OrdersPage() {
 
   const getStatusColor = (status: Order['status']): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
-        case 'Pending Payment Proof':
-        case 'Under Review':
+        case 'Pending Verification':
             return 'outline';
         case 'Confirmed':
         case 'In Production':
@@ -46,6 +45,8 @@ export default function OrdersPage() {
             return 'default'; // Could be different color
         case 'Completed/Delivered':
             return 'secondary';
+        case 'Cancelled':
+            return 'destructive';
         default:
             return 'outline';
     }
@@ -132,3 +133,5 @@ export default function OrdersPage() {
     </div>
   );
 }
+
+    

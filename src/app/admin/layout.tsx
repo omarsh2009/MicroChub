@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Package,
   ShoppingCart,
@@ -10,6 +10,7 @@ import {
   Menu,
   FileQuestion,
   Home,
+  Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +23,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/logo";
-import { useUser } from "@/firebase";
+import { useUser, useAuth } from "@/firebase";
+import { signOut } from "@/lib/auth";
+import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -32,17 +35,31 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const user = useUser();
+  const auth = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (user === undefined) return; // Still loading
 
     if (user === null) {
-      router.replace('/login?redirect=/admin');
+      router.replace(`/login?redirect=${pathname}`);
     } else if (!user.profile?.role || !['admin', 'super_admin'].includes(user.profile.role)) {
       router.replace('/');
     }
-  }, [user, router]);
+  }, [user, router, pathname]);
+
+  const handleLogout = async () => {
+    if (!auth) return;
+    try {
+      await signOut(auth);
+      toast({ title: "Logged Out" });
+      router.push("/login");
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Logout Failed", description: error.message });
+    }
+  };
 
   if (user === undefined || !user || !user.profile?.role || !['admin', 'super_admin'].includes(user.profile.role)) {
     return (
@@ -85,6 +102,13 @@ export default function AdminLayout({
               >
                 <FileQuestion className="h-4 w-4" />
                 Quote Requests
+              </Link>
+               <Link
+                href="/admin/payment-methods"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+              >
+                <Wallet className="h-4 w-4" />
+                Payment Methods
               </Link>
               {user.profile.role === 'super_admin' && (
                 <Link
@@ -142,6 +166,13 @@ export default function AdminLayout({
                   <FileQuestion className="h-5 w-5" />
                   Quote Requests
                 </Link>
+                 <Link
+                  href="/admin/payment-methods"
+                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
+                >
+                  <Wallet className="h-5 w-5" />
+                  Payment Methods
+                </Link>
                 {user.profile.role === 'super_admin' && (
                   <Link
                     href="/admin/users"
@@ -171,9 +202,7 @@ export default function AdminLayout({
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Logout</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -185,3 +214,5 @@ export default function AdminLayout({
     </div>
   );
 }
+
+    
