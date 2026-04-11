@@ -1,0 +1,93 @@
+/**
+ * Core Philosophy:
+ * This ruleset enforces a strict, multi-layered security model for an e-commerce application.
+ * It combines path-based ownership for private user data, denormalized ownership for shared data like orders,
+ * and a role-based system for administrators managed via a field on the user's document.
+ * The primary goal is to ensure users can only access their own information, while allowing administrators broad oversight.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -------------------------------------------------------------------------
+    // Helper Functions
+    // -------------------------------------------------------------------------
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      // Safely check for admin role on the user's document.
+      // This function now checks for existence before trying to access data.
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid))
+             && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
+    }
+
+    // -------------------------------------------------------------------------
+    // Public & Admin-Managed Collections
+    // -------------------------------------------------------------------------
+
+    match /categories/{categoryId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+
+    match /products/{productId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+
+    match /payment_methods/{paymentMethodId} {
+      allow get, list: if true; // Publicly readable for checkout
+      allow write: if isAdmin(); // Only admins can manage payment methods
+    }
+
+    // -------------------------------------------------------------------------
+    // User Data Collections (/users/{userId}/...)
+    // -------------------------------------------------------------------------
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId);
+      // A user can update their own profile, but cannot change their role.
+      allow update: if (isOwner(userId) && !('role' in request.resource.data)) || isAdmin();
+      allow delete: if isAdmin();
+
+      match /addresses/{addressId} {
+        allow read, update, delete: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      }
+
+      match /wishlist_items/{wishlistItemId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Shared Data Collections (Orders, Quotes, etc.)
+    // -------------------------------------------------------------------------
+    
+    match /orders/{orderId} {
+      allow read, update, delete: if isAdmin() || (resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid);
+    }
+    
+    match /custom_service_requests/{customServiceRequestId} {
+      allow read, update, delete: if isAdmin() || (resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid);
+    }
+    
+    match /quote_requests/{quoteRequestId} {
+      allow read, update, delete: if isAdmin() || (resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid);
+    }
+  }
+}
