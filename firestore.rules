@@ -56,41 +56,26 @@ service cloud.firestore {
     }
     
     // --- Shared Data Collections ---
-    // The key here is to separate rules for users from rules for admins to avoid
-    // the `isAdmin()` function (which does a `get`) from being evaluated during
-    // a user's `list` query.
     
     // ORDERS
     match /orders/{orderId} {
-      // User-specific rules that do NOT use `get` or `exists`.
-      allow list: if isSignedIn(); // Allows a user's query `where('userId', '==', uid)` to pass.
-      allow create: if isRequestOwner();
-      
-      // These rules CAN use `get` because they operate on a single document.
+      allow list: if isSignedIn();
       allow get, update: if isResourceOwner();
-      
-      // Admin-specific rules. `list` is NOT included here to prevent `get` in `isAdmin` from blocking user queries.
-      allow get, update, delete: if isAdmin();
+      allow create: if isRequestOwner();
     }
     
     // QUOTE REQUESTS
     match /quote_requests/{quoteRequestId} {
       allow list: if isSignedIn();
-      allow create: if isRequestOwner();
       allow get, update: if isResourceOwner();
-      
-      // Admin-specific rules. `list` is NOT included here.
-      allow get, update, delete: if isAdmin();
+      allow create: if isRequestOwner();
     }
     
     // CUSTOM SERVICE REQUESTS
     match /custom_service_requests/{customServiceRequestId} {
       allow list: if isSignedIn();
-      allow create: if isRequestOwner();
       allow get, update: if isResourceOwner();
-
-      // Admin-specific rules. `list` is NOT included here.
-      allow get, update, delete: if isAdmin();
+      allow create: if isRequestOwner();
     }
   }
 }
