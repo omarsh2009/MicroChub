@@ -49,7 +49,6 @@ service cloud.firestore {
         allow read, write: if request.auth.uid == userId;
       }
       match /wishlist_items/{wishlistItemId} {
-        // Users can only access their own wishlist items.
         allow read, write: if request.auth.uid == userId;
       }
     }
@@ -58,25 +57,36 @@ service cloud.firestore {
     
     // ORDERS
     match /orders/{orderId} {
+      // A user can list THEIR OWN orders. This is checked by ensuring the query
+      // from the client constrains the `userId` to the authenticated user's ID.
+      // This rule does NOT allow an admin to list all orders from the client.
+      allow list: if request.auth.uid == resource.data.userId;
+      
+      // A user can GET their own order. An admin can GET any single order.
+      allow get: if request.auth.uid == resource.data.userId || isAdmin();
+
       allow create: if isRequestOwner();
-      allow get, update: if isResourceOwner() || isAdmin();
-      allow list: if isRequestOwner();
+      allow update: if request.auth.uid == resource.data.userId || isAdmin();
       allow delete: if isAdmin();
     }
     
     // QUOTE REQUESTS
     match /quote_requests/{quoteRequestId} {
+      allow list: if request.auth.uid == resource.data.userId;
+      allow get: if request.auth.uid == resource.data.userId || isAdmin();
+      
       allow create: if isRequestOwner();
-      allow get, update: if isResourceOwner() || isAdmin();
-      allow list: if isRequestOwner();
+      allow update: if request.auth.uid == resource.data.userId || isAdmin();
       allow delete: if isAdmin();
     }
     
     // CUSTOM SERVICE REQUESTS
     match /custom_service_requests/{customServiceRequestId} {
+      allow list: if request.auth.uid == resource.data.userId;
+      allow get: if request.auth.uid == resource.data.userId || isAdmin();
+      
       allow create: if isRequestOwner();
-      allow get, update: if isResourceOwner() || isAdmin();
-      allow list: if isRequestOwner();
+      allow update: if request.auth.uid == resource.data.userId || isAdmin();
       allow delete: if isAdmin();
     }
   }
