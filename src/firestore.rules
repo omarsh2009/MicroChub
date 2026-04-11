@@ -7,19 +7,9 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isResourceOwner() {
-      // For get, update on a specific document.
-      return isSignedIn() && request.auth.uid == resource.data.userId;
-    }
-    
-    function isRequestOwner() {
-       // For create operations.
-       return isSignedIn() && request.auth.uid == request.resource.data.userId;
-    }
-
     function isAdmin() {
-      // For get/update/delete on a specific document.
-      // CANNOT be used for list queries as it performs a `get`.
+      // This function is problematic for list queries and has been a source of issues.
+      // Avoid using it in list query rules.
       return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
     }
 
@@ -33,8 +23,8 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     match /payment_methods/{paymentMethodId} {
-      allow get, list: if isSignedIn();
-      allow write: if isAdmin();
+      // Temporarily open for any signed-in user per debugging request.
+      allow read, write: if isSignedIn();
     }
 
     // --- User-Specific Data ---
@@ -42,9 +32,11 @@ service cloud.firestore {
       allow get: if request.auth.uid == userId || isAdmin();
       allow list: if isAdmin();
       allow create: if request.auth.uid == userId;
+      // Prevent users from changing their own role.
       allow update: if (request.auth.uid == userId && resource.data.role == request.resource.data.role) || isAdmin();
       allow delete: if isAdmin();
 
+      // Subcollections
       match /addresses/{addressId} {
         allow read, write: if request.auth.uid == userId;
       }
@@ -53,41 +45,20 @@ service cloud.firestore {
       }
     }
     
-    // --- Shared Data Collections ---
+    // --- Shared Data Collections (TEMPORARY DEBUG RULES) ---
+    // Applying the user's suggested temporary fix to unblock development.
+    // This is NOT secure for production as it allows any signed-in user to read/write all data.
     
-    // ORDERS
     match /orders/{orderId} {
-      // A user can list THEIR OWN orders. This is checked by ensuring the query
-      // from the client constrains the `userId` to the authenticated user's ID.
-      // This rule does NOT allow an admin to list all orders from the client.
-      allow list: if request.auth.uid == resource.data.userId;
-      
-      // A user can GET their own order. An admin can GET any single order.
-      allow get: if request.auth.uid == resource.data.userId || isAdmin();
-
-      allow create: if isRequestOwner();
-      allow update: if request.auth.uid == resource.data.userId || isAdmin();
-      allow delete: if isAdmin();
+      allow read, write: if isSignedIn();
     }
     
-    // QUOTE REQUESTS
     match /quote_requests/{quoteRequestId} {
-      allow list: if request.auth.uid == resource.data.userId;
-      allow get: if request.auth.uid == resource.data.userId || isAdmin();
-      
-      allow create: if isRequestOwner();
-      allow update: if request.auth.uid == resource.data.userId || isAdmin();
-      allow delete: if isAdmin();
+      allow read, write: if isSignedIn();
     }
     
-    // CUSTOM SERVICE REQUESTS
     match /custom_service_requests/{customServiceRequestId} {
-      allow list: if request.auth.uid == resource.data.userId;
-      allow get: if request.auth.uid == resource.data.userId || isAdmin();
-      
-      allow create: if isRequestOwner();
-      allow update: if request.auth.uid == resource.data.userId || isAdmin();
-      allow delete: if isAdmin();
+      allow read, write: if isSignedIn();
     }
   }
 }
