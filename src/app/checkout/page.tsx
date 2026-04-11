@@ -228,7 +228,7 @@ export default function CheckoutPage() {
                                         {paymentMethods.map(method => (
                                           <FormItem key={method.id}>
                                             <FormControl>
-                                              <RadioGroupItem value={method.id} className="sr-only" />
+                                              <RadioGroupItem value={method.id} id={method.id} className="sr-only" />
                                             </FormControl>
                                             <Label htmlFor={method.id} className={`flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground ${field.value === method.id ? 'border-primary' : ''}`}>
                                               {method.name}
