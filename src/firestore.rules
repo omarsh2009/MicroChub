@@ -7,10 +7,12 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // This can only be used for get/update/delete, not list.
     function isResourceOwner() {
       return isSignedIn() && request.auth.uid == resource.data.userId;
     }
     
+    // This is for create operations.
     function isRequestOwner() {
        return isSignedIn() && request.auth.uid == request.resource.data.userId;
     }
@@ -56,31 +58,42 @@ service cloud.firestore {
     }
     
     // --- Shared Data Collections ---
+    
+    // ORDERS
     match /orders/{orderId} {
-      // User can get their own order. Admin can get any order.
-      allow get: if isResourceOwner() || isAdmin();
-      // User can list their own orders (query must include `where('userId', '==', request.auth.uid)`).
-      // Admin CANNOT list all orders from the client.
-      allow list: if isSignedIn();
+      // Users can read (get+list) and update their own orders.
+      // The list query from the client MUST have a `where('userId', '==', request.auth.uid)` clause.
+      allow read, update: if request.auth.uid == resource.data.userId;
+      
+      // Admins can get, update, and delete any single order. They cannot list all orders.
+      allow get, update, delete: if isAdmin();
+
+      // Users can create orders for themselves.
       allow create: if isRequestOwner();
-      allow update: if isResourceOwner() || isAdmin();
-      allow delete: if isAdmin();
     }
     
+    // CUSTOM SERVICE REQUESTS
     match /custom_service_requests/{customServiceRequestId} {
-      allow get: if isResourceOwner() || isAdmin();
-      allow list: if isSignedIn();
+      // Users can read (get+list) and update their own requests.
+      allow read, update: if request.auth.uid == resource.data.userId;
+      
+      // Admins can get, update, and delete any single request. They cannot list all requests.
+      allow get, update, delete: if isAdmin();
+
+      // Users can create requests for themselves.
       allow create: if isRequestOwner();
-      allow update: if isResourceOwner() || isAdmin();
-      allow delete: if isAdmin();
     }
     
+    // QUOTE REQUESTS
     match /quote_requests/{quoteRequestId} {
-      allow get: if isResourceOwner() || isAdmin();
-      allow list: if isSignedIn();
+      // Users can read (get+list) and update their own requests.
+      allow read, update: if request.auth.uid == resource.data.userId;
+      
+      // Admins can get, update, and delete any single request. They cannot list all requests.
+      allow get, update, delete: if isAdmin();
+
+      // Users can create requests for themselves.
       allow create: if isRequestOwner();
-      allow update: if isResourceOwner() || isAdmin();
-      allow delete: if isAdmin();
     }
   }
 }
