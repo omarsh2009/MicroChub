@@ -17,13 +17,8 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
     function isAdmin() {
       // Safely check for admin role on the user's document.
-      // This function now checks for existence before trying to access data.
       return exists(/databases/$(database)/documents/users/$(request.auth.uid))
              && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
     }
@@ -52,22 +47,24 @@ service cloud.firestore {
     // -------------------------------------------------------------------------
 
     match /users/{userId} {
-      allow get: if isOwner(userId) || isAdmin();
+      function isOwner() {
+        return request.auth.uid == userId;
+      }
+
+      allow get: if isOwner() || isAdmin();
       allow list: if isAdmin();
-      allow create: if isOwner(userId);
-      // A user can update their own profile, but cannot change their role.
-      allow update: if (isOwner(userId) && !('role' in request.resource.data)) || isAdmin();
+      allow create: if isOwner();
+      allow update: if (isOwner() && !('role' in request.resource.data)) || isAdmin();
       allow delete: if isAdmin();
 
       match /addresses/{addressId} {
-        allow read, update, delete: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow read, update, delete: if isOwner();
+        allow create: if isOwner() && request.resource.data.userId == userId;
       }
 
       match /wishlist_items/{wishlistItemId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow delete: if isOwner(userId);
+        allow read, delete: if isOwner();
+        allow create: if isOwner() && request.resource.data.userId == userId;
       }
     }
 
@@ -76,18 +73,36 @@ service cloud.firestore {
     // -------------------------------------------------------------------------
     
     match /orders/{orderId} {
-      allow read, update, delete: if isAdmin() || (resource.data.userId == request.auth.uid);
-      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid);
+      // Admin Access: Admins can read and modify any order.
+      allow read, update, delete: if isAdmin();
+      
+      // User Access: Users can manage their OWN orders.
+      allow read, update, delete: if resource.data.userId == request.auth.uid;
+
+      // Create Access: Any signed-in user can create an order for themselves.
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
     }
     
     match /custom_service_requests/{customServiceRequestId} {
-      allow read, update, delete: if isAdmin() || (resource.data.userId == request.auth.uid);
-      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid);
+      // Admin Access: Admins can read and modify any request.
+      allow read, update, delete: if isAdmin();
+      
+      // User Access: Users can manage their OWN requests.
+      allow read, update, delete: if resource.data.userId == request.auth.uid;
+      
+      // Create Access: Any signed-in user can create a request for themselves.
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
     }
     
     match /quote_requests/{quoteRequestId} {
-      allow read, update, delete: if isAdmin() || (resource.data.userId == request.auth.uid);
-      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid);
+      // Admin Access: Admins can read and modify any quote request.
+      allow read, update, delete: if isAdmin();
+      
+      // User Access: Users can manage their OWN quote requests.
+      allow read, update, delete: if resource.data.userId == request.auth.uid;
+
+      // Create Access: Any signed-in user can create a quote request for themselves.
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
     }
   }
 }
