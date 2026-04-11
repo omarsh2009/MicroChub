@@ -60,11 +60,13 @@ service cloud.firestore {
     /**
      * Checks if the authenticated user has an admin or super_admin role.
      * This is determined by reading the 'role' field from the user's own profile document.
+     * This function is robust against non-existent user documents.
      */
     function isAdmin() {
-      // Security: This requires a 'get' call on every check, but aligns with app logic.
-      // The user's profile must exist for this to succeed.
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid))
+             && 'role' in userDoc.data
+             && userDoc.data.role in ['admin', 'super_admin'];
     }
 
     /**
@@ -145,7 +147,8 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin(); // Only admins can list all users.
       allow create: if isCreatingOwnUserDoc(userId);
-      allow update: if isOwner(userId) || isAdmin(); // Allow self or admin updates.
+      // Allow self-updates, or admin updates. Rule ensures user id cannot be changed.
+      allow update: if (isOwner(userId) && isUpdatingOwnUserDoc()) || isAdmin();
       allow delete: if isAdmin(); // Only admins can delete user profiles.
 
       match /addresses/{addressId} {
@@ -158,21 +161,17 @@ service cloud.firestore {
       match /wishlist_items/{wishlistItemId} {
         allow get, list: if isOwner(userId);
         allow create: if isOwner(userId) && isCreatingOwnChildDoc(userId);
-        allow update: if false;
+        allow update: if false; // Wishlist items are immutable
         allow delete: if isExistingOwner(userId);
       }
       
+      // DEPRECATED: Cart is now stored in client-side localStorage.
+      // These rules are left for reference but can be removed.
       match /carts/{cartId} {
-         allow get, list: if isOwner(userId);
-         allow create: if isOwner(userId) && isCreatingOwnChildDoc(userId);
-         allow update: if isExistingOwner(userId) && isUpdatingOwnChildDoc();
-         allow delete: if isExistingOwner(userId);
+         allow read, write: if false;
          
          match /cart_items/{cartItemId} {
-           allow get, list: if isOwner(userId);
-           allow create: if isOwner(userId) && request.resource.data.cartId == cartId;
-           allow update: if isExistingOwner(userId) && request.resource.data.cartId == resource.data.cartId;
-           allow delete: if isExistingOwner(userId);
+           allow read, write: if false;
          }
       }
     }
