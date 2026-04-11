@@ -8,18 +8,17 @@ service cloud.firestore {
     }
 
     function isResourceOwner() {
-      // Use this for get/update on a specific document.
-      // CANNOT be used for list queries.
+      // For get, update on a specific document.
       return isSignedIn() && request.auth.uid == resource.data.userId;
     }
     
     function isRequestOwner() {
-       // Use this for create operations.
+       // For create operations.
        return isSignedIn() && request.auth.uid == request.resource.data.userId;
     }
 
     function isAdmin() {
-      // Use this for get/update/delete on a specific document.
+      // For get/update/delete on a specific document.
       // CANNOT be used for list queries as it performs a `get`.
       return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
     }
@@ -59,23 +58,26 @@ service cloud.firestore {
     
     // ORDERS
     match /orders/{orderId} {
-      allow list: if isSignedIn();
-      allow get, update: if isResourceOwner();
       allow create: if isRequestOwner();
+      allow get, update: if isResourceOwner() || isAdmin();
+      allow list: if isRequestOwner();
+      allow delete: if isAdmin();
     }
     
     // QUOTE REQUESTS
     match /quote_requests/{quoteRequestId} {
-      allow list: if isSignedIn();
-      allow get, update: if isResourceOwner();
       allow create: if isRequestOwner();
+      allow get, update: if isResourceOwner() || isAdmin();
+      allow list: if isRequestOwner();
+      allow delete: if isAdmin();
     }
     
     // CUSTOM SERVICE REQUESTS
     match /custom_service_requests/{customServiceRequestId} {
-      allow list: if isSignedIn();
-      allow get, update: if isResourceOwner();
       allow create: if isRequestOwner();
+      allow get, update: if isResourceOwner() || isAdmin();
+      allow list: if isRequestOwner();
+      allow delete: if isAdmin();
     }
   }
 }
