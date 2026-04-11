@@ -1,6 +1,5 @@
 'use client';
 import { addDoc, collection, serverTimestamp, Firestore, doc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, FirebaseStorage } from 'firebase/storage';
 import type { CartItem, PaymentMethod, ShippingAddress } from './types';
 
 interface OrderPayload {
@@ -11,13 +10,12 @@ interface OrderPayload {
   shippingAddress: ShippingAddress;
   paymentMethod: PaymentMethod;
   transactionId: string;
-  hasRestrictedItem: boolean;
-  legalAgreementFile?: File;
+  requiresLegalApproval: boolean;
+  legalAgreementUrl?: string;
 }
 
 export async function createOrder(
   firestore: Firestore,
-  storage: FirebaseStorage,
   payload: OrderPayload
 ): Promise<string> {
   const { 
@@ -28,21 +26,9 @@ export async function createOrder(
     shippingAddress, 
     paymentMethod,
     transactionId,
-    hasRestrictedItem, 
-    legalAgreementFile 
+    requiresLegalApproval, 
+    legalAgreementUrl 
   } = payload;
-
-  let legalAgreementUrl: string | undefined = undefined;
-  let requiresLegalApproval = false;
-
-  // Upload legal agreement if it exists
-  if (hasRestrictedItem && legalAgreementFile) {
-    const legalAgreementPath = `user_uploads/${userId}/legal_agreements/${Date.now()}-${legalAgreementFile.name}`;
-    const legalStorageRef = ref(storage, legalAgreementPath);
-    const legalUploadResult = await uploadBytes(legalStorageRef, legalAgreementFile);
-    legalAgreementUrl = await getDownloadURL(legalUploadResult.ref);
-    requiresLegalApproval = true;
-  }
 
   // Create order document in Firestore's top-level 'orders' collection
   const ordersCollectionRef = collection(firestore, 'orders');
@@ -59,7 +45,7 @@ export async function createOrder(
     },
     transactionId,
     requiresLegalApproval,
-    legalAgreementApproved: false,
+    legalAgreementApproved: false, // This is always false on creation
     status: 'Pending Verification',
     createdAt: serverTimestamp(),
   };

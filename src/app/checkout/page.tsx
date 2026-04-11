@@ -30,6 +30,7 @@ import { createOrder } from '@/lib/orders';
 import { products } from '@/lib/data';
 import { getPaymentMethods } from '@/lib/admin';
 import type { PaymentMethod } from '@/lib/types';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/png", "application/pdf"];
 
@@ -139,8 +140,30 @@ export default function CheckoutPage() {
         return;
     }
     setIsLoading(true);
+
     try {
-        await createOrder(firestore, storage, {
+        let legalAgreementUrl: string | undefined = undefined;
+        const legalAgreementFile = values.legalAgreement?.[0];
+
+        if (hasRestrictedItem && legalAgreementFile) {
+            try {
+                const legalAgreementPath = `user_uploads/${user.uid}/legal_agreements/${Date.now()}-${legalAgreementFile.name}`;
+                const storageRef = ref(storage, legalAgreementPath);
+                const uploadResult = await uploadBytes(storageRef, legalAgreementFile);
+                legalAgreementUrl = await getDownloadURL(uploadResult.ref);
+            } catch (uploadError) {
+                console.error("Upload failed:", uploadError);
+                toast({
+                    variant: "destructive",
+                    title: "Upload Failed",
+                    description: "Could not upload your legal agreement. Please try again.",
+                });
+                setIsLoading(false);
+                return;
+            }
+        }
+
+        await createOrder(firestore, {
             userId: user.uid,
             cart,
             totalPrice,
@@ -153,8 +176,8 @@ export default function CheckoutPage() {
             },
             paymentMethod: selectedPaymentMethod,
             transactionId: values.transactionId,
-            hasRestrictedItem,
-            legalAgreementFile: values.legalAgreement?.[0],
+            requiresLegalApproval: hasRestrictedItem,
+            legalAgreementUrl: legalAgreementUrl,
         });
 
         toast({ title: 'Order Placed!', description: 'Your order has been received and is pending verification.' });
