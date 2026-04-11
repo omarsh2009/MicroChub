@@ -146,23 +146,34 @@ export default function CheckoutPage() {
         const legalAgreementFile = values.legalAgreement?.[0];
 
         if (hasRestrictedItem && legalAgreementFile) {
+            console.log("Starting upload process...");
+            console.log("File to upload:", legalAgreementFile);
+
             try {
                 const legalAgreementPath = `user_uploads/${user.uid}/legal_agreements/${Date.now()}-${legalAgreementFile.name}`;
                 const storageRef = ref(storage, legalAgreementPath);
+                
+                console.log("Uploading to path:", legalAgreementPath);
                 const uploadResult = await uploadBytes(storageRef, legalAgreementFile);
+                console.log("Upload complete:", uploadResult);
+
+                console.log("Getting download URL...");
                 legalAgreementUrl = await getDownloadURL(uploadResult.ref);
+                console.log("Download URL obtained:", legalAgreementUrl);
+
             } catch (uploadError) {
-                console.error("Upload failed:", uploadError);
+                console.error("Upload failed at try/catch block:", uploadError);
                 toast({
                     variant: "destructive",
                     title: "Upload Failed",
-                    description: "Could not upload your legal agreement. Please try again.",
+                    description: "Could not upload your legal agreement. Please check the console for details.",
                 });
                 setIsLoading(false);
                 return;
             }
         }
 
+        console.log("Proceeding to create order...");
         await createOrder(firestore, {
             userId: user.uid,
             cart,
@@ -180,14 +191,16 @@ export default function CheckoutPage() {
             legalAgreementUrl: legalAgreementUrl,
         });
 
+        console.log("Order created successfully.");
         toast({ title: 'Order Placed!', description: 'Your order has been received and is pending verification.' });
         clearCart();
         router.push('/orders');
 
     } catch (error: any) {
-        console.error('Order creation failed:', error);
+        console.error('Order submission process failed:', error);
         toast({ variant: 'destructive', title: 'Order Failed', description: error.message || 'Could not place your order.' });
     } finally {
+        console.log("Finishing submission process.");
         setIsLoading(false);
     }
   }
