@@ -9,7 +9,7 @@ service cloud.firestore {
 
     function isAdmin() {
       // Safely check for admin role on the user's document.
-      // NOTE: This function cannot be used to secure `list` queries for collections that are also queried by non-admins.
+      // NOTE: This function can only be used to secure GET, UPDATE, DELETE requests, not LIST queries.
       return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
              && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
     }
@@ -47,37 +47,29 @@ service cloud.firestore {
     }
     
     // --- Shared Data Collections ---
-    // NOTE: Admin `list` functionality is disabled on these collections to allow user-specific queries to succeed.
-    // Admins can still access individual documents via the `get` rule.
+    // The rules for these collections are simplified to prioritize user functionality.
+    // Admin list queries are disabled to prevent rule evaluation conflicts.
 
     match /orders/{orderId} {
-      allow create: if request.auth.uid == request.resource.data.userId;
-      
-      // Admin override for single document access
-      allow get, update, delete: if isAdmin();
-      
-      // Users can read/update their own orders. This rule allows `list` queries constrained by `where('userId', '==', auth.uid)`.
-      allow read, update: if request.auth.uid == resource.data.userId;
+      // A user can read, update, or create their own order document.
+      // This single rule handles get, list, create, and update for a user's own data.
+      allow read, write: if request.auth.uid == resource.data.userId || request.auth.uid == request.resource.data.userId;
+      // Admins can delete any order.
+      allow delete: if isAdmin();
     }
     
     match /custom_service_requests/{customServiceRequestId} {
-      allow create: if request.auth.uid == request.resource.data.userId;
-
-      // Admin override for single document access
-      allow get, update, delete: if isAdmin();
-
-      // Users can read/update their own requests.
-      allow read, update: if request.auth.uid == resource.data.userId;
+      // A user can read, update, or create their own service request.
+      allow read, write: if request.auth.uid == resource.data.userId || request.auth.uid == request.resource.data.userId;
+      // Admins can delete any request.
+      allow delete: if isAdmin();
     }
     
     match /quote_requests/{quoteRequestId} {
-      allow create: if request.auth.uid == request.resource.data.userId;
-      
-      // Admin override for single document access
-      allow get, update, delete: if isAdmin();
-
-      // Users can read/update their own requests.
-      allow read, update: if request.auth.uid == resource.data.userId;
+      // A user can read, update, or create their own quote request.
+      allow read, write: if request.auth.uid == resource.data.userId || request.auth.uid == request.resource.data.userId;
+      // Admins can delete any request.
+      allow delete: if isAdmin();
     }
   }
 }
