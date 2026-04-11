@@ -9,6 +9,7 @@ service cloud.firestore {
 
     function isAdmin() {
       // Safely check for admin role on the user's document.
+      // NOTE: This function cannot be used to secure `list` queries for collections that are also queried by non-admins.
       return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
              && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
     }
@@ -46,30 +47,36 @@ service cloud.firestore {
     }
     
     // --- Shared Data Collections ---
+    // NOTE: Admin `list` functionality is disabled on these collections to allow user-specific queries to succeed.
+    // Admins can still access individual documents via the `get` rule.
 
     match /orders/{orderId} {
       allow create: if request.auth.uid == request.resource.data.userId;
       
-      // Admins can get/update/delete any single order
+      // Admin override for single document access
       allow get, update, delete: if isAdmin();
       
-      // Users can read/update their own orders. This allows `list` with a `where` clause.
+      // Users can read/update their own orders. This rule allows `list` queries constrained by `where('userId', '==', auth.uid)`.
       allow read, update: if request.auth.uid == resource.data.userId;
     }
     
     match /custom_service_requests/{customServiceRequestId} {
       allow create: if request.auth.uid == request.resource.data.userId;
-      // Admins can get/update/delete any single request
+
+      // Admin override for single document access
       allow get, update, delete: if isAdmin();
-      // Users can read/update their own requests
+
+      // Users can read/update their own requests.
       allow read, update: if request.auth.uid == resource.data.userId;
     }
     
     match /quote_requests/{quoteRequestId} {
       allow create: if request.auth.uid == request.resource.data.userId;
-      // Admins can get/update/delete any single request
+      
+      // Admin override for single document access
       allow get, update, delete: if isAdmin();
-      // Users can read/update their own requests
+
+      // Users can read/update their own requests.
       allow read, update: if request.auth.uid == resource.data.userId;
     }
   }
