@@ -37,7 +37,7 @@ export async function createOrder(
 
   // Upload legal agreement if it exists
   if (hasRestrictedItem && legalAgreementFile) {
-    const legalAgreementPath = `legal-agreements/${userId}/${Date.now()}-${legalAgreementFile.name}`;
+    const legalAgreementPath = `user_uploads/${userId}/legal_agreements/${Date.now()}-${legalAgreementFile.name}`;
     const legalStorageRef = ref(storage, legalAgreementPath);
     const legalUploadResult = await uploadBytes(legalStorageRef, legalAgreementFile);
     legalAgreementUrl = await getDownloadURL(legalUploadResult.ref);
@@ -77,5 +77,3 @@ export async function createOrder(
 
   return newOrderDoc.id;
 }
-
-    

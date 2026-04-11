@@ -23,7 +23,7 @@ export async function createQuoteRequest(
   let fileUrl: string | undefined = undefined;
 
   if (file) {
-    const filePath = `quote-requests/${userId}/${Date.now()}-${file.name}`;
+    const filePath = `user_uploads/${userId}/quote_requests/${Date.now()}-${file.name}`;
     const fileStorageRef = ref(storage, filePath);
     const uploadResult = await uploadBytes(fileStorageRef, file);
     fileUrl = await getDownloadURL(uploadResult.ref);

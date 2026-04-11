@@ -173,7 +173,7 @@ export function ProductClientPage({ product }: { product: Product }) {
   const handleCustomQuoteRequest = async () => {
     if (!user) {
       toast({ variant: 'destructive', title: 'Please log in', description: 'You need to be logged in to request a quote.' });
-      router.push(`/login?redirect=/products/${product.slug}`);
+      router.push(`/products/${product.slug}`);
       return;
     }
     if (!firestore || !storage) {
@@ -183,6 +183,18 @@ export function ProductClientPage({ product }: { product: Product }) {
     if (!customNotes) {
       toast({ variant: 'destructive', title: 'Description needed', description: 'Please describe your custom modification.' });
       return;
+    }
+
+    if (customFile) {
+        const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+        if (!ACCEPTED_FILE_TYPES.includes(customFile.type)) {
+            toast({ variant: 'destructive', title: 'Invalid File Type', description: 'Only .jpg, .png, and .pdf files are accepted.' });
+            return;
+        }
+        if (customFile.size > 5 * 1024 * 1024) { // 5MB limit
+            toast({ variant: 'destructive', title: 'File Too Large', description: 'File size must be less than 5MB.' });
+            return;
+        }
     }
 
     setIsRequestingCustomQuote(true);
@@ -391,7 +403,7 @@ export function ProductClientPage({ product }: { product: Product }) {
                     </div>
                     <div className="grid w-full max-w-sm items-center gap-1.5">
                         <Label htmlFor="custom-file">Reference File (Optional)</Label>
-                        <Input id="custom-file" type="file" onChange={(e) => setCustomFile(e.target.files ? e.target.files[0] : null)} />
+                        <Input id="custom-file" type="file" accept="image/jpeg,image/png,application/pdf" onChange={(e) => setCustomFile(e.target.files ? e.target.files[0] : null)} />
                     </div>
                 </CardContent>
                 <CardFooter>

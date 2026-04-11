@@ -31,6 +31,8 @@ import { products } from '@/lib/data';
 import { getPaymentMethods } from '@/lib/admin';
 import type { PaymentMethod } from '@/lib/types';
 
+const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+
 const formSchema = z.object({
   fullName: z.string().min(3, 'Please enter your full name.'),
   phoneNumber: z.string().min(10, 'Please enter a valid phone number.'),
@@ -80,6 +82,10 @@ export default function CheckoutPage() {
           .custom<FileList>()
           .refine((files) => files?.length === 1, 'Signed legal agreement is required.')
           .refine((files) => files?.[0]?.size <= 5 * 1024 * 1024, `Max file size is 5MB.`)
+          .refine(
+            (files) => ACCEPTED_FILE_TYPES.includes(files?.[0]?.type as string),
+            'Only .jpg, .png, and .pdf files are accepted.'
+          ),
       });
     }
     return formSchema;
@@ -295,7 +301,7 @@ export default function CheckoutPage() {
                                                         <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Click to upload</span> or drag and drop</p>
                                                         <p className="text-xs text-muted-foreground">{field.value?.[0]?.name || 'PDF, PNG, JPG (MAX. 5MB)'}</p>
                                                     </div>
-                                                    <Input id="legal-dropzone-file" type="file" className="hidden" onChange={(e) => field.onChange(e.target.files)} />
+                                                    <Input id="legal-dropzone-file" type="file" className="hidden" accept="image/jpeg,image/png,application/pdf" onChange={(e) => field.onChange(e.target.files)} />
                                                 </label>
                                             </div> 
                                         </FormControl>
