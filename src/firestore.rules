@@ -7,84 +7,87 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // This can only be used for get/update/delete on a single document, not list queries.
     function isResourceOwner() {
+      // Use this for get/update on a specific document.
+      // CANNOT be used for list queries.
       return isSignedIn() && request.auth.uid == resource.data.userId;
     }
     
-    // This is for create operations where resource.data does not exist yet.
     function isRequestOwner() {
+       // Use this for create operations.
        return isSignedIn() && request.auth.uid == request.resource.data.userId;
     }
 
     function isAdmin() {
-      // This function uses get() and CANNOT be used in rules for queries (list operations).
-      // It should only be used for get, create, update, delete on single documents.
-      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-             && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
+      // Use this for get/update/delete on a specific document.
+      // CANNOT be used for list queries as it performs a `get`.
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
     }
 
     // --- Public & Admin-Managed Collections ---
     match /categories/{categoryId} {
-      allow get, list: if true;
-      allow create, update, delete: if isAdmin();
+      allow read: if true;
+      allow write: if isAdmin();
     }
-
     match /products/{productId} {
-      allow get, list: if true;
-      allow create, update, delete: if isAdmin();
+      allow read: if true;
+      allow write: if isAdmin();
     }
-
     match /payment_methods/{paymentMethodId} {
       allow get, list: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+      allow write: if isAdmin();
     }
 
     // --- User-Specific Data ---
     match /users/{userId} {
       allow get: if request.auth.uid == userId || isAdmin();
-      allow list: if isAdmin(); // Only admins can list all users.
-      allow create: if request.auth.uid == userId; // User creates their own doc.
-      // User can update their own doc, but not change role. Admin can update anything.
+      allow list: if isAdmin();
+      allow create: if request.auth.uid == userId;
       allow update: if (request.auth.uid == userId && resource.data.role == request.resource.data.role) || isAdmin();
       allow delete: if isAdmin();
 
-      // For subcollections, the owner is determined by the {userId} in the path.
       match /addresses/{addressId} {
         allow read, write: if request.auth.uid == userId;
       }
       match /wishlist_items/{wishlistItemId} {
+        // Users can only access their own wishlist items.
         allow read, write: if request.auth.uid == userId;
       }
     }
     
     // --- Shared Data Collections ---
+    // The key here is to separate rules for users from rules for admins to avoid
+    // the `isAdmin()` function (which does a `get`) from being evaluated during
+    // a user's `list` query.
     
     // ORDERS
     match /orders/{orderId} {
-      allow get: if isResourceOwner() || isAdmin();
-      allow list: if isSignedIn(); // Client MUST filter by userId
+      // User-specific rules that do NOT use `get` or `exists`.
+      allow list: if isSignedIn(); // Allows a user's query `where('userId', '==', uid)` to pass.
       allow create: if isRequestOwner();
-      allow update: if isResourceOwner() || isAdmin();
-      allow delete: if isAdmin();
-    }
-    
-    // CUSTOM SERVICE REQUESTS
-    match /custom_service_requests/{customServiceRequestId} {
-      allow get: if isResourceOwner() || isAdmin();
-      allow list: if isSignedIn(); // Client MUST filter by userId
-      allow create: if isRequestOwner();
-      allow update: if isResourceOwner() || isAdmin();
-      allow delete: if isAdmin();
+      
+      // These rules CAN use `get` because they operate on a single document.
+      allow get, update: if isResourceOwner();
+      
+      // Admin-specific rules. These use `get` and will only be evaluated for admins.
+      // Because they are in separate allow statements, they will not block the user's `list` query.
+      allow get, update, delete: if isAdmin();
     }
     
     // QUOTE REQUESTS
     match /quote_requests/{quoteRequestId} {
-      allow get: if isResourceOwner() || isAdmin();
-      allow list: if isSignedIn(); // Client MUST filter by userId
+      allow list: if isSignedIn();
       allow create: if isRequestOwner();
-      allow update: if isResourceOwner() || isAdmin();
-      allow delete: if isAdmin();
+      allow get, update: if isResourceOwner();
+      allow get, update, delete: if isAdmin();
+    }
+    
+    // CUSTOM SERVICE REQUESTS
+    match /custom_service_requests/{customServiceRequestId} {
+      allow list: if isSignedIn();
+      allow create: if isRequestOwner();
+      allow get, update: if isResourceOwner();
+      allow get, update, delete: if isAdmin();
     }
   }
 }
