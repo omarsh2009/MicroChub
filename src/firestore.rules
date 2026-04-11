@@ -7,58 +7,72 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isAdmin() {
-      // This function is problematic for list queries and has been a source of issues.
-      // Avoid using it in list query rules.
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
     }
 
     // --- Public & Admin-Managed Collections ---
+    // Temporarily locking down admin writes to debug list issues.
     match /categories/{categoryId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if false; // LOCKED FOR DEBUGGING
     }
     match /products/{productId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if false; // LOCKED FOR DEBUGGING
     }
     match /payment_methods/{paymentMethodId} {
-      // Temporarily open for any signed-in user per debugging request.
-      allow read, write: if isSignedIn();
+      allow read: if true;
+      allow write: if false; // LOCKED FOR DEBUGGING
     }
 
     // --- User-Specific Data ---
     match /users/{userId} {
-      allow get: if request.auth.uid == userId || isAdmin();
-      allow list: if isAdmin();
-      allow create: if request.auth.uid == userId;
-      // Prevent users from changing their own role.
-      allow update: if (request.auth.uid == userId && resource.data.role == request.resource.data.role) || isAdmin();
-      allow delete: if isAdmin();
+      allow get: if isOwner(userId);
+      allow list: if false; // Admin list functionality disabled for debugging.
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && request.resource.data.role == resource.data.role;
+      allow delete: if false; // Deletes disabled for debugging.
 
       // Subcollections
       match /addresses/{addressId} {
-        allow read, write: if request.auth.uid == userId;
+        allow read, write: if isOwner(userId);
       }
       match /wishlist_items/{wishlistItemId} {
-        allow read, write: if request.auth.uid == userId;
+        allow read, write: if isOwner(userId);
       }
     }
     
-    // --- Shared Data Collections (TEMPORARY DEBUG RULES) ---
-    // Applying the user's suggested temporary fix to unblock development.
-    // This is NOT secure for production as it allows any signed-in user to read/write all data.
+    // --- Shared Data Collections ---
+    // These rules are designed to allow users to access their own data.
     
     match /orders/{orderId} {
-      allow read, write: if isSignedIn();
+      // A user can list their own orders. Client query MUST constrain by userId.
+      allow list: if isSignedIn();
+      // A user can get their own specific order.
+      allow get: if isOwner(resource.data.userId);
+      // A user can create an order for themselves.
+      allow create: if isOwner(request.resource.data.userId);
+      // Updates and Deletes are locked for this debugging step.
+      allow update: if false;
+      allow delete: if false;
     }
     
     match /quote_requests/{quoteRequestId} {
-      allow read, write: if isSignedIn();
+      allow list: if isSignedIn();
+      allow get: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+      // User needs to update to accept/reject
+      allow update: if isOwner(resource.data.userId);
+      allow delete: if false;
     }
     
     match /custom_service_requests/{customServiceRequestId} {
-      allow read, write: if isSignedIn();
+      allow list: if isSignedIn();
+      allow get: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }
