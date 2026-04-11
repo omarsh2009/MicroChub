@@ -22,10 +22,10 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      // Safely check for admin role on the user's document.
+      // This function now checks for existence before trying to access data.
       return exists(/databases/$(database)/documents/users/$(request.auth.uid))
-             && 'role' in userDoc.data
-             && userDoc.data.role in ['admin', 'super_admin'];
+             && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
     }
 
     // -------------------------------------------------------------------------
@@ -55,15 +55,19 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId);
-      allow update: if isOwner(userId) && !("role" in request.resource.data) || isAdmin();
+      // A user can update their own profile, but cannot change their role.
+      allow update: if (isOwner(userId) && !("role" in request.resource.data)) || isAdmin();
       allow delete: if isAdmin();
 
       match /addresses/{addressId} {
-        allow read, write: if isOwner(userId);
+        allow read, update, delete: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
       }
 
       match /wishlist_items/{wishlistItemId} {
-        allow read, write: if isOwner(userId);
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow delete: if isOwner(userId);
       }
     }
 
@@ -72,17 +76,21 @@ service cloud.firestore {
     // -------------------------------------------------------------------------
     
     match /orders/{orderId} {
-      allow read, write: if isAdmin() || isOwner(resource.data.userId);
+      allow read: if isAdmin() || (resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid);
+      allow update, delete: if isAdmin() || (resource.data.userId == request.auth.uid);
     }
     
     match /custom_service_requests/{customServiceRequestId} {
-      allow read, write: if isAdmin() || isOwner(resource.data.userId);
+      allow read: if isAdmin() || (resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid);
+      allow update, delete: if isAdmin() || (resource.data.userId == request.auth.uid);
     }
     
     match /quote_requests/{quoteRequestId} {
-      allow read, write: if isAdmin() || isOwner(resource.data.userId);
+      allow read: if isAdmin() || (resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid);
+      allow update, delete: if isAdmin() || (resource.data.userId == request.auth.uid);
     }
   }
 }
-
-    
