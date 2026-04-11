@@ -94,25 +94,11 @@ service cloud.firestore {
     }
 
     /**
-     * Validates that the internal `id` field of a user document is immutable on update.
-     */
-    function isUpdatingOwnUserDoc() {
-      return request.resource.data.id == resource.data.id;
-    }
-
-    /**
      * Validates that a user is creating a child document under their own data tree.
      * Ensures the child document's `userId` field correctly points to the parent user.
      */
     function isCreatingOwnChildDoc(userId) {
-      return request.resource.data.userId == userId;
-    }
-    
-    /**
-     * Validates that the `userId` field of a child document is immutable on update.
-     */
-    function isUpdatingOwnChildDoc() {
-      return request.resource.data.userId == resource.data.userId;
+      return isOwner(userId) && request.resource.data.userId == userId;
     }
 
     // -------------------------------------------------------------------------
@@ -147,14 +133,14 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin(); // Only admins can list all users.
       allow create: if isCreatingOwnUserDoc(userId);
-      // Allow self-updates, or admin updates. Rule ensures user id cannot be changed.
-      allow update: if (isOwner(userId) && isUpdatingOwnUserDoc()) || isAdmin();
+      // Allow self-updates, or admin updates.
+      allow update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin(); // Only admins can delete user profiles.
 
       match /addresses/{addressId} {
         allow get, list: if isOwner(userId);
         allow create: if isOwner(userId) && isCreatingOwnChildDoc(userId);
-        allow update: if isExistingOwner(userId) && isUpdatingOwnChildDoc();
+        allow update: if isExistingOwner(userId);
         allow delete: if isExistingOwner(userId);
       }
 
