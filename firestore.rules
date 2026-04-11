@@ -7,13 +7,9 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
     function isAdmin() {
       // Safely check for admin role on the user's document.
-      return exists(/databases/$(database)/documents/users/$(request.auth.uid))
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
              && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
     }
 
@@ -35,46 +31,48 @@ service cloud.firestore {
 
     // --- User-Specific Data ---
     match /users/{userId} {
-      // Admins can read any user profile. Users can only read their own.
-      allow get: if isOwner(userId) || isAdmin();
+      // Users can read their own profile, Admins can read any.
+      allow get: if request.auth.uid == userId || isAdmin();
       // Only admins can list all users.
       allow list: if isAdmin();
       // Users can create their own profile.
-      allow create: if isOwner(userId);
-      // Admins can update any profile. Users can update their own, but cannot change their role.
-      allow update: if (isOwner(userId) && !("role" in request.resource.data)) || isAdmin();
+      allow create: if request.auth.uid == userId;
+      // Users can update their own profile (but not their role). Admins can update any.
+      allow update: if (request.auth.uid == userId && !("role" in request.resource.data)) || isAdmin();
       // Only admins can delete users.
       allow delete: if isAdmin();
 
+      // Rules for user subcollections. The {userId} wildcard is inherited.
       match /addresses/{addressId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if request.auth.uid == userId;
       }
       match /wishlist_items/{wishlistItemId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if request.auth.uid == userId;
       }
     }
     
     // --- Shared Data Collections ---
 
     match /orders/{orderId} {
-      // Users can create their own orders.
-      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
-      // Users can read/update/delete their own orders.
-      allow read, update, delete: if isOwner(resource.data.userId);
-      // Admins can get/update/delete ANY order, but cannot LIST all orders.
-      allow get, update, delete: if isAdmin();
+      allow create: if request.auth.uid == request.resource.data.userId;
+      
+      // Admins can perform any action on any order.
+      allow read, write: if isAdmin();
+      
+      // Users can read and write their own orders.
+      allow read, write: if request.auth.uid == resource.data.userId;
     }
     
     match /custom_service_requests/{customServiceRequestId} {
-      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
-      allow read, update, delete: if isOwner(resource.data.userId);
-      allow get, update, delete: if isAdmin();
+      allow create: if request.auth.uid == request.resource.data.userId;
+      allow read, write: if isAdmin();
+      allow read, write: if request.auth.uid == resource.data.userId;
     }
     
     match /quote_requests/{quoteRequestId} {
-      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
-      allow read, update, delete: if isOwner(resource.data.userId);
-      allow get, update, delete: if isAdmin();
+      allow create: if request.auth.uid == request.resource.data.userId;
+      allow read, write: if isAdmin();
+      allow read, write: if request.auth.uid == resource.data.userId;
     }
   }
 }
