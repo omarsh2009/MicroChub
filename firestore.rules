@@ -131,11 +131,11 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin(); // Only admins can list all users.
+      allow list: if isAdmin();
       allow create: if isCreatingOwnUserDoc(userId);
-      // Allow self-updates, or admin updates.
-      allow update: if isOwner(userId) || isAdmin();
-      allow delete: if isAdmin(); // Only admins can delete user profiles.
+      // Users can update their own doc, but cannot change their role. Admins can change anything.
+      allow update: if (isOwner(userId) && !("role" in request.resource.data)) || isAdmin();
+      allow delete: if isAdmin();
 
       match /addresses/{addressId} {
         allow get, list: if isOwner(userId);
