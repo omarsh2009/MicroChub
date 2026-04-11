@@ -7,9 +7,16 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isResourceOwner() {
+      return isSignedIn() && request.auth.uid == resource.data.userId;
+    }
+    
+    function isRequestOwner() {
+       return isSignedIn() && request.auth.uid == request.resource.data.userId;
+    }
+
+    // Admin check uses get(), so it cannot be used in `list` rules.
     function isAdmin() {
-      // Safely check for admin role on the user's document.
-      // NOTE: This function can only be used to secure GET, UPDATE, DELETE requests, not LIST queries.
       return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
              && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
     }
@@ -17,7 +24,7 @@ service cloud.firestore {
     // --- Public & Admin-Managed Collections ---
     match /categories/{categoryId} {
       allow get, list: if true;
-      allow write: if isAdmin();
+      allow write: if isAdmin(); // write = create, update, delete
     }
 
     match /products/{productId} {
@@ -26,18 +33,21 @@ service cloud.firestore {
     }
 
     match /payment_methods/{paymentMethodId} {
-      allow get, list: if true; // Publicly readable for checkout
-      allow write: if isAdmin(); // Only admins can manage payment methods
+      allow get, list: if true;
+      allow write: if isAdmin();
     }
 
     // --- User-Specific Data ---
     match /users/{userId} {
       allow get: if request.auth.uid == userId || isAdmin();
+      // Admin list query is not possible with doc-based roles. This will fail if called.
       allow list: if isAdmin();
       allow create: if request.auth.uid == userId;
+      // Users can't change their own role. Admins can change anything.
       allow update: if (request.auth.uid == userId && !("role" in request.resource.data)) || isAdmin();
       allow delete: if isAdmin();
 
+      // Subcollections inherit userId from the parent path.
       match /addresses/{addressId} {
         allow read, write: if request.auth.uid == userId;
       }
@@ -47,29 +57,27 @@ service cloud.firestore {
     }
     
     // --- Shared Data Collections ---
-    // The rules for these collections are simplified to prioritize user functionality.
-    // Admin list queries are disabled to prevent rule evaluation conflicts.
-
     match /orders/{orderId} {
-      // A user can read, update, or create their own order document.
-      // This single rule handles get, list, create, and update for a user's own data.
-      allow read, write: if request.auth.uid == resource.data.userId || request.auth.uid == request.resource.data.userId;
-      // Admins can delete any order.
-      allow delete: if isAdmin();
+      // User can read their own orders. A `list` query must have `where('userId', '==', request.auth.uid)`.
+      allow read: if isResourceOwner();
+      allow create: if isRequestOwner();
+      allow update: if isResourceOwner();
+      // Admins can GET, UPDATE, DELETE any single order. They CANNOT list all orders.
+      allow get, update, delete: if isAdmin();
     }
     
     match /custom_service_requests/{customServiceRequestId} {
-      // A user can read, update, or create their own service request.
-      allow read, write: if request.auth.uid == resource.data.userId || request.auth.uid == request.resource.data.userId;
-      // Admins can delete any request.
-      allow delete: if isAdmin();
+      allow read: if isResourceOwner();
+      allow create: if isRequestOwner();
+      allow update: if isResourceOwner();
+      allow get, update, delete: if isAdmin();
     }
     
     match /quote_requests/{quoteRequestId} {
-      // A user can read, update, or create their own quote request.
-      allow read, write: if request.auth.uid == resource.data.userId || request.auth.uid == request.resource.data.userId;
-      // Admins can delete any request.
-      allow delete: if isAdmin();
+      allow read: if isResourceOwner();
+      allow create: if isRequestOwner();
+      allow update: if isResourceOwner();
+      allow get, update, delete: if isAdmin();
     }
   }
 }
