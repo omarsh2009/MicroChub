@@ -9,6 +9,7 @@ import {
   UserCircle,
   Menu,
   FileQuestion,
+  Home,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -154,6 +155,12 @@ export default function AdminLayout({
             </SheetContent>
           </Sheet>
           <div className="flex w-full items-center justify-end gap-4 md:ml-auto md:gap-2 lg:gap-4">
+            <Button asChild variant="outline">
+              <Link href="/">
+                <Home className="mr-2 h-4 w-4" />
+                View Site
+              </Link>
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
