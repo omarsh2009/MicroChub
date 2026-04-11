@@ -1,20 +1,14 @@
-/**
- * Core Philosophy:
- * This ruleset enforces a strict, multi-layered security model for an e-commerce application.
- * It combines path-based ownership for private user data, denormalized ownership for shared data like orders,
- * and a role-based system for administrators managed via a field on the user's document.
- * The primary goal is to ensure users can only access their own information, while allowing administrators broad oversight.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // -------------------------------------------------------------------------
-    // Helper Functions
-    // -------------------------------------------------------------------------
-
+    // --- Helper Functions ---
     function isSignedIn() {
       return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
 
     function isAdmin() {
@@ -23,10 +17,7 @@ service cloud.firestore {
              && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
     }
 
-    // -------------------------------------------------------------------------
-    // Public & Admin-Managed Collections
-    // -------------------------------------------------------------------------
-
+    // --- Public & Admin-Managed Collections ---
     match /categories/{categoryId} {
       allow get, list: if true;
       allow write: if isAdmin();
@@ -42,67 +33,48 @@ service cloud.firestore {
       allow write: if isAdmin(); // Only admins can manage payment methods
     }
 
-    // -------------------------------------------------------------------------
-    // User Data Collections (/users/{userId}/...)
-    // -------------------------------------------------------------------------
-
+    // --- User-Specific Data ---
     match /users/{userId} {
-      function isOwner() {
-        return request.auth.uid == userId;
-      }
-
-      allow get: if isOwner() || isAdmin();
+      // Admins can read any user profile. Users can only read their own.
+      allow get: if isOwner(userId) || isAdmin();
+      // Only admins can list all users.
       allow list: if isAdmin();
-      allow create: if isOwner();
-      allow update: if (isOwner() && !('role' in request.resource.data)) || isAdmin();
+      // Users can create their own profile.
+      allow create: if isOwner(userId);
+      // Admins can update any profile. Users can update their own, but cannot change their role.
+      allow update: if (isOwner(userId) && !("role" in request.resource.data)) || isAdmin();
+      // Only admins can delete users.
       allow delete: if isAdmin();
 
       match /addresses/{addressId} {
-        allow read, update, delete: if isOwner();
-        allow create: if isOwner() && request.resource.data.userId == userId;
+        allow read, write: if isOwner(userId);
       }
-
       match /wishlist_items/{wishlistItemId} {
-        allow read, delete: if isOwner();
-        allow create: if isOwner() && request.resource.data.userId == userId;
+        allow read, write: if isOwner(userId);
       }
     }
-
-    // -------------------------------------------------------------------------
-    // Shared Data Collections (Orders, Quotes, etc.)
-    // -------------------------------------------------------------------------
     
-    match /orders/{orderId} {
-      // Admin Access: Admins can read and modify any order.
-      allow read, update, delete: if isAdmin();
-      
-      // User Access: Users can manage their OWN orders.
-      allow read, update, delete: if resource.data.userId == request.auth.uid;
+    // --- Shared Data Collections ---
 
-      // Create Access: Any signed-in user can create an order for themselves.
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+    match /orders/{orderId} {
+      // Users can create their own orders.
+      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
+      // Users can read/update/delete their own orders.
+      allow read, update, delete: if isOwner(resource.data.userId);
+      // Admins can get/update/delete ANY order, but cannot LIST all orders.
+      allow get, update, delete: if isAdmin();
     }
     
     match /custom_service_requests/{customServiceRequestId} {
-      // Admin Access: Admins can read and modify any request.
-      allow read, update, delete: if isAdmin();
-      
-      // User Access: Users can manage their OWN requests.
-      allow read, update, delete: if resource.data.userId == request.auth.uid;
-      
-      // Create Access: Any signed-in user can create a request for themselves.
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
+      allow read, update, delete: if isOwner(resource.data.userId);
+      allow get, update, delete: if isAdmin();
     }
     
     match /quote_requests/{quoteRequestId} {
-      // Admin Access: Admins can read and modify any quote request.
-      allow read, update, delete: if isAdmin();
-      
-      // User Access: Users can manage their OWN quote requests.
-      allow read, update, delete: if resource.data.userId == request.auth.uid;
-
-      // Create Access: Any signed-in user can create a quote request for themselves.
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
+      allow read, update, delete: if isOwner(resource.data.userId);
+      allow get, update, delete: if isAdmin();
     }
   }
 }
