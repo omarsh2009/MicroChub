@@ -31,6 +31,8 @@ import { products } from '@/lib/data';
 import { getPaymentMethods } from '@/lib/admin';
 import type { PaymentMethod } from '@/lib/types';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { testUpload } from '@/lib/storage-test';
+
 
 const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "application/pdf"];
 
@@ -60,6 +62,7 @@ export default function CheckoutPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [testFile, setTestFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (firestore) {
@@ -143,6 +146,7 @@ export default function CheckoutPage() {
             }
 
             try {
+                console.log("SUBMIT: Starting upload...");
                 console.log("Current user:", user);
                 console.log("File to upload:", legalAgreementFile);
 
@@ -165,18 +169,19 @@ export default function CheckoutPage() {
                 
                 console.log("Starting upload to path:", legalAgreementPath);
                 const uploadResult = await uploadBytes(storageRef, legalAgreementFile, { contentType: contentType });
-                console.log("Upload complete:", uploadResult);
+                console.log("SUBMIT: Upload complete:", uploadResult);
 
-                console.log("Getting download URL...");
+                console.log("SUBMIT: Getting download URL...");
                 legalAgreementUrl = await getDownloadURL(uploadResult.ref);
-                console.log("Download URL obtained:", legalAgreementUrl);
+                console.log("SUBMIT: Download URL obtained:", legalAgreementUrl);
 
             } catch (uploadError) {
-                console.error("FULL UPLOAD ERROR:", uploadError);
+                console.error("--- FULL UPLOAD ERROR ---");
+                console.error(uploadError);
                 toast({
                     variant: "destructive",
                     title: "Upload Failed",
-                    description: "Could not upload your legal agreement. Please check the console for details.",
+                    description: "Could not upload your legal agreement. Please check the console for the full error object.",
                 });
                 setIsLoading(false);
                 return;
@@ -347,7 +352,20 @@ export default function CheckoutPage() {
                                                         <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Click to upload</span> or drag and drop</p>
                                                         <p className="text-xs text-muted-foreground">{field.value?.[0]?.name || 'PDF, PNG, JPG, WEBP (MAX. 5MB)'}</p>
                                                     </div>
-                                                    <Input id="legal-dropzone-file" type="file" className="hidden" accept={ACCEPTED_FILE_TYPES.join(',')} onChange={(e) => field.onChange(e.target.files)} />
+                                                    <Input
+                                                      id="legal-dropzone-file"
+                                                      type="file"
+                                                      className="hidden"
+                                                      accept={ACCEPTED_FILE_TYPES.join(',')}
+                                                      onChange={(e) => {
+                                                          field.onChange(e.target.files);
+                                                          if (e.target.files && e.target.files.length > 0) {
+                                                            setTestFile(e.target.files[0]);
+                                                          } else {
+                                                            setTestFile(null);
+                                                          }
+                                                      }}
+                                                    />
                                                 </label>
                                             </div> 
                                         </FormControl>
@@ -356,6 +374,16 @@ export default function CheckoutPage() {
                                 )}
                             />
                         </CardContent>
+                         <CardFooter>
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              onClick={() => testFile && testUpload(storage, testFile)}
+                              disabled={!testFile}
+                            >
+                              Run Isolated Storage Test
+                            </Button>
+                        </CardFooter>
                     </Card>
                 )}
             </div>
