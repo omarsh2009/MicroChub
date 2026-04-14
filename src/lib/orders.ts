@@ -1,6 +1,7 @@
 'use client';
 import { addDoc, collection, serverTimestamp, Firestore, doc, updateDoc } from 'firebase/firestore';
 import type { CartItem, PaymentMethod, ShippingAddress } from './types';
+import { uploadFile } from './supabase';
 
 interface OrderPayload {
   userId: string;
@@ -11,7 +12,7 @@ interface OrderPayload {
   paymentMethod: PaymentMethod;
   transactionId: string;
   requiresLegalApproval: boolean;
-  legalAgreementUrl?: string;
+  legalAgreementFile?: File;
 }
 
 export async function createOrder(
@@ -27,8 +28,18 @@ export async function createOrder(
     paymentMethod,
     transactionId,
     requiresLegalApproval, 
-    legalAgreementUrl 
+    legalAgreementFile 
   } = payload;
+
+  let legalAgreementUrl: string | undefined = undefined;
+
+  if (requiresLegalApproval && legalAgreementFile) {
+    // Upload the file to Supabase and get the public URL
+    legalAgreementUrl = await uploadFile(legalAgreementFile, userId);
+  } else if (requiresLegalApproval && !legalAgreementFile) {
+    throw new Error("A signed legal agreement is required for restricted items.");
+  }
+
 
   // Create order document in Firestore's top-level 'orders' collection
   const ordersCollectionRef = collection(firestore, 'orders');

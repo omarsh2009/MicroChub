@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/hooks/use-cart';
-import { useUser, useFirestore, useStorage } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -30,8 +30,6 @@ import { createOrder } from '@/lib/orders';
 import { products } from '@/lib/data';
 import { getPaymentMethods } from '@/lib/admin';
 import type { PaymentMethod } from '@/lib/types';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { testUpload } from '@/lib/storage-test';
 
 
 const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "application/pdf"];
@@ -57,13 +55,11 @@ export default function CheckoutPage() {
   const { cart, totalPrice, clearCart } = useCart();
   const user = useUser();
   const firestore = useFirestore();
-  const storage = useStorage();
 
   const [isLoading, setIsLoading] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null);
-  const [testFile, setTestFile] = useState<File | null>(null);
-
+  
   useEffect(() => {
     if (firestore) {
       getPaymentMethods(firestore).then(methods => {
@@ -121,73 +117,27 @@ export default function CheckoutPage() {
   };
 
   async function onSubmit(values: CheckoutFormValues) {
-    if (!firestore || !storage || !user || !selectedPaymentMethod) {
+    if (!firestore || !user || !selectedPaymentMethod) {
         toast({ variant: 'destructive', title: 'Initialization Error', description: 'Services not ready or payment method not selected. Please try again.' });
         return;
     }
     setIsLoading(true);
 
     try {
-        let legalAgreementUrl: string | undefined = undefined;
-        
-        if (hasRestrictedItem) {
-             const legalAgreementFile = values.legalAgreement?.[0];
+        const legalAgreementFile = values.legalAgreement?.[0];
 
-             if (!legalAgreementFile) {
-                toast({ variant: 'destructive', title: 'Missing File', description: 'A signed legal agreement is required for restricted items.' });
-                setIsLoading(false);
-                return;
-            }
-
-            if (legalAgreementFile.size > 5 * 1024 * 1024) { // 5MB limit
-                toast({ variant: 'destructive', title: 'File Too Large', description: 'Legal agreement file must be under 5MB.' });
-                setIsLoading(false);
-                return;
-            }
-
-            try {
-                console.log("SUBMIT: Starting upload...");
-                console.log("Current user:", user);
-                console.log("File to upload:", legalAgreementFile);
-
-                let contentType = legalAgreementFile.type;
-                if (!contentType || contentType === "") {
-                    if (legalAgreementFile.name.endsWith(".jpg") || legalAgreementFile.name.endsWith(".jpeg")) {
-                        contentType = "image/jpeg";
-                    } else if (legalAgreementFile.name.endsWith(".png")) {
-                        contentType = "image/png";
-                    } else if (legalAgreementFile.name.endsWith(".webp")) {
-                        contentType = "image/webp";
-                    } else if (legalAgreementFile.name.endsWith(".pdf")) {
-                        contentType = "application/pdf";
-                    }
-                }
-                console.log("Final contentType:", contentType);
-
-                const legalAgreementPath = `user_uploads/${user.uid}/legal_agreements/${Date.now()}-${legalAgreementFile.name}`;
-                const storageRef = ref(storage, legalAgreementPath);
-                
-                console.log("Starting upload to path:", legalAgreementPath);
-                const uploadResult = await uploadBytes(storageRef, legalAgreementFile, { contentType: contentType });
-                console.log("SUBMIT: Upload complete:", uploadResult);
-
-                console.log("SUBMIT: Getting download URL...");
-                legalAgreementUrl = await getDownloadURL(uploadResult.ref);
-                console.log("SUBMIT: Download URL obtained:", legalAgreementUrl);
-
-            } catch (uploadError) {
-                console.error("--- FULL UPLOAD ERROR ---");
-                console.error(uploadError);
-                toast({
-                    variant: "destructive",
-                    title: "Upload Failed",
-                    description: "Could not upload your legal agreement. Please check the console for the full error object.",
-                });
-                setIsLoading(false);
-                return;
-            }
+        if (hasRestrictedItem && !legalAgreementFile) {
+            toast({ variant: 'destructive', title: 'Missing File', description: 'A signed legal agreement is required for restricted items.' });
+            setIsLoading(false);
+            return;
         }
 
+        if (legalAgreementFile && legalAgreementFile.size > 5 * 1024 * 1024) { // 5MB limit
+            toast({ variant: 'destructive', title: 'File Too Large', description: 'Legal agreement file must be under 5MB.' });
+            setIsLoading(false);
+            return;
+        }
+        
         console.log("Proceeding to create order...");
         await createOrder(firestore, {
             userId: user.uid,
@@ -203,7 +153,7 @@ export default function CheckoutPage() {
             paymentMethod: selectedPaymentMethod,
             transactionId: values.transactionId,
             requiresLegalApproval: hasRestrictedItem,
-            legalAgreementUrl: legalAgreementUrl,
+            legalAgreementFile: legalAgreementFile,
         });
 
         console.log("Order created successfully.");
@@ -357,14 +307,7 @@ export default function CheckoutPage() {
                                                       type="file"
                                                       className="hidden"
                                                       accept={ACCEPTED_FILE_TYPES.join(',')}
-                                                      onChange={(e) => {
-                                                          field.onChange(e.target.files);
-                                                          if (e.target.files && e.target.files.length > 0) {
-                                                            setTestFile(e.target.files[0]);
-                                                          } else {
-                                                            setTestFile(null);
-                                                          }
-                                                      }}
+                                                      onChange={(e) => field.onChange(e.target.files)}
                                                     />
                                                 </label>
                                             </div> 
@@ -374,16 +317,6 @@ export default function CheckoutPage() {
                                 )}
                             />
                         </CardContent>
-                         <CardFooter>
-                            <Button
-                              type="button"
-                              variant="secondary"
-                              onClick={() => testFile && testUpload(storage, testFile)}
-                              disabled={!testFile}
-                            >
-                              Run Isolated Storage Test
-                            </Button>
-                        </CardFooter>
                     </Card>
                 )}
             </div>

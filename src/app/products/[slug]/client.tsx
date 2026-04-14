@@ -28,7 +28,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useMemo } from "react";
 import { useCart } from '@/hooks/use-cart';
-import { useUser, useFirestore, useStorage } from "@/firebase";
+import { useUser, useFirestore } from "@/firebase";
 import { createQuoteRequest } from "@/lib/quotes";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,7 +42,6 @@ export function ProductClientPage({ product }: { product: Product }) {
   const { addToCart } = useCart();
   const user = useUser();
   const firestore = useFirestore();
-  const storage = useStorage();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string | string[]>>({});
@@ -143,14 +142,14 @@ export function ProductClientPage({ product }: { product: Product }) {
           router.push(`/login?redirect=/products/${product.slug}`);
           return;
       }
-      if (!firestore || !storage) {
+      if (!firestore) {
           toast({ variant: 'destructive', title: 'Error', description: 'Services not available. Please try again.'});
           return;
       }
 
       setIsRequestingQuote(true);
       try {
-        await createQuoteRequest(firestore, storage, {
+        await createQuoteRequest(firestore, {
             userId: user.uid,
             product,
             quantity,
@@ -176,7 +175,7 @@ export function ProductClientPage({ product }: { product: Product }) {
       router.push(`/products/${product.slug}`);
       return;
     }
-    if (!firestore || !storage) {
+    if (!firestore) {
       toast({ variant: 'destructive', title: 'Error', description: 'Services not available. Please try again.' });
       return;
     }
@@ -188,17 +187,6 @@ export function ProductClientPage({ product }: { product: Product }) {
     setIsRequestingCustomQuote(true);
 
     if (customFile) {
-        console.log("Validating custom quote file...");
-        console.log("File name:", customFile.name);
-        console.log("File type:", customFile.type);
-        console.log("File size:", customFile.size);
-
-        // Relaxed validation
-        if (!(customFile.type.startsWith("image/") || customFile.type === "application/pdf" || customFile.type === "")) {
-            toast({ variant: 'destructive', title: 'Invalid File Type', description: 'Only image and PDF files are accepted.' });
-            setIsRequestingCustomQuote(false);
-            return;
-        }
         if (customFile.size > 5 * 1024 * 1024) { // 5MB limit
             toast({ variant: 'destructive', title: 'File Too Large', description: 'File size must be less than 5MB.' });
             setIsRequestingCustomQuote(false);
@@ -207,7 +195,7 @@ export function ProductClientPage({ product }: { product: Product }) {
     }
 
     try {
-      await createQuoteRequest(firestore, storage, {
+      await createQuoteRequest(firestore, {
         userId: user.uid,
         product,
         quantity: 1, // Default to 1 for custom requests

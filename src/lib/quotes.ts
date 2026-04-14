@@ -1,7 +1,7 @@
 'use client';
 import { addDoc, collection, serverTimestamp, Firestore, doc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, FirebaseStorage } from 'firebase/storage';
 import type { CartItem, Product, SelectedConfiguration } from './types';
+import { uploadFile } from './supabase';
 
 interface QuoteRequestPayload {
   userId: string;
@@ -15,7 +15,6 @@ interface QuoteRequestPayload {
 
 export async function createQuoteRequest(
   firestore: Firestore,
-  storage: FirebaseStorage,
   payload: QuoteRequestPayload
 ): Promise<string> {
   const { userId, product, quantity, configuration, basePrice, userNotes, file } = payload;
@@ -24,33 +23,7 @@ export async function createQuoteRequest(
 
   if (file) {
     try {
-        console.log("Current user ID for quote:", userId);
-        console.log("File to upload for quote:", file);
-
-        let contentType = file.type;
-        if (!contentType || contentType === "") {
-            if (file.name.endsWith(".jpg") || file.name.endsWith(".jpeg")) {
-                contentType = "image/jpeg";
-            } else if (file.name.endsWith(".png")) {
-                contentType = "image/png";
-            } else if (file.name.endsWith(".webp")) {
-                contentType = "image/webp";
-            } else if (file.name.endsWith(".pdf")) {
-                contentType = "application/pdf";
-            }
-        }
-        console.log("Final contentType for quote:", contentType);
-        
-        const filePath = `user_uploads/${userId}/quote_requests/${Date.now()}-${file.name}`;
-        const fileStorageRef = ref(storage, filePath);
-
-        console.log("Starting quote file upload to path:", filePath);
-        const uploadResult = await uploadBytes(fileStorageRef, file, { contentType });
-        console.log("Quote file upload complete:", uploadResult);
-
-        console.log("Getting quote file download URL...");
-        fileUrl = await getDownloadURL(uploadResult.ref);
-        console.log("Quote file download URL obtained:", fileUrl);
+        fileUrl = await uploadFile(file, userId);
     } catch (uploadError) {
         console.error("FULL QUOTE UPLOAD ERROR:", uploadError);
         // Re-throw the error so the calling component can handle it and show a toast.
