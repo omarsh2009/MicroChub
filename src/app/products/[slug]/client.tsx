@@ -188,14 +188,14 @@ export function ProductClientPage({ product }: { product: Product }) {
     setIsRequestingCustomQuote(true);
 
     if (customFile) {
-        const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "application/pdf"];
         console.log("Validating custom quote file...");
         console.log("File name:", customFile.name);
         console.log("File type:", customFile.type);
         console.log("File size:", customFile.size);
 
-        if (!ACCEPTED_FILE_TYPES.includes(customFile.type)) {
-            toast({ variant: 'destructive', title: 'Invalid File Type', description: 'Only JPG, PNG, WebP, and PDF files are accepted.' });
+        // Relaxed validation
+        if (!(customFile.type.startsWith("image/") || customFile.type === "application/pdf" || customFile.type === "")) {
+            toast({ variant: 'destructive', title: 'Invalid File Type', description: 'Only image and PDF files are accepted.' });
             setIsRequestingCustomQuote(false);
             return;
         }

@@ -23,15 +23,30 @@ export async function createQuoteRequest(
   let fileUrl: string | undefined = undefined;
 
   if (file) {
+    console.log("File:", file);
+    console.log("Type:", file.type);
+    let contentType = file.type;
+    if (!contentType || contentType === "") {
+      if (file.name.endsWith(".jpg") || file.name.endsWith(".jpeg")) {
+        contentType = "image/jpeg";
+      } else if (file.name.endsWith(".png")) {
+        contentType = "image/png";
+      } else if (file.name.endsWith(".webp")) {
+        contentType = "image/webp";
+      } else if (file.name.endsWith(".pdf")) {
+        contentType = "application/pdf";
+      } else {
+        console.warn("Unknown file type for quote, proceeding without content type header:", file.name);
+      }
+    }
+    console.log("Final contentType for quote:", contentType);
+
     const filePath = `user_uploads/${userId}/quote_requests/${Date.now()}-${file.name}`;
     const fileStorageRef = ref(storage, filePath);
 
     console.log(`Uploading quote file to: ${filePath}`);
-    console.log("File name:", file.name);
-    console.log("File type:", file.type);
-    console.log("File size:", file.size);
 
-    const uploadResult = await uploadBytes(fileStorageRef, file, { contentType: file.type });
+    const uploadResult = await uploadBytes(fileStorageRef, file, { contentType });
     console.log("Quote file upload complete:", uploadResult);
 
     fileUrl = await getDownloadURL(uploadResult.ref);

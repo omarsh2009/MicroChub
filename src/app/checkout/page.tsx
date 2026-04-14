@@ -126,18 +126,34 @@ export default function CheckoutPage() {
 
     try {
         let legalAgreementUrl: string | undefined = undefined;
-        const legalAgreementFile = values.legalAgreement?.[0];
-
+        
         if (hasRestrictedItem) {
+             const legalAgreementFile = values.legalAgreement?.[0];
+
              if (!legalAgreementFile) {
                 toast({ variant: 'destructive', title: 'Missing File', description: 'A signed legal agreement is required for restricted items.' });
                 setIsLoading(false);
                 return;
             }
-            console.log("Starting legal agreement upload...");
-            console.log("File name:", legalAgreementFile.name);
-            console.log("File type:", legalAgreementFile.type);
-            console.log("File size:", legalAgreementFile.size);
+
+            console.log("File:", legalAgreementFile);
+            console.log("Type:", legalAgreementFile.type);
+
+            let contentType = legalAgreementFile.type;
+            if (!contentType || contentType === "") {
+              if (legalAgreementFile.name.endsWith(".jpg") || legalAgreementFile.name.endsWith(".jpeg")) {
+                contentType = "image/jpeg";
+              } else if (legalAgreementFile.name.endsWith(".png")) {
+                contentType = "image/png";
+              } else if (legalAgreementFile.name.endsWith(".webp")) {
+                contentType = "image/webp";
+              } else if (legalAgreementFile.name.endsWith(".pdf")) {
+                contentType = "application/pdf";
+              } else {
+                console.warn("Unknown file type, proceeding without content type header:", legalAgreementFile.name);
+              }
+            }
+            console.log("Final contentType:", contentType);
 
             if (legalAgreementFile.size > 5 * 1024 * 1024) { // 5MB limit
                 toast({ variant: 'destructive', title: 'File Too Large', description: 'Legal agreement file must be under 5MB.' });
@@ -145,8 +161,9 @@ export default function CheckoutPage() {
                 return;
             }
             
-            if (!ACCEPTED_FILE_TYPES.includes(legalAgreementFile.type)) {
-                toast({ variant: 'destructive', title: 'Invalid File Type', description: 'Only JPG, PNG, WebP, and PDF files are accepted.' });
+            // Relaxed validation: Allow empty type and let fallback handle it.
+            if (!contentType.startsWith('image/') && contentType !== 'application/pdf') {
+                toast({ variant: 'destructive', title: 'Invalid File Type', description: 'Only image and PDF files are accepted.' });
                 setIsLoading(false);
                 return;
             }
@@ -156,7 +173,7 @@ export default function CheckoutPage() {
                 const storageRef = ref(storage, legalAgreementPath);
                 
                 console.log("Uploading to path:", legalAgreementPath);
-                const uploadResult = await uploadBytes(storageRef, legalAgreementFile, { contentType: legalAgreementFile.type });
+                const uploadResult = await uploadBytes(storageRef, legalAgreementFile, { contentType: contentType });
                 console.log("Upload complete:", uploadResult);
 
                 console.log("Getting download URL...");
