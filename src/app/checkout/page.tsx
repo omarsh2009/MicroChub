@@ -32,7 +32,7 @@ import { getPaymentMethods } from '@/lib/admin';
 import type { PaymentMethod } from '@/lib/types';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "application/pdf"];
 
 const formSchema = z.object({
   fullName: z.string().min(3, 'Please enter your full name.'),
@@ -76,25 +76,8 @@ export default function CheckoutPage() {
     });
   }, [cart]);
 
-  const dynamicFormSchema = useMemo(() => {
-    if (hasRestrictedItem) {
-      return formSchema.extend({
-        legalAgreement: z
-          .custom<FileList>()
-          .refine((files) => files?.length === 1, 'Signed legal agreement is required.')
-          .refine((files) => files?.[0]?.size <= 5 * 1024 * 1024, `Max file size is 5MB.`)
-          .refine(
-            (files) => ACCEPTED_FILE_TYPES.includes(files?.[0]?.type as string),
-            'Only .jpg, .png, and .pdf files are accepted.'
-          ),
-      });
-    }
-    return formSchema;
-  }, [hasRestrictedItem]);
-
-
   const form = useForm<CheckoutFormValues>({
-    resolver: zodResolver(dynamicFormSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: {
       fullName: '',
       phoneNumber: '',
@@ -145,16 +128,35 @@ export default function CheckoutPage() {
         let legalAgreementUrl: string | undefined = undefined;
         const legalAgreementFile = values.legalAgreement?.[0];
 
-        if (hasRestrictedItem && legalAgreementFile) {
-            console.log("Starting upload process...");
-            console.log("File to upload:", legalAgreementFile);
+        if (hasRestrictedItem) {
+             if (!legalAgreementFile) {
+                toast({ variant: 'destructive', title: 'Missing File', description: 'A signed legal agreement is required for restricted items.' });
+                setIsLoading(false);
+                return;
+            }
+            console.log("Starting legal agreement upload...");
+            console.log("File name:", legalAgreementFile.name);
+            console.log("File type:", legalAgreementFile.type);
+            console.log("File size:", legalAgreementFile.size);
+
+            if (legalAgreementFile.size > 5 * 1024 * 1024) { // 5MB limit
+                toast({ variant: 'destructive', title: 'File Too Large', description: 'Legal agreement file must be under 5MB.' });
+                setIsLoading(false);
+                return;
+            }
+            
+            if (!ACCEPTED_FILE_TYPES.includes(legalAgreementFile.type)) {
+                toast({ variant: 'destructive', title: 'Invalid File Type', description: 'Only JPG, PNG, WebP, and PDF files are accepted.' });
+                setIsLoading(false);
+                return;
+            }
 
             try {
                 const legalAgreementPath = `user_uploads/${user.uid}/legal_agreements/${Date.now()}-${legalAgreementFile.name}`;
                 const storageRef = ref(storage, legalAgreementPath);
                 
                 console.log("Uploading to path:", legalAgreementPath);
-                const uploadResult = await uploadBytes(storageRef, legalAgreementFile);
+                const uploadResult = await uploadBytes(storageRef, legalAgreementFile, { contentType: legalAgreementFile.type });
                 console.log("Upload complete:", uploadResult);
 
                 console.log("Getting download URL...");
@@ -335,9 +337,9 @@ export default function CheckoutPage() {
                                                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                                         <UploadCloud className="w-8 h-8 mb-2 text-muted-foreground" />
                                                         <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                                                        <p className="text-xs text-muted-foreground">{field.value?.[0]?.name || 'PDF, PNG, JPG (MAX. 5MB)'}</p>
+                                                        <p className="text-xs text-muted-foreground">{field.value?.[0]?.name || 'PDF, PNG, JPG, WEBP (MAX. 5MB)'}</p>
                                                     </div>
-                                                    <Input id="legal-dropzone-file" type="file" className="hidden" accept="image/jpeg,image/png,application/pdf" onChange={(e) => field.onChange(e.target.files)} />
+                                                    <Input id="legal-dropzone-file" type="file" className="hidden" accept={ACCEPTED_FILE_TYPES.join(',')} onChange={(e) => field.onChange(e.target.files)} />
                                                 </label>
                                             </div> 
                                         </FormControl>

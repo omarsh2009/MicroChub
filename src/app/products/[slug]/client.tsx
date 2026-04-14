@@ -185,19 +185,27 @@ export function ProductClientPage({ product }: { product: Product }) {
       return;
     }
 
+    setIsRequestingCustomQuote(true);
+
     if (customFile) {
-        const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+        const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "application/pdf"];
+        console.log("Validating custom quote file...");
+        console.log("File name:", customFile.name);
+        console.log("File type:", customFile.type);
+        console.log("File size:", customFile.size);
+
         if (!ACCEPTED_FILE_TYPES.includes(customFile.type)) {
-            toast({ variant: 'destructive', title: 'Invalid File Type', description: 'Only .jpg, .png, and .pdf files are accepted.' });
+            toast({ variant: 'destructive', title: 'Invalid File Type', description: 'Only JPG, PNG, WebP, and PDF files are accepted.' });
+            setIsRequestingCustomQuote(false);
             return;
         }
         if (customFile.size > 5 * 1024 * 1024) { // 5MB limit
             toast({ variant: 'destructive', title: 'File Too Large', description: 'File size must be less than 5MB.' });
+            setIsRequestingCustomQuote(false);
             return;
         }
     }
 
-    setIsRequestingCustomQuote(true);
     try {
       await createQuoteRequest(firestore, storage, {
         userId: user.uid,
@@ -403,7 +411,7 @@ export function ProductClientPage({ product }: { product: Product }) {
                     </div>
                     <div className="grid w-full max-w-sm items-center gap-1.5">
                         <Label htmlFor="custom-file">Reference File (Optional)</Label>
-                        <Input id="custom-file" type="file" accept="image/jpeg,image/png,application/pdf" onChange={(e) => setCustomFile(e.target.files ? e.target.files[0] : null)} />
+                        <Input id="custom-file" type="file" accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf" onChange={(e) => setCustomFile(e.target.files ? e.target.files[0] : null)} />
                     </div>
                 </CardContent>
                 <CardFooter>

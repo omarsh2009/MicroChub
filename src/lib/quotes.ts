@@ -25,8 +25,17 @@ export async function createQuoteRequest(
   if (file) {
     const filePath = `user_uploads/${userId}/quote_requests/${Date.now()}-${file.name}`;
     const fileStorageRef = ref(storage, filePath);
-    const uploadResult = await uploadBytes(fileStorageRef, file);
+
+    console.log(`Uploading quote file to: ${filePath}`);
+    console.log("File name:", file.name);
+    console.log("File type:", file.type);
+    console.log("File size:", file.size);
+
+    const uploadResult = await uploadBytes(fileStorageRef, file, { contentType: file.type });
+    console.log("Quote file upload complete:", uploadResult);
+
     fileUrl = await getDownloadURL(uploadResult.ref);
+    console.log("Quote file download URL:", fileUrl);
   }
 
   // Create a CartItem-like object to store in the quote
