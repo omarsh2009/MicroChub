@@ -23,34 +23,39 @@ export async function createQuoteRequest(
   let fileUrl: string | undefined = undefined;
 
   if (file) {
-    console.log("File:", file);
-    console.log("Type:", file.type);
-    let contentType = file.type;
-    if (!contentType || contentType === "") {
-      if (file.name.endsWith(".jpg") || file.name.endsWith(".jpeg")) {
-        contentType = "image/jpeg";
-      } else if (file.name.endsWith(".png")) {
-        contentType = "image/png";
-      } else if (file.name.endsWith(".webp")) {
-        contentType = "image/webp";
-      } else if (file.name.endsWith(".pdf")) {
-        contentType = "application/pdf";
-      } else {
-        console.warn("Unknown file type for quote, proceeding without content type header:", file.name);
-      }
+    try {
+        console.log("Current user ID for quote:", userId);
+        console.log("File to upload for quote:", file);
+
+        let contentType = file.type;
+        if (!contentType || contentType === "") {
+            if (file.name.endsWith(".jpg") || file.name.endsWith(".jpeg")) {
+                contentType = "image/jpeg";
+            } else if (file.name.endsWith(".png")) {
+                contentType = "image/png";
+            } else if (file.name.endsWith(".webp")) {
+                contentType = "image/webp";
+            } else if (file.name.endsWith(".pdf")) {
+                contentType = "application/pdf";
+            }
+        }
+        console.log("Final contentType for quote:", contentType);
+        
+        const filePath = `user_uploads/${userId}/quote_requests/${Date.now()}-${file.name}`;
+        const fileStorageRef = ref(storage, filePath);
+
+        console.log("Starting quote file upload to path:", filePath);
+        const uploadResult = await uploadBytes(fileStorageRef, file, { contentType });
+        console.log("Quote file upload complete:", uploadResult);
+
+        console.log("Getting quote file download URL...");
+        fileUrl = await getDownloadURL(uploadResult.ref);
+        console.log("Quote file download URL obtained:", fileUrl);
+    } catch (uploadError) {
+        console.error("FULL QUOTE UPLOAD ERROR:", uploadError);
+        // Re-throw the error so the calling component can handle it and show a toast.
+        throw uploadError;
     }
-    console.log("Final contentType for quote:", contentType);
-
-    const filePath = `user_uploads/${userId}/quote_requests/${Date.now()}-${file.name}`;
-    const fileStorageRef = ref(storage, filePath);
-
-    console.log(`Uploading quote file to: ${filePath}`);
-
-    const uploadResult = await uploadBytes(fileStorageRef, file, { contentType });
-    console.log("Quote file upload complete:", uploadResult);
-
-    fileUrl = await getDownloadURL(uploadResult.ref);
-    console.log("Quote file download URL:", fileUrl);
   }
 
   // Create a CartItem-like object to store in the quote

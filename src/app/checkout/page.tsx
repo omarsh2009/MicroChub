@@ -136,43 +136,34 @@ export default function CheckoutPage() {
                 return;
             }
 
-            console.log("File:", legalAgreementFile);
-            console.log("Type:", legalAgreementFile.type);
-
-            let contentType = legalAgreementFile.type;
-            if (!contentType || contentType === "") {
-              if (legalAgreementFile.name.endsWith(".jpg") || legalAgreementFile.name.endsWith(".jpeg")) {
-                contentType = "image/jpeg";
-              } else if (legalAgreementFile.name.endsWith(".png")) {
-                contentType = "image/png";
-              } else if (legalAgreementFile.name.endsWith(".webp")) {
-                contentType = "image/webp";
-              } else if (legalAgreementFile.name.endsWith(".pdf")) {
-                contentType = "application/pdf";
-              } else {
-                console.warn("Unknown file type, proceeding without content type header:", legalAgreementFile.name);
-              }
-            }
-            console.log("Final contentType:", contentType);
-
             if (legalAgreementFile.size > 5 * 1024 * 1024) { // 5MB limit
                 toast({ variant: 'destructive', title: 'File Too Large', description: 'Legal agreement file must be under 5MB.' });
                 setIsLoading(false);
                 return;
             }
-            
-            // Relaxed validation: Allow empty type and let fallback handle it.
-            if (!contentType.startsWith('image/') && contentType !== 'application/pdf') {
-                toast({ variant: 'destructive', title: 'Invalid File Type', description: 'Only image and PDF files are accepted.' });
-                setIsLoading(false);
-                return;
-            }
 
             try {
+                console.log("Current user:", user);
+                console.log("File to upload:", legalAgreementFile);
+
+                let contentType = legalAgreementFile.type;
+                if (!contentType || contentType === "") {
+                    if (legalAgreementFile.name.endsWith(".jpg") || legalAgreementFile.name.endsWith(".jpeg")) {
+                        contentType = "image/jpeg";
+                    } else if (legalAgreementFile.name.endsWith(".png")) {
+                        contentType = "image/png";
+                    } else if (legalAgreementFile.name.endsWith(".webp")) {
+                        contentType = "image/webp";
+                    } else if (legalAgreementFile.name.endsWith(".pdf")) {
+                        contentType = "application/pdf";
+                    }
+                }
+                console.log("Final contentType:", contentType);
+
                 const legalAgreementPath = `user_uploads/${user.uid}/legal_agreements/${Date.now()}-${legalAgreementFile.name}`;
                 const storageRef = ref(storage, legalAgreementPath);
                 
-                console.log("Uploading to path:", legalAgreementPath);
+                console.log("Starting upload to path:", legalAgreementPath);
                 const uploadResult = await uploadBytes(storageRef, legalAgreementFile, { contentType: contentType });
                 console.log("Upload complete:", uploadResult);
 
@@ -181,7 +172,7 @@ export default function CheckoutPage() {
                 console.log("Download URL obtained:", legalAgreementUrl);
 
             } catch (uploadError) {
-                console.error("Upload failed at try/catch block:", uploadError);
+                console.error("FULL UPLOAD ERROR:", uploadError);
                 toast({
                     variant: "destructive",
                     title: "Upload Failed",
@@ -216,7 +207,7 @@ export default function CheckoutPage() {
         router.push('/orders');
 
     } catch (error: any) {
-        console.error('Order submission process failed:', error);
+        console.error('FULL ORDER SUBMISSION ERROR:', error);
         toast({ variant: 'destructive', title: 'Order Failed', description: error.message || 'Could not place your order.' });
     } finally {
         console.log("Finishing submission process.");
