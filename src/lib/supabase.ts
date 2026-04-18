@@ -4,9 +4,15 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase URL and anon key are required.');
+// More robust check to prevent unhelpful errors from the Supabase client
+if (!supabaseUrl || supabaseUrl.includes('YOUR_SUPABASE_URL')) {
+    throw new Error('Supabase URL is missing or is still a placeholder. Please check your .env.local file and make sure NEXT_PUBLIC_SUPABASE_URL is set correctly.');
 }
+
+if (!supabaseAnonKey || supabaseAnonKey.includes('YOUR_SUPABASE_ANON_KEY')) {
+    throw new Error('Supabase anon key is missing or is still a placeholder. Please check your .env.local file and make sure NEXT_PUBLIC_SUPABASE_ANON_KEY is set correctly.');
+}
+
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
