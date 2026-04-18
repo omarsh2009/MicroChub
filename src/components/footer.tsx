@@ -1,8 +1,18 @@
+'use client';
 import Link from "next/link";
-import { Cpu, Twitter, Github, Instagram } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Logo } from "./logo";
+import { getSocialLinks } from "@/lib/social-links";
+import { SocialLink } from "@/lib/types";
+import { getIconForPlatform } from "@/app/admin/social-links/components/social-link-form";
 
 export function Footer() {
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
+
+  useEffect(() => {
+    getSocialLinks(true).then(setSocialLinks);
+  }, []);
+
   return (
     <footer className="bg-card text-card-foreground border-t">
       <div className="container mx-auto py-8 px-4 md:px-6">
@@ -61,15 +71,11 @@ export function Footer() {
           <div>
             <h3 className="font-headline text-lg font-semibold mb-4">Follow Us</h3>
             <div className="flex space-x-4">
-              <Link href="#" className="text-muted-foreground hover:text-primary" aria-label="Twitter">
-                <Twitter className="h-6 w-6" />
-              </Link>
-              <Link href="#" className="text-muted-foreground hover:text-primary" aria-label="GitHub">
-                <Github className="h-6 w-6" />
-              </Link>
-              <Link href="#" className="text-muted-foreground hover:text-primary" aria-label="Instagram">
-                <Instagram className="h-6 w-6" />
-              </Link>
+              {socialLinks.map((link) => (
+                 <Link key={link.id} href={link.url} className="text-muted-foreground hover:text-primary" aria-label={link.platform} target="_blank" rel="noopener noreferrer">
+                   {getIconForPlatform(link.platform)}
+                 </Link>
+              ))}
             </div>
           </div>
         </div>
