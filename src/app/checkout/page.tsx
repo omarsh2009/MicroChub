@@ -82,6 +82,7 @@ export default function CheckoutPage() {
       address: '',
       city: '',
       notes: '',
+      paymentMethodId: '',
       transactionId: '',
     },
   });
@@ -199,14 +200,14 @@ export default function CheckoutPage() {
                         <FormField control={form.control} name="address" render={({ field }) => (
                             <FormItem className="md:col-span-2">
                                 <FormLabel>Address</FormLabel>
-                                <FormControl><Textarea placeholder="Your full street address" {...field} /></FormControl>
+                                <FormControl><Textarea placeholder="Your full street address" {...field} value={field.value || ''} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="notes" render={({ field }) => (
                             <FormItem className="md:col-span-2">
                                 <FormLabel>Order Notes (Optional)</FormLabel>
-                                <FormControl><Textarea placeholder="Any special instructions for your order?" {...field} /></FormControl>
+                                <FormControl><Textarea placeholder="Any special instructions for your order?" {...field} value={field.value || ''}/></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />

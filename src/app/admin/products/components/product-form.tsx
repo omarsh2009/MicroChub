@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Product, Category } from '@/lib/types';
-import { Loader2, Sparkles, PlusCircle, Trash2, Check, ChevronsUpDown } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, Check, ChevronsUpDown } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -84,7 +84,7 @@ export function ProductForm({
       productType: product?.productType || 'build_to_order',
       image: product?.image || '',
       discountType: product?.discountType || undefined,
-      discountValue: product?.discountValue || undefined,
+      discountValue: product?.discountValue || 0,
     },
   });
   
@@ -140,7 +140,7 @@ export function ProductForm({
                 <FormItem>
                   <FormLabel>Base Price (EGP)</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
+                    <Input type="number" {...field} value={field.value ?? 0} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -173,9 +173,9 @@ export function ProductForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Discount Type (Optional)</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || ''}>
                       <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Select a type" /></SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder="No Discount" /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="percentage">Percentage (%)</SelectItem>
@@ -193,7 +193,7 @@ export function ProductForm({
                   <FormItem>
                     <FormLabel>Discount Value (Optional)</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} value={field.value ?? ''} />
+                      <Input type="number" {...field} value={field.value ?? 0} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -204,7 +204,7 @@ export function ProductForm({
         <FormField
             control={form.control}
             name="image"
-            render={() => (
+            render={({ field }) => (
                 <FormItem>
                 <FormLabel>Product Image</FormLabel>
                 <FormControl>
@@ -264,7 +264,7 @@ export function ProductForm({
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              field.value?.includes(category.id) ? "opacity-100" : "opacity-0"
+                              (field.value || []).includes(category.id) ? "opacity-100" : "opacity-0"
                             )}
                           />
                           {category.name}
@@ -286,7 +286,7 @@ export function ProductForm({
             <FormItem>
               <FormLabel>Technical Specs</FormLabel>
               <FormControl>
-                <Textarea placeholder="MCU: ESP32-S3&#10;Connectivity: Wi-Fi" {...field} rows={4} />
+                <Textarea placeholder="MCU: ESP32-S3&#10;Connectivity: Wi-Fi" {...field} rows={4} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -299,7 +299,7 @@ export function ProductForm({
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="A versatile, customizable hardware companion..." {...field} rows={5} />
+                <Textarea placeholder="A versatile, customizable hardware companion..." {...field} rows={5} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -441,7 +441,7 @@ function OptionFieldArray({ groupIndex }: { groupIndex: number }) {
                 name={`customizationGroups.${groupIndex}.options.${optionIndex}.priceAdjustment`}
                 render={({ field }) => (
                 <FormItem>
-                    <FormControl><Input type="number" {...field} placeholder="Price Adj." disabled={isQuoteRequested} /></FormControl>
+                    <FormControl><Input type="number" {...field} placeholder="Price Adj." disabled={isQuoteRequested} value={field.value ?? 0} /></FormControl>
                     <FormMessage />
                 </FormItem>
                 )}

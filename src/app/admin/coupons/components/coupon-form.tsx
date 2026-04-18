@@ -107,7 +107,7 @@ export function CouponForm({ coupon, onSubmit, onFinished }: CouponFormProps) {
               <FormItem>
                 <FormLabel>Value</FormLabel>
                 <FormControl>
-                  <Input type="number" {...field} />
+                  <Input type="number" {...field} value={field.value ?? 0} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -122,7 +122,7 @@ export function CouponForm({ coupon, onSubmit, onFinished }: CouponFormProps) {
               <FormItem>
                 <FormLabel>Max Uses (Optional)</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="e.g. 100" {...field} />
+                  <Input type="number" placeholder="e.g. 100" {...field} value={field.value ?? ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
