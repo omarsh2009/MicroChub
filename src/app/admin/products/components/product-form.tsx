@@ -152,7 +152,7 @@ export function ProductForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Product Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger><SelectValue placeholder="Select a type" /></SelectTrigger>
                       </FormControl>
@@ -173,7 +173,7 @@ export function ProductForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Discount Type (Optional)</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger><SelectValue placeholder="Select a type" /></SelectTrigger>
                       </FormControl>
@@ -193,7 +193,7 @@ export function ProductForm({
                   <FormItem>
                     <FormLabel>Discount Value (Optional)</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input type="number" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
