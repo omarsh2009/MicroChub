@@ -27,6 +27,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useWishlist } from "@/hooks/use-wishlist";
 import { cn } from "@/lib/utils";
+import { products } from "@/lib/data";
+import { ProductCard } from "@/components/product-card";
+import { Separator } from "@/components/ui/separator";
 
 export function ProductClientPage({ product }: { product: Product }) {
   const router = useRouter();
@@ -221,6 +224,19 @@ export function ProductClientPage({ product }: { product: Product }) {
   }, [product, calculatedPrice]);
   
   const hasDiscount = discountedPrice !== calculatedPrice;
+  
+  const relatedProducts = useMemo(() => {
+    if (!product || product.categoryIds.length === 0) {
+      return [];
+    }
+
+    return products
+      .filter(p => 
+        p.id !== product.id && // Exclude the current product
+        p.categoryIds.some(catId => product.categoryIds.includes(catId)) // Find products with at least one shared category
+      )
+      .slice(0, 4); // Limit to 4 related products
+  }, [product]);
 
 
   return (
@@ -432,7 +448,24 @@ export function ProductClientPage({ product }: { product: Product }) {
 
           </div>
         </div>
+
+        {relatedProducts.length > 0 && (
+            <div className="mt-20">
+                <Separator />
+                <div className="mt-12">
+                    <h2 className="font-headline text-3xl font-bold tracking-tighter text-center sm:text-4xl mb-8">Related Products</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {relatedProducts.map(p => (
+                            <ProductCard key={p.id} product={p} />
+                        ))}
+                    </div>
+                </div>
+            </div>
+        )}
+
       </div>
     </div>
   );
 }
+
+    

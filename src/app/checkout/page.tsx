@@ -25,11 +25,12 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, UploadCloud, Copy } from 'lucide-react';
+import { Loader2, UploadCloud, Copy, Ticket } from 'lucide-react';
 import { createOrder } from '@/lib/orders';
 import { products } from '@/lib/data';
 import { getPaymentMethods } from '@/lib/admin';
-import type { PaymentMethod } from '@/lib/types';
+import type { PaymentMethod, Coupon } from '@/lib/types';
+import { validateCoupon } from '@/lib/coupons';
 
 
 const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "application/pdf"];
@@ -59,11 +60,14 @@ export default function CheckoutPage() {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null);
   
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  
   useEffect(() => {
-    setIsLoading(true);
+    // We can set a loading state here if needed in the future
     getPaymentMethods().then(methods => {
       setPaymentMethods(methods.filter(m => m.enabled));
-      setIsLoading(false);
     });
   }, []);
 
@@ -73,6 +77,23 @@ export default function CheckoutPage() {
       return product?.isRestricted;
     });
   }, [cart]);
+  
+  const discountAmount = useMemo(() => {
+    if (!appliedCoupon) return 0;
+    if (appliedCoupon.type === 'fixed') {
+      return appliedCoupon.value;
+    }
+    if (appliedCoupon.type === 'percentage') {
+      return totalPrice * (appliedCoupon.value / 100);
+    }
+    return 0;
+  }, [appliedCoupon, totalPrice]);
+
+  const finalPrice = useMemo(() => {
+      const priceAfterDiscount = totalPrice - discountAmount;
+      return priceAfterDiscount > 0 ? priceAfterDiscount : 0;
+  }, [totalPrice, discountAmount]);
+
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(formSchema),
@@ -114,28 +135,43 @@ export default function CheckoutPage() {
     navigator.clipboard.writeText(text);
     toast({ title: 'Copied to clipboard!' });
   };
+  
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return;
+    setIsApplyingCoupon(true);
+    const result = await validateCoupon(couponCode);
+    
+    if ('error' in result) {
+        toast({ variant: 'destructive', title: 'Coupon Invalid', description: result.error });
+        setAppliedCoupon(null); // Clear previous valid coupon if new one is invalid
+    } else {
+        setAppliedCoupon(result);
+        toast({ title: 'Coupon Applied!', description: `Discount of ${result.type === 'fixed' ? `EGP ${result.value}` : `${result.value}%`} applied.`});
+    }
+    setIsApplyingCoupon(false);
+  };
 
   async function onSubmit(values: CheckoutFormValues) {
     if (!user || !selectedPaymentMethod) {
         toast({ variant: 'destructive', title: 'Initialization Error', description: 'User or payment method not selected. Please try again.' });
         return;
     }
+    
+    const legalAgreementFile = values.legalAgreement?.[0];
+
+    if (hasRestrictedItem && !legalAgreementFile) {
+        toast({ variant: 'destructive', title: 'Missing File', description: 'A signed legal agreement is required for restricted items.' });
+        return;
+    }
+
     setIsLoading(true);
 
     try {
-        const legalAgreementFile = values.legalAgreement?.[0];
-
-        if (hasRestrictedItem && !legalAgreementFile) {
-            toast({ variant: 'destructive', title: 'Missing File', description: 'A signed legal agreement is required for restricted items.' });
-            setIsLoading(false);
-            return;
-        }
-
         console.log("Proceeding to create order (mock)...");
         await createOrder({
             userId: user.uid,
             cart,
-            totalPrice,
+            totalPrice: finalPrice,
             notes: values.notes,
             shippingAddress: {
               fullName: values.fullName,
@@ -147,6 +183,8 @@ export default function CheckoutPage() {
             transactionId: values.transactionId,
             requiresLegalApproval: hasRestrictedItem,
             legalAgreementFile: legalAgreementFile,
+            couponCode: appliedCoupon?.code,
+            discountAmount: discountAmount,
         });
 
         console.log("Order submitted (mock).");
@@ -179,21 +217,21 @@ export default function CheckoutPage() {
                         <FormField control={form.control} name="fullName" render={({ field }) => (
                             <FormItem className="md:col-span-2">
                                 <FormLabel>Full Name</FormLabel>
-                                <FormControl><Input placeholder="Your full name" {...field} /></FormControl>
+                                <FormControl><Input placeholder="Your full name" {...field} value={field.value || ''} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="phoneNumber" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Phone Number</FormLabel>
-                                <FormControl><Input placeholder="Your phone number" {...field} /></FormControl>
+                                <FormControl><Input placeholder="Your phone number" {...field} value={field.value || ''} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                          <FormField control={form.control} name="city" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>City</FormLabel>
-                                <FormControl><Input placeholder="e.g. Cairo" {...field} /></FormControl>
+                                <FormControl><Input placeholder="e.g. Cairo" {...field} value={field.value || ''} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
@@ -262,7 +300,7 @@ export default function CheckoutPage() {
                                       <FormItem>
                                       <FormLabel>Transaction ID / Reference Number</FormLabel>
                                       <FormControl>
-                                          <Input placeholder="Enter the ID from your payment confirmation" {...field} />
+                                          <Input placeholder="Enter the ID from your payment confirmation" {...field} value={field.value || ''} />
                                       </FormControl>
                                       <FormMessage />
                                       </FormItem>
@@ -276,17 +314,22 @@ export default function CheckoutPage() {
 
                 {hasRestrictedItem && (
                     <Card>
-                        <CardHeader><CardTitle>3. Legal Documents</CardTitle></CardHeader>
+                        <CardHeader>
+                          <CardTitle>3. Legal Documents</CardTitle>
+                          <CardDescription>
+                            Your order contains a restricted item. Please download the agreement, sign it, and upload the completed file.
+                             <Button variant="link" asChild className="p-0 h-auto ml-1 text-inherit hover:underline">
+                                <a href="/MicroChub-Restricted-Item-Agreement.pdf" target="_blank" rel="noopener noreferrer" download>Download Agreement</a>
+                            </Button>
+                          </CardDescription>
+                        </CardHeader>
                         <CardContent>
                             <FormField
                                 control={form.control}
                                 name="legalAgreement"
-                                render={({ field: { onChange, ...fieldProps } }) => (
+                                render={({ field: { onChange, value, ...fieldProps } }) => (
                                     <FormItem>
-                                        <FormLabel>Signed Legal Agreement</FormLabel>
-                                        <FormDescription>
-                                            Please upload the signed legal agreement for the restricted item(s) in your cart.
-                                        </FormDescription>
+                                        <FormLabel>Upload Signed Legal Agreement</FormLabel>
                                         <FormControl>
                                             <div className="flex items-center justify-center w-full">
                                                 <label htmlFor="legal-dropzone-file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted">
@@ -319,22 +362,38 @@ export default function CheckoutPage() {
                     <CardHeader>
                         <CardTitle>Order Summary</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-2">
-                        {cart.map(item => (
-                            <div key={item.id} className="flex justify-between items-start text-sm">
-                                <div>
-                                    <p className="font-medium">{item.name} <span className="text-muted-foreground">x{item.quantity}</span></p>
-                                    {Object.entries(item.configuration).map(([group, option]) => (
-                                        <p key={group} className="text-xs text-muted-foreground pl-2">{group}: {Array.isArray(option) ? option.join(', '): option}</p>
-                                    ))}
-                                </div>
-                                <p className="font-medium">EGP {(item.price * item.quantity).toLocaleString()}</p>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-end gap-2">
+                           <div className="grid flex-grow items-center gap-1.5">
+                               <Label htmlFor="coupon-code">Coupon Code</Label>
+                               <Input id="coupon-code" placeholder="Enter code" value={couponCode} onChange={e => setCouponCode(e.target.value)} />
+                           </div>
+                           <Button type="button" variant="outline" onClick={handleApplyCoupon} disabled={isApplyingCoupon}>
+                               {isApplyingCoupon ? <Loader2 className="animate-spin" /> : <Ticket />}
+                               <span className="sr-only">Apply Coupon</span>
+                           </Button>
+                        </div>
+
+                        <Separator />
+                        
+                        <div className="flex justify-between text-sm">
+                            <span>Subtotal</span>
+                            <span>EGP {totalPrice.toLocaleString()}</span>
+                        </div>
+                        {appliedCoupon && (
+                            <div className="flex justify-between text-sm text-primary">
+                                <span>Discount ({appliedCoupon.code})</span>
+                                <span>- EGP {discountAmount.toLocaleString()}</span>
                             </div>
-                        ))}
+                        )}
+                        <div className="flex justify-between text-sm">
+                            <span>Shipping</span>
+                            <span className="text-muted-foreground">Calculated at checkout</span>
+                        </div>
                         <Separator />
                         <div className="flex justify-between font-bold text-lg">
                             <span>Total</span>
-                            <span>EGP {totalPrice.toLocaleString()}</span>
+                            <span>EGP {finalPrice.toLocaleString()}</span>
                         </div>
                     </CardContent>
                     <CardFooter>
@@ -350,3 +409,5 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
+    
