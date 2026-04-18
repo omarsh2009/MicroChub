@@ -157,6 +157,5 @@ export type SocialLink = {
     id: string;
     platform: string;
     url: string;
-    icon: string; // e.g. "Facebook", "Twitter"
     enabled: boolean;
 }

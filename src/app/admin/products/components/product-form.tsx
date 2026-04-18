@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray, useFormContext } from 'react-hook-form';
 import { z } from 'zod';
@@ -17,12 +17,17 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Product } from '@/lib/types';
-import { Loader2, Sparkles, PlusCircle, Trash2 } from 'lucide-react';
+import { Product, Category } from '@/lib/types';
+import { Loader2, Sparkles, PlusCircle, Trash2, Check, ChevronsUpDown } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { getCategories } from '@/lib/categories';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 const customizationOptionSchema = z.object({
   name: z.string().min(1, 'Option name is required.'),
@@ -39,12 +44,16 @@ const customizationGroupSchema = z.object({
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
-  category: z.string().min(2, { message: 'Category is required.' }),
+  categoryIds: z.array(z.string()).min(1, { message: 'At least one category is required.' }),
   price: z.coerce.number().positive(),
   technicalSpecs: z.string().min(10, { message: 'Please provide some technical specs.' }),
   description: z.string().optional(),
   isRestricted: z.boolean().optional(),
   customizationGroups: z.array(customizationGroupSchema).optional(),
+  productType: z.enum(['ready', 'build_to_order']).default('build_to_order'),
+  image: z.string().optional(),
+  discountType: z.enum(['fixed', 'percentage']).optional(),
+  discountValue: z.coerce.number().optional(),
 });
 
 export function ProductForm({
@@ -55,16 +64,27 @@ export function ProductForm({
   onFinished: () => void;
 }) {
   const { toast } = useToast();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [imagePreview, setImagePreview] = useState<string | null>(product?.image || null);
+
+  useEffect(() => {
+    getCategories().then(setCategories);
+  }, []);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: product?.name || '',
-      category: product?.category || '',
+      categoryIds: product?.categoryIds || [],
       price: product?.price || 0,
       technicalSpecs: product ? Object.entries(product.specs).map(([k, v]) => `${k}: ${v}`).join('\n') : '',
       description: product?.description || '',
       isRestricted: product?.isRestricted || false,
       customizationGroups: product?.customizationGroups || [],
+      productType: product?.productType || 'build_to_order',
+      image: product?.image || '',
+      discountType: product?.discountType || undefined,
+      discountValue: product?.discountValue || undefined,
     },
   });
   
@@ -72,6 +92,19 @@ export function ProductForm({
     control: form.control,
     name: "customizationGroups"
   });
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setImagePreview(base64String);
+        form.setValue('image', base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("Mock Product Submit:", values);
@@ -99,34 +132,153 @@ export function ProductForm({
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="category"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Category</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g. Mochi & Co." {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Base Price (EGP)</FormLabel>
-                <FormControl>
-                  <Input type="number" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+         <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Base Price (EGP)</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+                control={form.control}
+                name="productType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Product Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select a type" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="build_to_order">Build-to-Order</SelectItem>
+                        <SelectItem value="ready">Ready (In Stock)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
         </div>
+         <div className="grid grid-cols-2 gap-4">
+            <FormField
+                control={form.control}
+                name="discountType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Discount Type (Optional)</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select a type" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="percentage">Percentage (%)</SelectItem>
+                        <SelectItem value="fixed">Fixed Amount (EGP)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="discountValue"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Discount Value (Optional)</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+        </div>
+
+        <FormField
+            control={form.control}
+            name="image"
+            render={() => (
+                <FormItem>
+                <FormLabel>Product Image</FormLabel>
+                <FormControl>
+                    <Input type="file" accept="image/*" onChange={handleFileChange} />
+                </FormControl>
+                {imagePreview && (
+                    <div className="mt-4">
+                        <Image src={imagePreview} alt="Image Preview" width={100} height={100} className="rounded-md object-cover" />
+                    </div>
+                )}
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+
+        <FormField
+          control={form.control}
+          name="categoryIds"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Categories</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className={cn(
+                        "w-full justify-between",
+                        !field.value?.length && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value?.length > 0
+                        ? `${field.value.length} categor${field.value.length > 1 ? 'ies' : 'y'} selected`
+                        : "Select categories"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    <CommandInput placeholder="Search categories..." />
+                    <CommandEmpty>No categories found.</CommandEmpty>
+                    <CommandGroup>
+                      {categories.map((category) => (
+                        <CommandItem
+                          key={category.id}
+                          onSelect={() => {
+                            const selected = field.value || [];
+                            const isSelected = selected.includes(category.id);
+                            const newValue = isSelected
+                              ? selected.filter((id) => id !== category.id)
+                              : [...selected, category.id];
+                            field.onChange(newValue);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              field.value?.includes(category.id) ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {category.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
         <FormField
           control={form.control}
           name="technicalSpecs"

@@ -1,25 +1,25 @@
-import { type Category, type Product, type UserWithId, type OrderWithUserData, type QuoteRequestWithUserData, type PaymentMethod, type Coupon } from "./types";
+import { type Category, type Product, type UserWithId, type OrderWithUserData, type QuoteRequestWithUserData, type PaymentMethod, type Coupon, type SocialLink } from "./types";
 
-export const categories: Category[] = [
+export const mockCategories: Category[] = [
   {
     id: "mochi",
     name: "Mochi & Co.",
-    description: "Customizable mochis, desktop accessories, and cases.",
+    slug: 'mochi-co'
   },
   {
     id: "esp",
     name: "ESP Devices",
-    description: "Hacking and testing tools based on ESP microcontrollers.",
+    slug: 'esp-devices'
   },
   {
     id: "arduino",
     name: "Arduino Projects",
-    description: "DIY machines and kits powered by Arduino.",
+    slug: 'arduino-projects'
   },
   {
     id: "displays",
     name: "Smart Displays",
-    description: "Connected displays for work and play.",
+    slug: 'smart-displays'
   },
 ];
 
@@ -31,8 +31,9 @@ export const products: Product[] = [
     description:
       "A versatile, customizable hardware companion for developers and makers. Features advanced connectivity and a modular design.",
     price: 1200,
-    category: "Mochi & Co.",
+    categoryIds: ["mochi", "esp"],
     image: "https://picsum.photos/seed/mochi4main/600/400",
+    productType: 'build_to_order',
     specs: {
       MCU: "ESP32-S3",
       Connectivity: "Wi-Fi, Bluetooth 5.0",
@@ -75,8 +76,9 @@ export const products: Product[] = [
     description:
       "An advanced toolkit for Wi-Fi network testing and security research. Comes pre-flashed with Bruce OS for maximum functionality.",
     price: 950,
-    category: "ESP Devices",
+    categoryIds: ["esp"],
     image: "https://picsum.photos/seed/jammerpro/600/400",
+    productType: 'ready',
     specs: {
       MCU: "ESP32",
       Antenna: "External 5dBi",
@@ -96,8 +98,9 @@ export const products: Product[] = [
     description:
       "A complete DIY kit to build your own desktop CNC machine. Perfect for milling soft materials like wood, plastic, and PCBs.",
     price: 3500,
-    category: "Arduino Projects",
+    categoryIds: ["arduino"],
     image: "https://picsum.photos/seed/cnckit/600/400",
+    productType: 'build_to_order',
     specs: {
       Controller: "Arduino UNO with GRBL Shield",
       WorkingArea: "180x100x45mm",
@@ -114,8 +117,9 @@ export const products: Product[] = [
     description:
       "A sleek, smart display that shows what's currently playing on your Spotify. A perfect desk companion for music lovers.",
     price: 750,
-    category: "Smart Displays",
+    categoryIds: ["displays", "esp"],
     image: "https://picsum.photos/seed/spotifydisplay/600/400",
+    productType: 'ready',
     specs: {
       MCU: "ESP8266",
       Display: "1.54 inch IPS Color Display",
@@ -134,8 +138,9 @@ export const products: Product[] = [
     description:
       "A crystal clear, protective case for your Mochi device. Show off the hardware while keeping it safe.",
     price: 150,
-    category: "Mochi & Co.",
+    categoryIds: ["mochi"],
     image: "https://picsum.photos/seed/mochicase/600/400",
+    productType: 'ready',
     specs: {
       Material: "Acrylic",
       Compatibility: "Mochi v3, Mochi v4",
@@ -150,8 +155,9 @@ export const products: Product[] = [
     description:
       "Build your own customizable stream deck. Assign macros, hotkeys, and custom actions to 12 mechanical keys.",
     price: 800,
-    category: "Arduino Projects",
+    categoryIds: ["arduino"],
     image: "https://picsum.photos/seed/streamdeck/600/400",
+    productType: 'build_to_order',
     specs: {
       Controller: "Arduino Pro Micro",
       Keys: "12x Gateron Mechanical Switches",
@@ -275,3 +281,10 @@ export const mockCoupons: Coupon[] = [
     { id: 'coupon-001', code: 'SAVE10', type: 'percentage', value: 10, usedCount: 0 },
     { id: 'coupon-002', code: '50OFF', type: 'fixed', value: 50, usedCount: 0, expiryDate: '2024-12-31' },
 ];
+
+export const mockSocialLinks: SocialLink[] = [
+    { id: 'sl-1', platform: 'Facebook', url: 'https://facebook.com', enabled: true },
+    { id: 'sl-2', platform: 'Twitter', url: 'https://twitter.com', enabled: true },
+    { id: 'sl-3', platform: 'Instagram', url: 'https://instagram.com', enabled: true },
+    { id: 'sl-4', platform: 'GitHub', url: 'https://github.com', enabled: false },
+]

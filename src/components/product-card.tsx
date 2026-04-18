@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { type Product } from "@/lib/types";
+import { mockCategories } from "@/lib/data";
 
 interface ProductCardProps {
   product: Product;
@@ -29,6 +30,8 @@ export function ProductCard({ product }: ProductCardProps) {
       discountedPrice = product.price * (1 - product.discountValue / 100);
     }
   }
+
+  const categoryName = mockCategories.find(c => c.id === product.categoryIds[0])?.name || 'Uncategorized';
 
   return (
     <Card className="flex flex-col overflow-hidden group transition-all duration-300 hover:shadow-primary/20 hover:shadow-lg hover:-translate-y-1">
@@ -55,7 +58,7 @@ export function ProductCard({ product }: ProductCardProps) {
       </CardHeader>
       <CardContent className="p-4 flex-grow">
         <Badge variant="outline" className="mb-2">
-          {product.category}
+          {categoryName}
         </Badge>
         <CardTitle className="text-lg font-headline">
           <Link href={`/products/${product.slug}`}>{product.name}</Link>
