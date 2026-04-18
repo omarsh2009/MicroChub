@@ -20,7 +20,6 @@ import { MoreHorizontal } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { Product } from '@/lib/types';
 import Image from 'next/image';
-import { placeholderImagesById } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 
 export function ProductTable({
@@ -56,19 +55,16 @@ export function ProductTable({
       </TableHeader>
       <TableBody>
         {products.map((product) => {
-          const primaryImageId = product.images[0];
-          const placeholderImage = placeholderImagesById[primaryImageId];
           return (
             <TableRow key={product.id}>
               <TableCell className="hidden sm:table-cell">
-                {placeholderImage ? (
+                {product.image ? (
                   <Image
                     alt={product.name}
                     className="aspect-square rounded-md object-cover"
                     height="64"
-                    src={placeholderImage.imageUrl}
+                    src={product.image}
                     width="64"
-                    data-ai-hint={placeholderImage.imageHint}
                   />
                 ) : (
                   <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center text-xs">No Image</div>

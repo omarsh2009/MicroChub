@@ -1,7 +1,7 @@
 'use client';
 
-import { mockOrders, mockUsers, mockQuoteRequests, mockPaymentMethods } from './data';
-import type { Order, UserProfile, OrderWithUserData, UserWithId, QuoteRequest, QuoteRequestWithUserData, PaymentMethod } from './types';
+import { mockOrders, mockUsers, mockQuoteRequests, mockPaymentMethods, mockCoupons } from './data';
+import type { Order, UserProfile, OrderWithUserData, UserWithId, QuoteRequest, QuoteRequestWithUserData, PaymentMethod, Coupon } from './types';
 
 // MOCK API - simulates a network delay
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -9,7 +9,15 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export async function getAllOrders(): Promise<OrderWithUserData[]> {
   await sleep(500);
   console.log("Mock API: Fetched all orders");
-  return mockOrders;
+  // Return a deep copy to prevent mutation of original mock data
+  return JSON.parse(JSON.stringify(mockOrders));
+}
+
+export async function getOrdersByUserId(userId: string): Promise<OrderWithUserData[]> {
+  await sleep(500);
+  console.log(`Mock API: Fetched orders for user ${userId}`);
+  const userOrders = mockOrders.filter(o => o.userId === userId);
+  return JSON.parse(JSON.stringify(userOrders));
 }
 
 export async function updateOrderStatus(
@@ -35,12 +43,20 @@ export async function approveLegalAgreement(
     console.log(`Mock API: Approved legal agreement for order ${orderId}`);
 }
 
-
+// USER MANAGEMENT
 export async function getAllUsers(): Promise<UserWithId[]> {
     await sleep(500);
     console.log("Mock API: Fetched all users");
-    return mockUsers;
+    return JSON.parse(JSON.stringify(mockUsers));
 }
+
+export async function getUserById(userId: string): Promise<UserWithId | undefined> {
+    await sleep(200);
+    console.log(`Mock API: Fetched user ${userId}`);
+    const user = mockUsers.find(u => u.id === userId);
+    return user ? JSON.parse(JSON.stringify(user)) : undefined;
+}
+
 
 export async function updateUserRole(
     userId: string,
@@ -54,10 +70,11 @@ export async function updateUserRole(
     console.log(`Mock API: Updated user ${userId} role to ${role}`);
 }
 
+// QUOTE MANAGEMENT
 export async function getAllQuoteRequests(): Promise<QuoteRequestWithUserData[]> {
   await sleep(500);
   console.log("Mock API: Fetched all quote requests");
-  return mockQuoteRequests;
+  return JSON.parse(JSON.stringify(mockQuoteRequests));
 }
 
 export async function submitQuote(
@@ -75,11 +92,11 @@ export async function submitQuote(
   console.log(`Mock API: Submitted quote for ${quoteId} with price ${price}`);
 }
 
-// Payment Methods
+// PAYMENT METHODS
 export async function getPaymentMethods(): Promise<PaymentMethod[]> {
   await sleep(200);
   console.log("Mock API: Fetched payment methods");
-  return mockPaymentMethods;
+  return JSON.parse(JSON.stringify(mockPaymentMethods));
 }
 
 export async function addPaymentMethod(data: Omit<PaymentMethod, 'id'>): Promise<string> {

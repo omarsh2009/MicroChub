@@ -1,65 +1,4 @@
-import { type Category, type Product, type UserWithId, type OrderWithUserData, type QuoteRequestWithUserData, type PaymentMethod } from "./types";
-
-export type ImagePlaceholder = {
-  id: string;
-  description: string;
-  imageUrl: string;
-  imageHint: string;
-};
-
-export const placeholderImages: ImagePlaceholder[] = [
-    {
-      "id": "mochi-v4-main",
-      "description": "A top-down view of the Mochi v4 device on a dark background.",
-      "imageUrl": "https://picsum.photos/seed/mochi4main/600/400",
-      "imageHint": "circuit board gadget"
-    },
-    {
-      "id": "mochi-v4-side",
-      "description": "A side-angle view of the Mochi v4 showing its ports.",
-      "imageUrl": "https://picsum.photos/seed/mochi4side/600/400",
-      "imageHint": "electronic device"
-    },
-    {
-      "id": "jammer-pro-main",
-      "description": "The ESP Jammer Pro with its antenna, looking sleek.",
-      "imageUrl": "https://picsum.photos/seed/jammerpro/600/400",
-      "imageHint": "hacker gadget"
-    },
-    {
-      "id": "cnc-kit-main",
-      "description": "The fully assembled Mini CNC Kit on a workbench.",
-      "imageUrl": "https://picsum.photos/seed/cnckit/600/400",
-      "imageHint": "cnc machine"
-    },
-    {
-      "id": "spotify-display-main",
-      "description": "The Spotify Display showing album art on a desk.",
-      "imageUrl": "https://picsum.photos/seed/spotifydisplay/600/400",
-      "imageHint": "desk gadget"
-    },
-    {
-      "id": "mochi-case-main",
-      "description": "A clear acrylic case for the Mochi device.",
-      "imageUrl": "https://picsum.photos/seed/mochicase/600/400",
-      "imageHint": "clear case"
-    },
-    {
-      "id": "stream-deck-main",
-      "description": "A DIY stream deck with glowing keys.",
-      "imageUrl": "https://picsum.photos/seed/streamdeck/600/400",
-      "imageHint": "keyboard custom"
-    }
-  ];
-
-
-export const placeholderImagesById = placeholderImages.reduce(
-  (acc, img) => {
-    acc[img.id] = img;
-    return acc;
-  },
-  {} as Record<string, ImagePlaceholder>
-);
+import { type Category, type Product, type UserWithId, type OrderWithUserData, type QuoteRequestWithUserData, type PaymentMethod, type Coupon } from "./types";
 
 export const categories: Category[] = [
   {
@@ -93,7 +32,7 @@ export const products: Product[] = [
       "A versatile, customizable hardware companion for developers and makers. Features advanced connectivity and a modular design.",
     price: 1200,
     category: "Mochi & Co.",
-    images: ["mochi-v4-main", "mochi-v4-side"],
+    image: "https://picsum.photos/seed/mochi4main/600/400",
     specs: {
       MCU: "ESP32-S3",
       Connectivity: "Wi-Fi, Bluetooth 5.0",
@@ -137,7 +76,7 @@ export const products: Product[] = [
       "An advanced toolkit for Wi-Fi network testing and security research. Comes pre-flashed with Bruce OS for maximum functionality.",
     price: 950,
     category: "ESP Devices",
-    images: ["jammer-pro-main"],
+    image: "https://picsum.photos/seed/jammerpro/600/400",
     specs: {
       MCU: "ESP32",
       Antenna: "External 5dBi",
@@ -147,6 +86,8 @@ export const products: Product[] = [
     useCases: ["Wi-Fi penetration testing", "Network analysis", "Educational tool"],
     featured: true,
     isRestricted: true,
+    discountType: 'fixed',
+    discountValue: 100,
   },
   {
     id: "prod-003",
@@ -156,7 +97,7 @@ export const products: Product[] = [
       "A complete DIY kit to build your own desktop CNC machine. Perfect for milling soft materials like wood, plastic, and PCBs.",
     price: 3500,
     category: "Arduino Projects",
-    images: ["cnc-kit-main"],
+    image: "https://picsum.photos/seed/cnckit/600/400",
     specs: {
       Controller: "Arduino UNO with GRBL Shield",
       WorkingArea: "180x100x45mm",
@@ -174,7 +115,7 @@ export const products: Product[] = [
       "A sleek, smart display that shows what's currently playing on your Spotify. A perfect desk companion for music lovers.",
     price: 750,
     category: "Smart Displays",
-    images: ["spotify-display-main"],
+    image: "https://picsum.photos/seed/spotifydisplay/600/400",
     specs: {
       MCU: "ESP8266",
       Display: "1.54 inch IPS Color Display",
@@ -183,6 +124,8 @@ export const products: Product[] = [
     },
     useCases: ["Desktop music visualizer", "Smart home dashboard piece", "Gift for music fans"],
     featured: true,
+    discountType: 'percentage',
+    discountValue: 15,
   },
   {
     id: "prod-005",
@@ -192,7 +135,7 @@ export const products: Product[] = [
       "A crystal clear, protective case for your Mochi device. Show off the hardware while keeping it safe.",
     price: 150,
     category: "Mochi & Co.",
-    images: ["mochi-case-main"],
+    image: "https://picsum.photos/seed/mochicase/600/400",
     specs: {
       Material: "Acrylic",
       Compatibility: "Mochi v3, Mochi v4",
@@ -208,7 +151,7 @@ export const products: Product[] = [
       "Build your own customizable stream deck. Assign macros, hotkeys, and custom actions to 12 mechanical keys.",
     price: 800,
     category: "Arduino Projects",
-    images: ["stream-deck-main"],
+    image: "https://picsum.photos/seed/streamdeck/600/400",
     specs: {
       Controller: "Arduino Pro Micro",
       Keys: "12x Gateron Mechanical Switches",
@@ -270,7 +213,7 @@ export const mockOrders: OrderWithUserData[] = [
         id: 'order-001',
         userId: 'user-002',
         items: [
-            { id: 'cart-001', productId: 'prod-001', name: 'Mochi v4', slug: 'mochi-v4', image: placeholderImagesById['mochi-v4-main'].imageUrl, quantity: 1, price: 1250, configuration: { 'Case Color': 'Cyber Purple' } }
+            { id: 'cart-001', productId: 'prod-001', name: 'Mochi v4', slug: 'mochi-v4', image: "https://picsum.photos/seed/mochi4main/600/400", quantity: 1, price: 1250, configuration: { 'Case Color': 'Cyber Purple' } }
         ],
         totalPrice: 1250,
         status: 'In Production',
@@ -284,7 +227,7 @@ export const mockOrders: OrderWithUserData[] = [
         id: 'order-002',
         userId: 'user-003',
         items: [
-            { id: 'cart-002', productId: 'prod-002', name: 'ESP Jammer Pro', slug: 'esp-jammer-pro', image: placeholderImagesById['jammer-pro-main'].imageUrl, quantity: 1, price: 950, configuration: {} }
+            { id: 'cart-002', productId: 'prod-002', name: 'ESP Jammer Pro', slug: 'esp-jammer-pro', image: "https://picsum.photos/seed/jammerpro/600/400", quantity: 1, price: 950, configuration: {} }
         ],
         totalPrice: 950,
         status: 'Pending Verification',
@@ -304,7 +247,7 @@ export const mockQuoteRequests: QuoteRequestWithUserData[] = [
         id: 'quote-001',
         userId: 'user-003',
         items: [
-            { id: 'cart-quote-001', productId: 'prod-006', name: 'Arduino Stream Deck Kit', slug: 'arduino-stream-deck', image: placeholderImagesById['stream-deck-main'].imageUrl, quantity: 2, price: 800, configuration: { 'Keycap Style': 'Custom Printed' } }
+            { id: 'cart-quote-001', productId: 'prod-006', name: 'Arduino Stream Deck Kit', slug: 'arduino-stream-deck', image: "https://picsum.photos/seed/streamdeck/600/400", quantity: 2, price: 800, configuration: { 'Keycap Style': 'Custom Printed' } }
         ],
         userNotes: 'I want a custom logo on each keycap. The logo is attached.',
         fileUrl: '#',
@@ -316,7 +259,7 @@ export const mockQuoteRequests: QuoteRequestWithUserData[] = [
         id: 'quote-002',
         userId: 'user-002',
         items: [
-            { id: 'cart-quote-002', productId: 'prod-001', name: 'Mochi v4', slug: 'mochi-v4', image: placeholderImagesById['mochi-v4-main'].imageUrl, quantity: 1, price: 1200, configuration: {} }
+            { id: 'cart-quote-002', productId: 'prod-001', name: 'Mochi v4', slug: 'mochi-v4', image: "https://picsum.photos/seed/mochi4main/600/400", quantity: 1, price: 1200, configuration: {} }
         ],
         userNotes: 'I need a special firmware with a custom boot screen.',
         status: 'Quoted',
@@ -326,4 +269,9 @@ export const mockQuoteRequests: QuoteRequestWithUserData[] = [
         quotedAt: { seconds: new Date('2024-05-20T17:00:00Z').getTime() / 1000, nanoseconds: 0 },
         user: { id: 'user-002', name: 'Alice', email: 'alice@example.com', phoneNumber: '0111222333' }
     }
-]
+];
+
+export const mockCoupons: Coupon[] = [
+    { id: 'coupon-001', code: 'SAVE10', type: 'percentage', value: 10, usedCount: 0 },
+    { id: 'coupon-002', code: '50OFF', type: 'fixed', value: 50, usedCount: 0, expiryDate: '2024-12-31' },
+];

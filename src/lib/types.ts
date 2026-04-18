@@ -23,13 +23,15 @@ export type Product = {
   name: string;
   description: string;
   price: number;
+  image: string;
   category: string;
-  images: string[];
   specs: Record<string, string>;
   useCases: string[];
   featured?: boolean;
   isRestricted?: boolean;
   customizationGroups?: CustomizationGroup[];
+  discountValue?: number;
+  discountType?: 'fixed' | 'percentage';
 };
 
 export type UserProfile = {
@@ -134,4 +136,18 @@ export type QuoteRequestWithUserData = QuoteRequest & {
   }
 };
 
-    
+export type Coupon = {
+  id: string;
+  code: string;
+  type: 'fixed' | 'percentage';
+  value: number;
+  maxUses?: number;
+  usedCount: number;
+  expiryDate?: string;
+};
+
+export type LegalAgreement = {
+  fileName: string;
+  fileContent: string; // base64 or data URL
+  uploadedAt: string;
+};

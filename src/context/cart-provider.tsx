@@ -8,7 +8,6 @@ import {
 } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import type { CartItem, Product, SelectedConfiguration } from '@/lib/types';
-import { placeholderImagesById } from '@/lib/data';
 
 interface CartContextType {
   cart: CartItem[];
@@ -74,9 +73,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const currentCart = JSON.parse(localStorage.getItem(CART_KEY) || '[]') as CartItem[];
       const existingItem = currentCart.find((item) => item.id === cartItemId);
       
-      const primaryImageId = product.images[0];
-      const placeholderImage = placeholderImagesById[primaryImageId];
-
       let newCart: CartItem[];
 
       if (existingItem) {
@@ -91,7 +87,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           productId: product.id,
           name: product.name,
           slug: product.slug,
-          image: placeholderImage?.imageUrl || '',
+          image: product.image || '',
           quantity,
           price, // This is the price per unit
           configuration,

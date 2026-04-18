@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import {
   Table,
   TableHeader,
@@ -14,8 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import type { UserWithId, UserProfile } from '@/lib/types';
+import { Eye } from 'lucide-react';
 
 export function UsersTable({
   users,
@@ -32,7 +34,9 @@ export function UsersTable({
         <TableRow>
           <TableHead>Name</TableHead>
           <TableHead>Email</TableHead>
+          <TableHead>Phone Number</TableHead>
           <TableHead>Role</TableHead>
+          <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -40,6 +44,7 @@ export function UsersTable({
           <TableRow key={user.id}>
             <TableCell className="font-medium">{user.name}</TableCell>
             <TableCell>{user.email}</TableCell>
+            <TableCell>{user.phoneNumber}</TableCell>
             <TableCell>
               <Select value={user.role} onValueChange={(newRole) => onRoleChange(user.id, newRole as UserProfile['role'])}>
                   <SelectTrigger className="w-[180px]">
@@ -51,6 +56,14 @@ export function UsersTable({
                       ))}
                   </SelectContent>
               </Select>
+            </TableCell>
+            <TableCell>
+                <Button asChild variant="outline" size="sm">
+                    <Link href={`/admin/users/${user.id}`}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        View
+                    </Link>
+                </Button>
             </TableCell>
           </TableRow>
         ))}
