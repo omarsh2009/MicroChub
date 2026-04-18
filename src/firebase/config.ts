@@ -1,3 +1,4 @@
+'use client';
 export const firebaseConfig = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
@@ -8,8 +9,14 @@ export const firebaseConfig = {
 };
 
 // A robust check to ensure Firebase environment variables are configured.
-if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes('YOUR_API_KEY')) {
+const requiredKeys: (keyof typeof firebaseConfig)[] = ['apiKey', 'projectId', 'appId', 'authDomain'];
+const missingOrPlaceholderKeys = requiredKeys.filter(key => {
+    const value = firebaseConfig[key];
+    return !value || value.includes('YOUR_');
+});
+
+if (missingOrPlaceholderKeys.length > 0) {
     throw new Error(
-        'ACTION REQUIRED: Your Firebase configuration is incomplete or incorrect. Please ensure you have a `.env.local` file in your project root with the correct `NEXT_PUBLIC_` prefixes for all Firebase variables. Copy the contents of the `.env` template file, fill in your actual Firebase project credentials, and restart your development server.'
+        `STOP! Your Firebase environment variables are not configured correctly. The following keys are missing or using placeholder values: ${missingOrPlaceholderKeys.join(', ')}. \n\n--- PLEASE FOLLOW THESE STEPS ---\n1. Create a file named '.env.local' in the root of your project.\n2. Copy all content from the '.env' template file into '.env.local'.\n3. Replace the placeholder values (e.g., 'YOUR_API_KEY') with your REAL Firebase project credentials.\n4. IMPORTANT: You MUST restart your development server after creating or editing the .env.local file.`
     );
 }

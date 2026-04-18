@@ -4,9 +4,17 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-// More robust check to prevent unhelpful errors from the Supabase client
-if (!supabaseUrl || supabaseUrl.includes('YOUR_SUPABASE_URL') || !supabaseAnonKey || supabaseAnonKey.includes('YOUR_SUPABASE_ANON_KEY')) {
-    throw new Error('ACTION REQUIRED: Your Supabase configuration is incomplete. Please check your .env.local file and ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set correctly. You may need to restart your development server.');
+// A robust check to prevent unhelpful errors from the Supabase client
+let errorParts: string[] = [];
+if (!supabaseUrl || supabaseUrl.includes('YOUR_SUPABASE_URL')) {
+    errorParts.push('NEXT_PUBLIC_SUPABASE_URL');
+}
+if (!supabaseAnonKey || supabaseAnonKey.includes('YOUR_SUPABASE_ANON_KEY')) {
+    errorParts.push('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+}
+
+if (errorParts.length > 0) {
+    throw new Error(`STOP! Your Supabase environment variables are not configured correctly. The following keys are missing or using placeholder values: ${errorParts.join(', ')}. \n\n--- PLEASE FOLLOW THESE STEPS ---\n1. Create a file named '.env.local' in the root of your project.\n2. Copy all content from the '.env' template file into '.env.local'.\n3. Replace the placeholder values (e.g., 'YOUR_SUPABASE_URL') with your REAL Supabase project credentials.\n4. IMPORTANT: You MUST restart your development server after creating or editing the .env.local file.`);
 }
 
 
