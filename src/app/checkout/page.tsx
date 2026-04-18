@@ -97,6 +97,7 @@ export default function CheckoutPage() {
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(formSchema),
+    mode: 'onChange',
     defaultValues: {
       fullName: '',
       phoneNumber: '',
@@ -143,12 +144,18 @@ export default function CheckoutPage() {
     
     if ('error' in result) {
         toast({ variant: 'destructive', title: 'Coupon Invalid', description: result.error });
-        setAppliedCoupon(null); // Clear previous valid coupon if new one is invalid
+        setAppliedCoupon(null);
     } else {
         setAppliedCoupon(result);
         toast({ title: 'Coupon Applied!', description: `Discount of ${result.type === 'fixed' ? `EGP ${result.value}` : `${result.value}%`} applied.`});
     }
     setIsApplyingCoupon(false);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      form.setValue('legalAgreement', e.target.files);
+    }
   };
 
   async function onSubmit(values: CheckoutFormValues) {
@@ -161,6 +168,7 @@ export default function CheckoutPage() {
 
     if (hasRestrictedItem && !legalAgreementFile) {
         toast({ variant: 'destructive', title: 'Missing File', description: 'A signed legal agreement is required for restricted items.' });
+        form.setError('legalAgreement', { type: 'manual', message: 'A signed agreement is required.'})
         return;
     }
 
@@ -327,7 +335,7 @@ export default function CheckoutPage() {
                             <FormField
                                 control={form.control}
                                 name="legalAgreement"
-                                render={({ field: { onChange, value, ...fieldProps } }) => (
+                                render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Upload Signed Legal Agreement</FormLabel>
                                         <FormControl>
@@ -343,8 +351,7 @@ export default function CheckoutPage() {
                                                       type="file"
                                                       className="hidden"
                                                       accept={ACCEPTED_FILE_TYPES.join(',')}
-                                                      onChange={(e) => onChange(e.target.files)}
-                                                      {...fieldProps}
+                                                      onChange={handleFileChange}
                                                     />
                                                 </label>
                                             </div> 
@@ -397,7 +404,7 @@ export default function CheckoutPage() {
                         </div>
                     </CardContent>
                     <CardFooter>
-                        <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+                        <Button type="submit" className="w-full" size="lg" disabled={isLoading || !form.formState.isValid}>
                             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Place Order
                         </Button>
@@ -409,5 +416,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-
-    

@@ -12,10 +12,10 @@ import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/auth';
 
 export interface WishlistItem {
-    id: string; // Will be the productId for simplicity in mock
+    id: string;
     productId: string;
     userId: string;
-    addedAt: number; // Use a timestamp
+    addedAt: number;
 }
 
 interface WishlistContextType {
@@ -36,18 +36,19 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Use a user-specific key for localStorage
-  const userWishlistKey = useMemo(() => user ? `${WISHLIST_KEY}-${user.uid}` : WISHLIST_KEY, [user]);
+  const userWishlistKey = useMemo(() => (user ? `${WISHLIST_KEY}-${user.uid}` : null), [user]);
 
   useEffect(() => {
+    if (!userWishlistKey) {
+      setLoading(false);
+      setWishlist([]);
+      return;
+    }
+
     setLoading(true);
     try {
       const storedWishlist = localStorage.getItem(userWishlistKey);
-      if (storedWishlist) {
-        setWishlist(JSON.parse(storedWishlist));
-      } else {
-        setWishlist([]);
-      }
+      setWishlist(storedWishlist ? JSON.parse(storedWishlist) : []);
     } catch (error) {
       console.error("Failed to load wishlist from localStorage", error);
       setWishlist([]);
@@ -56,14 +57,15 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     }
   }, [userWishlistKey]);
 
-  const updateWishlist = (newWishlist: WishlistItem[]) => {
-    setWishlist(newWishlist);
-    try {
-      localStorage.setItem(userWishlistKey, JSON.stringify(newWishlist));
-    } catch (error) {
-      console.error("Failed to save wishlist to localStorage", error);
+  useEffect(() => {
+    if (userWishlistKey && !loading) {
+      try {
+        localStorage.setItem(userWishlistKey, JSON.stringify(wishlist));
+      } catch (error) {
+        console.error("Failed to save wishlist to localStorage", error);
+      }
     }
-  };
+  }, [wishlist, userWishlistKey, loading]);
 
   const addToWishlist = useCallback(async (productId: string) => {
     if (!user) {
@@ -71,38 +73,39 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         return;
     }
     
-    if (wishlist.some(item => item.productId === productId)) {
-        toast({ variant: 'default', title: 'Already in Wishlist', description: 'This item is already in your wishlist.' });
-        return;
-    }
+    setWishlist(prevWishlist => {
+        if (prevWishlist.some(item => item.productId === productId)) {
+            toast({ variant: 'default', title: 'Already in Wishlist' });
+            return prevWishlist;
+        }
 
-    const newItem: WishlistItem = {
-      id: productId,
-      productId,
-      userId: user.uid,
-      addedAt: Date.now(),
-    };
-
-    updateWishlist([...wishlist, newItem]);
-    toast({ title: 'Added to Wishlist', description: 'The item has been added to your wishlist.' });
-  }, [wishlist, user, userWishlistKey, toast]);
+        const newItem: WishlistItem = {
+            id: productId,
+            productId,
+            userId: user.uid,
+            addedAt: Date.now(),
+        };
+        
+        toast({ title: 'Added to Wishlist' });
+        return [...prevWishlist, newItem];
+    });
+  }, [user, toast]);
 
   const removeFromWishlist = useCallback(async (productId: string) => {
     if (!user) {
         toast({ variant: 'destructive', title: 'You must be logged in.' });
         return;
     }
-    const newWishlist = wishlist.filter(item => item.productId !== productId);
-    updateWishlist(newWishlist);
-    toast({ title: 'Removed from Wishlist', description: 'The item has been removed from your wishlist.' });
-  }, [wishlist, user, userWishlistKey, toast]);
+    setWishlist(prevWishlist => prevWishlist.filter(item => item.productId !== productId));
+    toast({ title: 'Removed from Wishlist' });
+  }, [user, toast]);
   
   const isInWishlist = useCallback((productId: string) => {
-      return !!wishlist?.some(item => item.productId === productId);
+      return wishlist.some(item => item.productId === productId);
   }, [wishlist]);
 
   const value = useMemo(() => ({
-    wishlist: wishlist || [],
+    wishlist,
     loading,
     addToWishlist,
     removeFromWishlist,
