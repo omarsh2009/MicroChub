@@ -246,20 +246,26 @@ export function ProductClientPage({ product }: { product: Product }) {
                 &larr; Back to Products
               </Link>
               <div className="flex items-center gap-2 mt-4">
-                <Badge variant="outline">{product.category}</Badge>
-                <Badge variant="secondary">Made to Order</Badge>
+                {product.categoryIds.map(catId => <Badge key={catId} variant="outline">{catId}</Badge>)}
+                {product.productType === 'build_to_order' ? (
+                  <Badge variant="secondary">Made to Order</Badge>
+                ) : (
+                  <Badge variant="default" className="bg-green-600 hover:bg-green-700">In Stock</Badge>
+                )}
               </div>
               <h1 className="font-headline text-4xl lg:text-5xl font-bold mt-2">{product.name}</h1>
               <p className="text-muted-foreground text-lg mt-4">{product.description}</p>
             </div>
             
-            <Alert variant="default" className="bg-primary/5 border-primary/20">
-                <Clock className="h-4 w-4 text-primary" />
-                <AlertTitle className="text-primary">Heads Up!</AlertTitle>
-                <AlertDescription>
-                    This is a made-to-order item. Estimated production time is 7-14 business days.
-                </AlertDescription>
-            </Alert>
+            {product.productType === 'build_to_order' && (
+              <Alert variant="default" className="bg-primary/5 border-primary/20">
+                  <Clock className="h-4 w-4 text-primary" />
+                  <AlertTitle className="text-primary">Heads Up!</AlertTitle>
+                  <AlertDescription>
+                      This is a made-to-order item. Estimated production time is 7-14 business days.
+                  </AlertDescription>
+              </Alert>
+            )}
 
             {product.isRestricted && (
                 <Alert variant="destructive">
