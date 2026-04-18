@@ -1,7 +1,7 @@
 export type Category = {
   id: string;
   name: string;
-  description: string;
+  slug: string;
 };
 
 export type CustomizationOption = {
@@ -24,7 +24,7 @@ export type Product = {
   description: string;
   price: number;
   image: string;
-  category: string;
+  categoryIds: string[];
   specs: Record<string, string>;
   useCases: string[];
   featured?: boolean;
@@ -32,6 +32,7 @@ export type Product = {
   customizationGroups?: CustomizationGroup[];
   discountValue?: number;
   discountType?: 'fixed' | 'percentage';
+  productType?: 'ready' | 'build_to_order';
 };
 
 export type UserProfile = {
@@ -151,3 +152,11 @@ export type LegalAgreement = {
   fileContent: string; // base64 or data URL
   uploadedAt: string;
 };
+
+export type SocialLink = {
+    id: string;
+    platform: string;
+    url: string;
+    icon: string; // e.g. "Facebook", "Twitter"
+    enabled: boolean;
+}

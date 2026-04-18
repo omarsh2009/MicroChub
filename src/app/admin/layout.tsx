@@ -14,6 +14,8 @@ import {
   LogOut,
   FileText,
   Ticket,
+  Link2,
+  LayoutGrid,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,11 +34,13 @@ import { cn } from "@/lib/utils";
 
 const navLinks = [
     { href: "/admin/products", label: "Products", icon: Package },
+    { href: "/admin/categories", label: "Categories", icon: LayoutGrid },
     { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
     { href: "/admin/quotes", label: "Quote Requests", icon: FileQuestion },
     { href: "/admin/payment-methods", label: "Payment Methods", icon: Wallet },
     { href: "/admin/coupons", label: "Coupons", icon: Ticket },
     { href: "/admin/legal", label: "Legal Agreement", icon: FileText },
+    { href: "/admin/social-links", label: "Social Links", icon: Link2 },
 ];
 
 export default function AdminLayout({
