@@ -1,7 +1,5 @@
-'use client';
-
 import { mockCategories } from './data';
-import type { Category } from './types';
+import type { Category } from '../types';
 
 // MOCK API - simulates localStorage for categories
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));

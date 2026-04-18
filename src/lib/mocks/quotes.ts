@@ -1,6 +1,6 @@
 'use client';
-import type { Product, SelectedConfiguration } from './types';
-import { mockQuoteRequests } from './data';
+import type { Product, SelectedConfiguration } from '../types';
+import { mockQuoteRequests, mockUsers } from './data';
 
 interface QuoteRequestPayload {
   userId: string;
@@ -25,14 +25,21 @@ export async function createQuoteRequest(
   const newQuoteId = `mock-quote-${Date.now()}`;
 
   const quoteItem = {
+      id: `cart-quote-${Date.now()}`,
       productId: product.id,
       name: product.name,
       slug: product.slug,
-      image: product.images[0] || '',
+      image: product.image || '',
       quantity: quantity,
       price: basePrice,
       configuration: configuration,
   };
+
+  const currentUser = mockUsers.find(u => u.id === userId);
+  if (!currentUser) {
+    throw new Error("User not found to create quote.");
+  }
+
 
   const quoteData: any = {
     id: newQuoteId,
@@ -43,9 +50,9 @@ export async function createQuoteRequest(
     createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 },
     user: {
         id: userId,
-        name: 'Test User',
-        email: 'test@example.com',
-        phoneNumber: '01234567890',
+        name: currentUser.name,
+        email: currentUser.email,
+        phoneNumber: currentUser.phoneNumber,
     }
   };
 

@@ -8,14 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader2, FileQuestion } from 'lucide-react';
-import type { QuoteRequest } from '@/lib/types';
+import type { QuoteRequest, Product } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/hooks/use-cart';
-import { products } from '@/lib/data';
-import { updateUserQuoteStatus } from '@/lib/quotes';
-import { getAllQuoteRequests } from '@/lib/admin';
+import { getProducts } from '@/lib/services/products';
+import { updateUserQuoteStatus } from '@/lib/services/quotes';
+import { getAllQuoteRequests } from '@/lib/services/admin';
 
 export default function QuotesPage() {
   const user = useUser();
@@ -26,6 +26,11 @@ export default function QuotesPage() {
   const [quotes, setQuotes] = useState<QuoteRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [products, setProductsData] = useState<Product[]>([]);
+
+  useEffect(() => {
+    getProducts().then(setProductsData);
+  }, []);
 
   useEffect(() => {
     if (!user) return;

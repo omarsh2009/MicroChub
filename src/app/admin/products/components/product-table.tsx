@@ -18,18 +18,21 @@ import {
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import type { Product } from '@/lib/types';
+import type { Product, Category } from '@/lib/types';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 
 export function ProductTable({
   products,
+  categories,
   onEdit,
 }: {
   products: Product[];
+  categories: Category[];
   onEdit: (product: Product) => void;
 }) {
   const { toast } = useToast();
+  const categoryMap = new Map(categories.map(c => [c.id, c.name]));
 
   const handleDelete = (product: Product) => {
     toast({
@@ -55,6 +58,7 @@ export function ProductTable({
       </TableHeader>
       <TableBody>
         {products.map((product) => {
+          const categoryName = categoryMap.get(product.categoryIds[0]) || 'Uncategorized';
           return (
             <TableRow key={product.id}>
               <TableCell className="hidden sm:table-cell">
@@ -72,7 +76,7 @@ export function ProductTable({
               </TableCell>
               <TableCell className="font-medium">{product.name}</TableCell>
               <TableCell>
-                <Badge variant="outline">{product.category}</Badge>
+                <Badge variant="outline">{categoryName}</Badge>
               </TableCell>
               <TableCell className="hidden md:table-cell">
                 EGP {product.price.toLocaleString()}

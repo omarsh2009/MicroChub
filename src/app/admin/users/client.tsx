@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useUser } from '@/auth';
-import { getAllUsers, updateUserRole } from '@/lib/admin';
+import { getAllUsers, updateUserRole } from '@/lib/services/admin';
 import type { UserWithId, UserProfile } from '@/lib/types';
 import { UsersTable } from './components/users-table';
 import {

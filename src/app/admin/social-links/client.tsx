@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
 import type { SocialLink } from '@/lib/types';
-import { getSocialLinks, addSocialLink, updateSocialLink, deleteSocialLink } from '@/lib/social-links';
+import { getSocialLinks, addSocialLink, updateSocialLink, deleteSocialLink } from '@/lib/services/social-links';
 import { SocialLinksTable } from './components/social-links-table';
 import { SocialLinkForm } from './components/social-link-form';
 

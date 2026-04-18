@@ -1,8 +1,8 @@
 'use client';
 
-import { mockUsers, mockQuoteRequests, mockPaymentMethods, getInitialMockOrders } from './data';
+import { mockUsers, mockQuoteRequests, mockPaymentMethods } from './data';
 import { getStoredOrders, setStoredOrders } from './orders';
-import type { Order, UserProfile, OrderWithUserData, UserWithId, QuoteRequest, QuoteRequestWithUserData, PaymentMethod } from './types';
+import type { Order, UserProfile, OrderWithUserData, UserWithId, QuoteRequest, QuoteRequestWithUserData, PaymentMethod } from '../types';
 
 // MOCK API - simulates a network delay
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));

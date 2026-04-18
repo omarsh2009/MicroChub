@@ -12,17 +12,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { type Product } from "@/lib/types";
-import { mockCategories } from "@/lib/data";
 
 interface ProductCardProps {
   product: Product;
+  categoryName: string;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, categoryName }: ProductCardProps) {
   const primaryImage = product.image;
 
   let discountedPrice: number | null = null;
-  if (product.discountValue && product.discountType) {
+  if (product.discountValue && product.discountType && product.discountType !== 'none') {
     if (product.discountType === 'fixed') {
       discountedPrice = product.price - product.discountValue;
     }
@@ -30,8 +30,6 @@ export function ProductCard({ product }: ProductCardProps) {
       discountedPrice = product.price * (1 - product.discountValue / 100);
     }
   }
-
-  const categoryName = mockCategories.find(c => c.id === product.categoryIds[0])?.name || 'Uncategorized';
 
   return (
     <Card className="flex flex-col overflow-hidden group transition-all duration-300 hover:shadow-primary/20 hover:shadow-lg hover:-translate-y-1">

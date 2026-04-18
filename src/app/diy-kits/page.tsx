@@ -1,10 +1,15 @@
-import { products } from "@/lib/data";
+import { getProducts } from "@/lib/services/products";
+import { getCategories } from "@/lib/services/categories";
 import { ProductCard } from "@/components/product-card";
 import { Badge } from "@/components/ui/badge";
 
-export default function DiyKitsPage() {
-  const diyKits = products.filter(
-    (product) => product.category === "Arduino Projects"
+export default async function DiyKitsPage() {
+  const allProducts = await getProducts();
+  const allCategories = await getCategories();
+
+  const categoryMap = new Map(allCategories.map(c => [c.id, c.name]));
+  const diyKits = allProducts.filter(
+    (product) => product.categoryIds.includes("arduino")
   );
 
   return (
@@ -28,7 +33,11 @@ export default function DiyKitsPage() {
           {diyKits.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {diyKits.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard 
+                  key={product.id} 
+                  product={product} 
+                  categoryName={categoryMap.get(product.categoryIds[0]) || 'Uncategorized'}
+                />
               ))}
             </div>
           ) : (

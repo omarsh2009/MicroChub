@@ -12,8 +12,8 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
-import { featuredProducts, mockCategories } from "@/lib/data";
-import { Category } from "@/lib/types";
+import { getFeaturedProducts } from "@/lib/services/products";
+import { getCategories } from "@/lib/services/categories";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -24,7 +24,11 @@ const categoryIcons: Record<string, React.ReactNode> = {
   displays: <HardDrive className="h-8 w-8" />,
 };
 
-export default function Home() {
+export default async function Home() {
+  const featuredProducts = await getFeaturedProducts();
+  const categories = await getCategories();
+  const categoryMap = new Map(categories.map(c => [c.id, c.name]));
+
   return (
     <div className="flex flex-col min-h-[100dvh] bg-background text-foreground">
       <section className="relative w-full py-24 md:py-32 lg:py-40 xl:py-48">
@@ -60,7 +64,7 @@ export default function Home() {
             Explore Our Arsenal
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {mockCategories.map((category) => (
+            {categories.map((category) => (
               <Link href="#" key={category.id}>
                 <Card className="group hover:border-primary transition-colors duration-300 transform hover:-translate-y-1">
                   <CardHeader className="flex flex-col items-center justify-center text-center p-6">
@@ -92,7 +96,11 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard 
+                key={product.id} 
+                product={product} 
+                categoryName={categoryMap.get(product.categoryIds[0]) || 'Uncategorized'}
+              />
             ))}
           </div>
         </div>

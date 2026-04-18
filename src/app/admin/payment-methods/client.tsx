@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
 import type { PaymentMethod } from '@/lib/types';
-import { getPaymentMethods, addPaymentMethod, updatePaymentMethod, deletePaymentMethod } from '@/lib/admin';
+import { getPaymentMethods, addPaymentMethod, updatePaymentMethod, deletePaymentMethod } from '@/lib/services/admin';
 import { PaymentMethodsTable } from './components/payment-methods-table';
 import { PaymentMethodForm } from './components/payment-method-form';
 

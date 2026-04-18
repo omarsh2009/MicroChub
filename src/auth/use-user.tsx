@@ -10,15 +10,15 @@ export interface MockUserData {
 
 const mockUser: MockUserData = {
     uid: 'mock-user-123',
-    email: 'test@example.com',
-    displayName: 'Test User',
+    email: 'superadmin@example.com',
+    displayName: 'Super Admin',
     profile: {
         id: 'mock-user-123',
-        name: 'Test User',
-        email: 'test@example.com',
+        name: 'Super Admin',
+        email: 'superadmin@example.com',
         phoneNumber: '01234567890',
         wishlist: [],
-        role: 'user',
+        role: 'super_admin',
     },
 };
 

@@ -1,6 +1,6 @@
 'use client';
 
-import type { LegalAgreement } from './types';
+import type { LegalAgreement } from '../types';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const LEGAL_AGREEMENT_KEY = 'global_legal_agreement';

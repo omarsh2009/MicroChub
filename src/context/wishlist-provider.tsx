@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/auth';
+import { getWishlist, addToWishlist as addService, removeFromWishlist as removeService } from '@/lib/services/wishlist';
 
 export interface WishlistItem {
     id: string;
@@ -28,7 +29,6 @@ interface WishlistContextType {
 
 export const WishlistContext = createContext<WishlistContextType | null>(null);
 
-const WISHLIST_KEY = 'microchub-wishlist';
 
 export function WishlistProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
@@ -36,36 +36,35 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const userWishlistKey = useMemo(() => (user ? `${WISHLIST_KEY}-${user.uid}` : null), [user]);
-
   useEffect(() => {
-    if (!userWishlistKey) {
-      setLoading(false);
+    if (!user) {
       setWishlist([]);
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
-    try {
-      const storedWishlist = localStorage.getItem(userWishlistKey);
-      setWishlist(storedWishlist ? JSON.parse(storedWishlist) : []);
-    } catch (error) {
-      console.error("Failed to load wishlist from localStorage", error);
-      setWishlist([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [userWishlistKey]);
+    let isMounted = true;
+    const loadWishlist = async () => {
+        setLoading(true);
+        try {
+            const userWishlist = await getWishlist(user.uid);
+            if(isMounted) {
+                setWishlist(userWishlist);
+            }
+        } catch (error) {
+            console.error("Failed to load wishlist", error);
+            toast({ variant: 'destructive', title: 'Could not load wishlist' });
+        } finally {
+            if(isMounted) {
+                setLoading(false);
+            }
+        }
+    };
+    
+    loadWishlist();
 
-  useEffect(() => {
-    if (userWishlistKey && !loading) {
-      try {
-        localStorage.setItem(userWishlistKey, JSON.stringify(wishlist));
-      } catch (error) {
-        console.error("Failed to save wishlist to localStorage", error);
-      }
-    }
-  }, [wishlist, userWishlistKey, loading]);
+    return () => { isMounted = false; }
+  }, [user, toast]);
 
   const addToWishlist = useCallback(async (productId: string) => {
     if (!user) {
@@ -73,31 +72,33 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         return;
     }
     
-    setWishlist(prevWishlist => {
-        if (prevWishlist.some(item => item.productId === productId)) {
-            toast({ variant: 'default', title: 'Already in Wishlist' });
-            return prevWishlist;
-        }
+    if (wishlist.some(item => item.productId === productId)) {
+        return; // Already in wishlist
+    }
 
-        const newItem: WishlistItem = {
-            id: productId,
-            productId,
-            userId: user.uid,
-            addedAt: Date.now(),
-        };
-        
+    try {
+        const newItem = await addService(user.uid, productId);
+        setWishlist(prev => [...prev, newItem]);
         toast({ title: 'Added to Wishlist' });
-        return [...prevWishlist, newItem];
-    });
-  }, [user, toast]);
+    } catch(error) {
+        console.error("Failed to add to wishlist", error);
+        toast({ variant: 'destructive', title: 'Could not add to wishlist' });
+    }
+  }, [user, wishlist, toast]);
 
   const removeFromWishlist = useCallback(async (productId: string) => {
     if (!user) {
         toast({ variant: 'destructive', title: 'You must be logged in.' });
         return;
     }
-    setWishlist(prevWishlist => prevWishlist.filter(item => item.productId !== productId));
-    toast({ title: 'Removed from Wishlist' });
+    try {
+        await removeService(user.uid, productId);
+        setWishlist(prev => prev.filter(item => item.productId !== productId));
+        toast({ title: 'Removed from Wishlist' });
+    } catch (error) {
+        console.error("Failed to remove from wishlist", error);
+        toast({ variant: 'destructive', title: 'Could not remove from wishlist' });
+    }
   }, [user, toast]);
   
   const isInWishlist = useCallback((productId: string) => {

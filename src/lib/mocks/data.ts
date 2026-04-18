@@ -1,4 +1,4 @@
-import { type Category, type Product, type UserWithId, type QuoteRequestWithUserData, type PaymentMethod, type Coupon, type SocialLink } from "./types";
+import { type Category, type Product, type UserWithId, type QuoteRequestWithUserData, type PaymentMethod, type Coupon, type SocialLink, OrderWithUserData } from "../types";
 
 export const mockCategories: Category[] = [
   {
@@ -201,7 +201,6 @@ export const products: Product[] = [
 
 export const featuredProducts = products.filter((p) => p.featured);
 
-
 export const mockUsers: UserWithId[] = [
     { id: 'mock-user-123', name: 'Test User', email: 'test@example.com', phoneNumber: '01234567890', role: 'user', wishlist: [] },
     { id: 'user-002', name: 'Alice', email: 'alice@example.com', phoneNumber: '0111222333', role: 'admin', wishlist: [] },
@@ -289,7 +288,6 @@ export const mockSocialLinks: SocialLink[] = [
     { id: 'sl-4', platform: 'GitHub', url: 'https://github.com', enabled: false },
 ]
 
-// This function is used to initialize the orders in localStorage if they don't exist.
 export function getInitialMockOrders(): OrderWithUserData[] {
     return initialMockOrders;
 }

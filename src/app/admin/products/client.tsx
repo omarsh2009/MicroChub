@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Product } from '@/lib/types';
+import { Product, Category } from '@/lib/types';
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export function ProductClientPage({ products }: { products: Product[] }) {
+export function ProductClientPage({ products, categories }: { products: Product[], categories: Category[] }) {
   const [open, setOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | undefined>(undefined);
 
@@ -52,7 +52,7 @@ export function ProductClientPage({ products }: { products: Product[] }) {
           <CardDescription>View, edit, and add new products to your store.</CardDescription>
         </CardHeader>
         <CardContent>
-            <ProductTable products={products} onEdit={handleEdit} />
+            <ProductTable products={products} categories={categories} onEdit={handleEdit} />
         </CardContent>
          <CardFooter>
           <div className="text-xs text-muted-foreground">
@@ -66,7 +66,7 @@ export function ProductClientPage({ products }: { products: Product[] }) {
           <DialogHeader>
             <DialogTitle>{selectedProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
           </DialogHeader>
-          <ProductForm product={selectedProduct} onFinished={() => setOpen(false)} />
+          <ProductForm product={selectedProduct} categories={categories} onFinished={() => setOpen(false)} />
         </DialogContent>
       </Dialog>
     </>

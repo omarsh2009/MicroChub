@@ -1,12 +1,10 @@
-'use client';
-import { products } from "@/lib/data";
-import dynamic from 'next/dynamic';
+import { getProducts } from "@/lib/services/products";
+import { ProductClientPage } from "./client";
+import { getCategories } from "@/lib/services/categories";
 
-const ProductClientPage = dynamic(
-  () => import('./client').then(mod => mod.ProductClientPage), 
-  { ssr: false }
-);
-
-export default function AdminProductsPage() {
-  return <ProductClientPage products={products} />;
+export default async function AdminProductsPage() {
+  const products = await getProducts();
+  const categories = await getCategories();
+  
+  return <ProductClientPage products={products} categories={categories} />;
 }

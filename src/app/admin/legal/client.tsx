@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { getLegalAgreement, saveLegalAgreement } from '@/lib/legal';
+import { getLegalAgreement, saveLegalAgreement } from '@/lib/services/legal';
 import type { LegalAgreement } from '@/lib/types';
 import { Loader2, UploadCloud, FileText } from 'lucide-react';
 

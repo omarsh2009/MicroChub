@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
 import type { Category } from '@/lib/types';
-import { getCategories, addCategory, updateCategory, deleteCategory } from '@/lib/categories';
+import { getCategories, addCategory, updateCategory, deleteCategory } from '@/lib/services/categories';
 import { CategoriesTable } from './components/categories-table';
 import { CategoryForm } from './components/category-form';
 

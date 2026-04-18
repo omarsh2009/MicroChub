@@ -26,11 +26,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, UploadCloud, Copy, Ticket } from 'lucide-react';
-import { createOrder } from '@/lib/orders';
-import { products } from '@/lib/data';
-import { getPaymentMethods } from '@/lib/admin';
-import type { PaymentMethod, Coupon } from '@/lib/types';
-import { validateCoupon } from '@/lib/coupons';
+import { createOrder } from '@/lib/services/orders';
+import { getProducts } from '@/lib/services/products';
+import { getPaymentMethods } from '@/lib/services/admin';
+import type { PaymentMethod, Coupon, Product } from '@/lib/types';
+import { validateCoupon } from '@/lib/services/coupons';
 
 
 const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "application/pdf"];
@@ -63,9 +63,14 @@ export default function CheckoutPage() {
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    getProducts().then(setProducts);
+  }, []);
   
   useEffect(() => {
-    // We can set a loading state here if needed in the future
     getPaymentMethods().then(methods => {
       setPaymentMethods(methods.filter(m => m.enabled));
     });
@@ -76,7 +81,7 @@ export default function CheckoutPage() {
       const product = products.find(p => p.id === item.productId);
       return product?.isRestricted;
     });
-  }, [cart]);
+  }, [cart, products]);
   
   const discountAmount = useMemo(() => {
     if (!appliedCoupon) return 0;
@@ -140,6 +145,7 @@ export default function CheckoutPage() {
   const handleApplyCoupon = async () => {
     if (!couponCode) return;
     setIsApplyingCoupon(true);
+    setAppliedCoupon(null); // Clear previous coupon
     const result = await validateCoupon(couponCode);
     
     if ('error' in result) {
@@ -175,7 +181,6 @@ export default function CheckoutPage() {
     setIsLoading(true);
 
     try {
-        console.log("Proceeding to create order (mock)...");
         await createOrder({
             userId: user.uid,
             cart,
@@ -195,16 +200,14 @@ export default function CheckoutPage() {
             discountAmount: discountAmount,
         });
 
-        console.log("Order submitted (mock).");
         toast({ title: 'Order Placed!', description: 'Your order has been received and is pending verification.' });
         clearCart();
         router.push('/orders');
 
     } catch (error: any) {
-        console.error('MOCK ORDER SUBMISSION ERROR:', error);
+        console.error('Order submission error:', error);
         toast({ variant: 'destructive', title: 'Order Failed', description: error.message || 'Could not place your order.' });
     } finally {
-        console.log("Finishing submission process.");
         setIsLoading(false);
     }
   }

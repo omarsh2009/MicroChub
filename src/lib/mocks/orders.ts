@@ -1,6 +1,7 @@
 'use client';
 import { getInitialMockOrders } from './data';
-import type { CartItem, OrderWithUserData, PaymentMethod, ShippingAddress } from './types';
+import type { CartItem, OrderWithUserData, PaymentMethod, ShippingAddress } from '../types';
+import { mockUsers } from './data';
 
 interface OrderPayload {
   userId: string;
@@ -27,7 +28,11 @@ export function getStoredOrders(): OrderWithUserData[] {
         localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(initialOrders));
         return initialOrders;
     }
-    return JSON.parse(stored);
+    try {
+      return JSON.parse(stored);
+    } catch(e) {
+      return [];
+    }
 }
 
 export function setStoredOrders(orders: OrderWithUserData[]) {
@@ -56,6 +61,11 @@ export async function createOrder(
     throw new Error("A signed legal agreement is required for restricted items.");
   }
 
+  const currentUser = mockUsers.find(u => u.id === userId);
+  if (!currentUser) {
+      throw new Error("User not found to create order.");
+  }
+
   const newOrderId = `mock-order-${Date.now()}`;
   
   const orderData: OrderWithUserData = {
@@ -79,9 +89,9 @@ export async function createOrder(
     },
     user: {
         id: userId,
-        name: shippingAddress.fullName,
-        email: 'test@example.com', // In real app, get from user object
-        phoneNumber: shippingAddress.phoneNumber,
+        name: currentUser.name,
+        email: currentUser.email,
+        phoneNumber: currentUser.phoneNumber,
     }
   };
 

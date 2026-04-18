@@ -1,6 +1,6 @@
 'use client';
 import { mockSocialLinks } from './data';
-import type { SocialLink } from './types';
+import type { SocialLink } from '../types';
 
 // MOCK API - simulates localStorage for social links
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));

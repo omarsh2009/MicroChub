@@ -1,6 +1,6 @@
 'use client';
 import { mockCoupons } from './data';
-import type { Coupon } from './types';
+import type { Coupon } from '../types';
 
 // MOCK API - simulates localStorage for coupons
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -9,7 +9,12 @@ const COUPONS_STORAGE_KEY = 'microchub-coupons';
 function getStoredCoupons(): Coupon[] {
     if (typeof window === 'undefined') return mockCoupons;
     const stored = localStorage.getItem(COUPONS_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : mockCoupons;
+    // Initialize with mock data if nothing is in localStorage
+    if (!stored || JSON.parse(stored).length === 0) {
+        setStoredCoupons(mockCoupons);
+        return mockCoupons;
+    }
+    return JSON.parse(stored);
 }
 
 function setStoredCoupons(coupons: Coupon[]) {

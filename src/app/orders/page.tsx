@@ -9,7 +9,7 @@ import { Loader2, PackageSearch } from 'lucide-react';
 import type { Order } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
-import { getUserOrders } from '@/lib/orders'; 
+import { getUserOrders } from '@/lib/services/orders'; 
 
 export default function OrdersPage() {
   const user = useUser();

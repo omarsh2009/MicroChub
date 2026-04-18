@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useUser } from '@/auth';
-import { getAllQuoteRequests } from '@/lib/admin';
+import { getAllQuoteRequests } from '@/lib/services/admin';
 import type { QuoteRequestWithUserData } from '@/lib/types';
 import { QuotesTable } from './components/quotes-table';
 import { QuoteDetailsDialog } from './components/quote-details-dialog';

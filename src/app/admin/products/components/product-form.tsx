@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray, useFormContext } from 'react-hook-form';
 import { z } from 'zod';
@@ -23,7 +23,6 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { getCategories } from '@/lib/categories';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
@@ -52,24 +51,21 @@ const formSchema = z.object({
   customizationGroups: z.array(customizationGroupSchema).optional(),
   productType: z.enum(['ready', 'build_to_order']).default('build_to_order'),
   image: z.string().optional(),
-  discountType: z.enum(['fixed', 'percentage']).optional(),
+  discountType: z.enum(['fixed', 'percentage', 'none']).optional(),
   discountValue: z.coerce.number().optional(),
 });
 
 export function ProductForm({
   product,
+  categories,
   onFinished,
 }: {
   product?: Product;
+  categories: Category[];
   onFinished: () => void;
 }) {
   const { toast } = useToast();
-  const [categories, setCategories] = useState<Category[]>([]);
   const [imagePreview, setImagePreview] = useState<string | null>(product?.image || null);
-
-  useEffect(() => {
-    getCategories().then(setCategories);
-  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -83,7 +79,7 @@ export function ProductForm({
       customizationGroups: product?.customizationGroups || [],
       productType: product?.productType || 'build_to_order',
       image: product?.image || '',
-      discountType: product?.discountType || undefined,
+      discountType: product?.discountType || 'none',
       discountValue: product?.discountValue || 0,
     },
   });
@@ -126,7 +122,7 @@ export function ProductForm({
             <FormItem>
               <FormLabel>Product Name</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Mochi v5" {...field} />
+                <Input placeholder="e.g. Mochi v5" {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -140,7 +136,7 @@ export function ProductForm({
                 <FormItem>
                   <FormLabel>Base Price (EGP)</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} value={field.value ?? 0} />
+                    <Input type="number" {...field} value={field.value ?? 0} onChange={e => field.onChange(Number(e.target.value))} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -152,7 +148,7 @@ export function ProductForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Product Type</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || 'build_to_order'}>
                       <FormControl>
                         <SelectTrigger><SelectValue placeholder="Select a type" /></SelectTrigger>
                       </FormControl>
@@ -173,11 +169,12 @@ export function ProductForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Discount Type (Optional)</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                    <Select onValueChange={field.onChange} value={field.value || 'none'}>
                       <FormControl>
                         <SelectTrigger><SelectValue placeholder="No Discount" /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="none">No Discount</SelectItem>
                         <SelectItem value="percentage">Percentage (%)</SelectItem>
                         <SelectItem value="fixed">Fixed Amount (EGP)</SelectItem>
                       </SelectContent>
@@ -193,7 +190,7 @@ export function ProductForm({
                   <FormItem>
                     <FormLabel>Discount Value (Optional)</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} value={field.value ?? 0} />
+                      <Input type="number" {...field} value={field.value ?? 0}  onChange={e => field.onChange(Number(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -234,10 +231,10 @@ export function ProductForm({
                       role="combobox"
                       className={cn(
                         "w-full justify-between",
-                        !field.value?.length && "text-muted-foreground"
+                        !(field.value && field.value.length > 0) && "text-muted-foreground"
                       )}
                     >
-                      {field.value?.length > 0
+                      {field.value && field.value.length > 0
                         ? `${field.value.length} categor${field.value.length > 1 ? 'ies' : 'y'} selected`
                         : "Select categories"}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -441,7 +438,7 @@ function OptionFieldArray({ groupIndex }: { groupIndex: number }) {
                 name={`customizationGroups.${groupIndex}.options.${optionIndex}.priceAdjustment`}
                 render={({ field }) => (
                 <FormItem>
-                    <FormControl><Input type="number" {...field} placeholder="Price Adj." disabled={isQuoteRequested} value={field.value ?? 0} /></FormControl>
+                    <FormControl><Input type="number" {...field} placeholder="Price Adj." disabled={isQuoteRequested} value={field.value ?? 0} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
                     <FormMessage />
                 </FormItem>
                 )}

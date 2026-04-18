@@ -21,17 +21,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useMemo } from "react";
 import { useCart } from '@/hooks/use-cart';
 import { useUser } from "@/auth";
-import { createQuoteRequest } from "@/lib/quotes";
+import { createQuoteRequest } from "@/lib/services/quotes";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useWishlist } from "@/hooks/use-wishlist";
 import { cn } from "@/lib/utils";
-import { products } from "@/lib/data";
 import { ProductCard } from "@/components/product-card";
 import { Separator } from "@/components/ui/separator";
 
-export function ProductClientPage({ product }: { product: Product }) {
+export function ProductClientPage({ product, allProducts }: { product: Product, allProducts: Product[] }) {
   const router = useRouter();
   const { toast } = useToast();
   const { addToCart } = useCart();
@@ -210,7 +209,7 @@ export function ProductClientPage({ product }: { product: Product }) {
   const priceSuffix = needsQuote ? '+' : '';
 
   const discountedPrice = useMemo(() => {
-    if (!product.discountValue || !product.discountType) {
+    if (!product.discountValue || !product.discountType || product.discountType === 'none') {
       return calculatedPrice;
     }
     let discounted = calculatedPrice;
@@ -230,13 +229,13 @@ export function ProductClientPage({ product }: { product: Product }) {
       return [];
     }
 
-    return products
+    return allProducts
       .filter(p => 
         p.id !== product.id && // Exclude the current product
         p.categoryIds.some(catId => product.categoryIds.includes(catId)) // Find products with at least one shared category
       )
       .slice(0, 4); // Limit to 4 related products
-  }, [product]);
+  }, [product, allProducts]);
 
 
   return (
@@ -456,7 +455,7 @@ export function ProductClientPage({ product }: { product: Product }) {
                     <h2 className="font-headline text-3xl font-bold tracking-tighter text-center sm:text-4xl mb-8">Related Products</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         {relatedProducts.map(p => (
-                            <ProductCard key={p.id} product={p} />
+                            <ProductCard key={p.id} product={p} categoryName="Related" />
                         ))}
                     </div>
                 </div>
@@ -467,5 +466,3 @@ export function ProductClientPage({ product }: { product: Product }) {
     </div>
   );
 }
-
-    

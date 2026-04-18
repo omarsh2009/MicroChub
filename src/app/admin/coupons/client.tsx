@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
 import type { Coupon } from '@/lib/types';
-import { getCoupons, addCoupon, updateCoupon, deleteCoupon } from '@/lib/coupons';
+import { getCoupons, addCoupon, updateCoupon, deleteCoupon } from '@/lib/services/coupons';
 import { CouponsTable } from './components/coupons-table';
 import { CouponForm } from './components/coupon-form';
 

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useUser } from '@/auth';
-import { getAllOrders } from '@/lib/admin';
+import { getAllOrders } from '@/lib/services/admin';
 import type { OrderWithUserData } from '@/lib/types';
 import { OrdersTable } from './components/orders-table';
 import { OrderDetailsDialog } from './components/order-details-dialog';

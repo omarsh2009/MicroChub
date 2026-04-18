@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
-import { signInWithEmail } from "@/lib/auth";
+import { signInWithEmail } from "@/lib/services/auth";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 

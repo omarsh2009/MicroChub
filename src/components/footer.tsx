@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Logo } from "./logo";
-import { getSocialLinks } from "@/lib/social-links";
+import { getSocialLinks } from "@/lib/services/social-links";
 import { SocialLink } from "@/lib/types";
 import { getIconForPlatform } from "@/app/admin/social-links/components/social-link-form";
 

@@ -1,8 +1,13 @@
-import { products } from "@/lib/data";
+import { getProducts } from "@/lib/services/products";
+import { getCategories } from "@/lib/services/categories";
 import { ProductCard } from "@/components/product-card";
 import { Badge } from "@/components/ui/badge";
 
-export default function ProductsPage() {
+export default async function ProductsPage() {
+  const products = await getProducts();
+  const categories = await getCategories();
+  const categoryMap = new Map(categories.map(c => [c.id, c.name]));
+
   return (
     <div className="bg-background text-foreground">
       <section className="w-full py-24 md:py-32">
@@ -23,7 +28,11 @@ export default function ProductsPage() {
         <div className="container px-4 md:px-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard 
+                key={product.id} 
+                product={product} 
+                categoryName={categoryMap.get(product.categoryIds[0]) || 'Uncategorized'}
+              />
             ))}
           </div>
         </div>
