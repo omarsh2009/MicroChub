@@ -1,22 +1,23 @@
 'use client';
 
-import { mockOrders, mockUsers, mockQuoteRequests, mockPaymentMethods, mockCoupons } from './data';
-import type { Order, UserProfile, OrderWithUserData, UserWithId, QuoteRequest, QuoteRequestWithUserData, PaymentMethod, Coupon } from './types';
+import { mockUsers, mockQuoteRequests, mockPaymentMethods, getInitialMockOrders } from './data';
+import { getStoredOrders, setStoredOrders } from './orders';
+import type { Order, UserProfile, OrderWithUserData, UserWithId, QuoteRequest, QuoteRequestWithUserData, PaymentMethod } from './types';
 
 // MOCK API - simulates a network delay
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export async function getAllOrders(): Promise<OrderWithUserData[]> {
   await sleep(500);
-  console.log("Mock API: Fetched all orders");
-  // Return a deep copy to prevent mutation of original mock data
-  return JSON.parse(JSON.stringify(mockOrders));
+  console.log("Mock API: Fetched all orders from localStorage");
+  return getStoredOrders();
 }
 
 export async function getOrdersByUserId(userId: string): Promise<OrderWithUserData[]> {
   await sleep(500);
-  console.log(`Mock API: Fetched orders for user ${userId}`);
-  const userOrders = mockOrders.filter(o => o.userId === userId);
+  console.log(`Mock API: Fetched orders for user ${userId} from localStorage`);
+  const allOrders = getStoredOrders();
+  const userOrders = allOrders.filter(o => o.userId === userId);
   return JSON.parse(JSON.stringify(userOrders));
 }
 
@@ -25,22 +26,26 @@ export async function updateOrderStatus(
     status: Order['status']
 ): Promise<void> {
     await sleep(300);
-    const order = mockOrders.find(o => o.id === orderId);
-    if(order) {
-        order.status = status;
+    const orders = getStoredOrders();
+    const orderIndex = orders.findIndex(o => o.id === orderId);
+    if(orderIndex !== -1) {
+        orders[orderIndex].status = status;
+        setStoredOrders(orders);
     }
-    console.log(`Mock API: Updated order ${orderId} status to ${status}`);
+    console.log(`Mock API: Updated order ${orderId} status to ${status} in localStorage`);
 }
 
 export async function approveLegalAgreement(
     orderId: string
 ): Promise<void> {
     await sleep(300);
-     const order = mockOrders.find(o => o.id === orderId);
-    if(order) {
-        order.legalAgreementApproved = true;
+    const orders = getStoredOrders();
+    const orderIndex = orders.findIndex(o => o.id === orderId);
+    if(orderIndex !== -1) {
+        orders[orderIndex].legalAgreementApproved = true;
+        setStoredOrders(orders);
     }
-    console.log(`Mock API: Approved legal agreement for order ${orderId}`);
+    console.log(`Mock API: Approved legal agreement for order ${orderId} in localStorage`);
 }
 
 // USER MANAGEMENT

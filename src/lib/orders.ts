@@ -1,6 +1,6 @@
 'use client';
-import type { CartItem, PaymentMethod, ShippingAddress } from './types';
-import { mockOrders } from './data';
+import { getInitialMockOrders } from './data';
+import type { CartItem, OrderWithUserData, PaymentMethod, ShippingAddress } from './types';
 
 interface OrderPayload {
   userId: string;
@@ -12,10 +12,28 @@ interface OrderPayload {
   transactionId: string;
   requiresLegalApproval: boolean;
   legalAgreementFile?: File;
+  couponCode?: string;
+  discountAmount?: number;
 }
 
-// MOCK API - simulates a network delay
+const ORDERS_STORAGE_KEY = 'microchub-orders';
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+export function getStoredOrders(): OrderWithUserData[] {
+    if (typeof window === 'undefined') return [];
+    const stored = localStorage.getItem(ORDERS_STORAGE_KEY);
+    if (!stored) {
+        const initialOrders = getInitialMockOrders();
+        localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(initialOrders));
+        return initialOrders;
+    }
+    return JSON.parse(stored);
+}
+
+export function setStoredOrders(orders: OrderWithUserData[]) {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
+}
 
 export async function createOrder(
   payload: OrderPayload
@@ -40,7 +58,7 @@ export async function createOrder(
 
   const newOrderId = `mock-order-${Date.now()}`;
   
-  const orderData = {
+  const orderData: OrderWithUserData = {
     id: newOrderId,
     userId,
     items: cart,
@@ -68,14 +86,20 @@ export async function createOrder(
   };
 
   if (legalAgreementFile) {
-    // In a real app, this would be uploaded and the URL stored.
     console.log("Simulating file upload for:", legalAgreementFile.name);
-    (orderData as any).legalAgreementUrl = `/${legalAgreementFile.name}`;
+    orderData.legalAgreementUrl = `/${legalAgreementFile.name}`;
   }
   
-  // Add to our in-memory mock data array
-  mockOrders.unshift(orderData);
+  const allOrders = getStoredOrders();
+  allOrders.unshift(orderData);
+  setStoredOrders(allOrders);
 
-  console.log("Mock Order Submitted:", orderData);
+  console.log("Mock Order Submitted and stored in localStorage:", orderData);
   return newOrderId;
+}
+
+export async function getUserOrders(userId: string): Promise<OrderWithUserData[]> {
+  await sleep(200);
+  const orders = getStoredOrders();
+  return orders.filter(o => o.userId === userId);
 }

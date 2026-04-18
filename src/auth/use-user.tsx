@@ -18,7 +18,7 @@ const mockUser: MockUserData = {
         email: 'test@example.com',
         phoneNumber: '01234567890',
         wishlist: [],
-        role: 'super_admin',
+        role: 'user',
     },
 };
 

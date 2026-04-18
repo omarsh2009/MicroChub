@@ -9,7 +9,7 @@ import { Loader2, PackageSearch } from 'lucide-react';
 import type { Order } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
-import { getAllOrders } from '@/lib/admin'; // We can reuse admin service for getting all orders
+import { getUserOrders } from '@/lib/orders'; 
 
 export default function OrdersPage() {
   const user = useUser();
@@ -18,12 +18,16 @@ export default function OrdersPage() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setOrders([]);
+      setLoading(false);
+      return;
+    };
+    
     setLoading(true);
-    getAllOrders()
-      .then(allOrders => {
-        // Filter orders for the current mock user
-        setOrders(allOrders.filter(o => o.userId === user.uid));
+    getUserOrders(user.uid)
+      .then(userOrders => {
+        setOrders(userOrders);
       })
       .catch(err => setError(err))
       .finally(() => setLoading(false));
