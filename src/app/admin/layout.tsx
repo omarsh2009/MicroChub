@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Package,
   ShoppingCart,
@@ -12,6 +12,8 @@ import {
   Home,
   Wallet,
   LogOut,
+  FileText,
+  Ticket,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +28,16 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/logo";
 import { useUser } from "@/auth";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const navLinks = [
+    { href: "/admin/products", label: "Products", icon: Package },
+    { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
+    { href: "/admin/quotes", label: "Quote Requests", icon: FileQuestion },
+    { href: "/admin/payment-methods", label: "Payment Methods", icon: Wallet },
+    { href: "/admin/coupons", label: "Coupons", icon: Ticket },
+    { href: "/admin/legal", label: "Legal Agreement", icon: FileText },
+];
 
 export default function AdminLayout({
   children,
@@ -35,6 +46,7 @@ export default function AdminLayout({
 }) {
   const user = useUser();
   const router = useRouter();
+  const pathname = usePathname();
   const { toast } = useToast();
 
   const handleLogout = async () => {
@@ -56,6 +68,7 @@ export default function AdminLayout({
     );
   }
 
+  const isSuperAdmin = user.profile.role === 'super_admin';
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
@@ -69,38 +82,26 @@ export default function AdminLayout({
           </div>
           <div className="flex-1">
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-              <Link
-                href="/admin/products"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-              >
-                <Package className="h-4 w-4" />
-                Products
-              </Link>
-              <Link
-                href="/admin/orders"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-              >
-                <ShoppingCart className="h-4 w-4" />
-                Orders
-              </Link>
-              <Link
-                href="/admin/quotes"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-              >
-                <FileQuestion className="h-4 w-4" />
-                Quote Requests
-              </Link>
-               <Link
-                href="/admin/payment-methods"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-              >
-                <Wallet className="h-4 w-4" />
-                Payment Methods
-              </Link>
-              {user.profile.role === 'super_admin' && (
+              {navLinks.map(link => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                        pathname.startsWith(link.href) && "text-primary bg-muted"
+                    )}
+                  >
+                    <link.icon className="h-4 w-4" />
+                    {link.label}
+                  </Link>
+              ))}
+              {isSuperAdmin && (
                 <Link
                   href="/admin/users"
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                  className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                      pathname.startsWith("/admin/users") && "text-primary bg-muted"
+                  )}
                 >
                   <Users className="h-4 w-4" />
                   Users
@@ -132,35 +133,17 @@ export default function AdminLayout({
                   <Logo />
                   <span>MicroChub Admin</span>
                 </Link>
-                <Link
-                  href="/admin/products"
-                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
-                >
-                  <Package className="h-5 w-5" />
-                  Products
-                </Link>
-                 <Link
-                  href="/admin/orders"
-                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
-                >
-                  <ShoppingCart className="h-5 w-5" />
-                  Orders
-                </Link>
-                 <Link
-                  href="/admin/quotes"
-                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
-                >
-                  <FileQuestion className="h-5 w-5" />
-                  Quote Requests
-                </Link>
-                 <Link
-                  href="/admin/payment-methods"
-                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
-                >
-                  <Wallet className="h-5 w-5" />
-                  Payment Methods
-                </Link>
-                {user.profile.role === 'super_admin' && (
+                {navLinks.map(link => (
+                    <Link
+                        key={link.href}
+                        href={link.href}
+                        className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
+                    >
+                        <link.icon className="h-5 w-5" />
+                        {link.label}
+                    </Link>
+                ))}
+                {isSuperAdmin && (
                   <Link
                     href="/admin/users"
                     className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
