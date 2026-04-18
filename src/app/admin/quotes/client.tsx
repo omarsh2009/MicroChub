@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useFirestore, useUser } from '@/firebase';
+import { useUser } from '@/auth';
 import { getAllQuoteRequests } from '@/lib/admin';
 import type { QuoteRequestWithUserData } from '@/lib/types';
 import { QuotesTable } from './components/quotes-table';
@@ -16,7 +16,6 @@ import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export function QuotesClientPage() {
-  const firestore = useFirestore();
   const user = useUser();
   const { toast } = useToast();
   const [quotes, setQuotes] = useState<QuoteRequestWithUserData[]>([]);
@@ -25,21 +24,19 @@ export function QuotesClientPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
-    if (!firestore || !user) return;
+    if (!user) return;
 
     const fetchQuotes = async () => {
       try {
         setLoading(true);
-        const fetchedQuotes = await getAllQuoteRequests(firestore);
+        const fetchedQuotes = await getAllQuoteRequests();
         setQuotes(fetchedQuotes);
       } catch (error: any) {
         console.error('Failed to fetch quote requests:', error);
         toast({
           variant: 'destructive',
           title: 'Error Fetching Quotes',
-          description: error.message.includes('permission-denied') 
-            ? "You don't have permission to view quote requests."
-            : 'Could not fetch quote requests. Please try again.',
+          description: 'Could not fetch quote requests. Please try again.',
         });
       } finally {
         setLoading(false);
@@ -47,7 +44,7 @@ export function QuotesClientPage() {
     };
 
     fetchQuotes();
-  }, [firestore, user, toast]);
+  }, [user, toast]);
 
   const handleViewDetails = (quote: QuoteRequestWithUserData) => {
     setSelectedQuote(quote);

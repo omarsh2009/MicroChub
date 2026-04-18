@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useFirestore, useUser } from '@/firebase';
+import { useUser } from '@/auth';
 import { getAllOrders } from '@/lib/admin';
 import type { OrderWithUserData } from '@/lib/types';
 import { OrdersTable } from './components/orders-table';
@@ -16,7 +16,6 @@ import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export function OrdersClientPage() {
-  const firestore = useFirestore();
   const user = useUser();
   const { toast } = useToast();
   const [orders, setOrders] = useState<OrderWithUserData[]>([]);
@@ -25,21 +24,19 @@ export function OrdersClientPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
-    if (!firestore || !user) return;
+    if (!user) return;
 
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        const fetchedOrders = await getAllOrders(firestore);
+        const fetchedOrders = await getAllOrders();
         setOrders(fetchedOrders);
       } catch (error: any) {
         console.error('Failed to fetch orders:', error);
         toast({
           variant: 'destructive',
           title: 'Error Fetching Orders',
-          description: error.message.includes('permission-denied') 
-            ? "You don't have permission to view orders. Please contact an administrator."
-            : 'Could not fetch orders. Please try again.',
+          description: 'Could not fetch orders. Please try again.',
         });
       } finally {
         setLoading(false);
@@ -47,7 +44,7 @@ export function OrdersClientPage() {
     };
 
     fetchOrders();
-  }, [firestore, user, toast]);
+  }, [user, toast]);
 
   const handleViewDetails = (order: OrderWithUserData) => {
     setSelectedOrder(order);

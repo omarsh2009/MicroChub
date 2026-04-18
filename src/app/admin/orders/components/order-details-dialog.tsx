@@ -14,7 +14,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { updateOrderStatus, approveLegalAgreement } from '@/lib/admin';
-import { useFirestore } from '@/firebase';
 import type { OrderWithUserData, Order } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ExternalLink, ShieldCheck, ShieldAlert } from 'lucide-react';
@@ -28,7 +27,6 @@ interface OrderDetailsDialogProps {
 }
 
 export function OrderDetailsDialog({ isOpen, onClose, order, onOrderUpdate }: OrderDetailsDialogProps) {
-    const firestore = useFirestore();
     const { toast } = useToast();
     const [newStatus, setNewStatus] = useState<Order['status']>(order.status);
     const [isSaving, setIsSaving] = useState(false);
@@ -41,10 +39,10 @@ export function OrderDetailsDialog({ isOpen, onClose, order, onOrderUpdate }: Or
     };
     
     const handleSaveChanges = async () => {
-        if (!firestore || newStatus === order.status) return;
+        if (newStatus === order.status) return;
         setIsSaving(true);
         try {
-            await updateOrderStatus(firestore, order.id, newStatus);
+            await updateOrderStatus(order.id, newStatus);
             toast({
                 title: 'Order Updated',
                 description: `Order #${order.id.slice(0, 7)} status changed to ${newStatus}.`,
@@ -64,10 +62,9 @@ export function OrderDetailsDialog({ isOpen, onClose, order, onOrderUpdate }: Or
     };
 
      const handleApproveLegal = async () => {
-        if (!firestore) return;
         setIsApprovingLegal(true);
         try {
-            await approveLegalAgreement(firestore, order.id);
+            await approveLegalAgreement(order.id);
             toast({
                 title: 'Legal Agreement Approved',
                 description: `Agreement for order #${order.id.slice(0, 7)} has been approved.`,
@@ -235,5 +232,3 @@ export function OrderDetailsDialog({ isOpen, onClose, order, onOrderUpdate }: Or
         </Dialog>
     );
 }
-
-    

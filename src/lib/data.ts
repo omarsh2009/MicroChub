@@ -1,8 +1,59 @@
-import { type Category, type Product } from "./types";
-import { PlaceHolderImages } from "./placeholder-images";
-import { type ImagePlaceholder } from "./placeholder-images";
+import { type Category, type Product, type UserWithId, type OrderWithUserData, type QuoteRequestWithUserData, type PaymentMethod } from "./types";
 
-export const placeholderImagesById = PlaceHolderImages.reduce(
+export type ImagePlaceholder = {
+  id: string;
+  description: string;
+  imageUrl: string;
+  imageHint: string;
+};
+
+export const placeholderImages: ImagePlaceholder[] = [
+    {
+      "id": "mochi-v4-main",
+      "description": "A top-down view of the Mochi v4 device on a dark background.",
+      "imageUrl": "https://picsum.photos/seed/mochi4main/600/400",
+      "imageHint": "circuit board gadget"
+    },
+    {
+      "id": "mochi-v4-side",
+      "description": "A side-angle view of the Mochi v4 showing its ports.",
+      "imageUrl": "https://picsum.photos/seed/mochi4side/600/400",
+      "imageHint": "electronic device"
+    },
+    {
+      "id": "jammer-pro-main",
+      "description": "The ESP Jammer Pro with its antenna, looking sleek.",
+      "imageUrl": "https://picsum.photos/seed/jammerpro/600/400",
+      "imageHint": "hacker gadget"
+    },
+    {
+      "id": "cnc-kit-main",
+      "description": "The fully assembled Mini CNC Kit on a workbench.",
+      "imageUrl": "https://picsum.photos/seed/cnckit/600/400",
+      "imageHint": "cnc machine"
+    },
+    {
+      "id": "spotify-display-main",
+      "description": "The Spotify Display showing album art on a desk.",
+      "imageUrl": "https://picsum.photos/seed/spotifydisplay/600/400",
+      "imageHint": "desk gadget"
+    },
+    {
+      "id": "mochi-case-main",
+      "description": "A clear acrylic case for the Mochi device.",
+      "imageUrl": "https://picsum.photos/seed/mochicase/600/400",
+      "imageHint": "clear case"
+    },
+    {
+      "id": "stream-deck-main",
+      "description": "A DIY stream deck with glowing keys.",
+      "imageUrl": "https://picsum.photos/seed/streamdeck/600/400",
+      "imageHint": "keyboard custom"
+    }
+  ];
+
+
+export const placeholderImagesById = placeholderImages.reduce(
   (acc, img) => {
     acc[img.id] = img;
     return acc;
@@ -200,3 +251,79 @@ export const products: Product[] = [
 ];
 
 export const featuredProducts = products.filter((p) => p.featured);
+
+
+export const mockUsers: UserWithId[] = [
+    { id: 'mock-user-123', name: 'Test User', email: 'test@example.com', phoneNumber: '01234567890', role: 'super_admin', wishlist: [] },
+    { id: 'user-002', name: 'Alice', email: 'alice@example.com', phoneNumber: '0111222333', role: 'admin', wishlist: [] },
+    { id: 'user-003', name: 'Bob', email: 'bob@example.com', phoneNumber: '0444555666', role: 'user', wishlist: [] },
+];
+
+export const mockPaymentMethods: PaymentMethod[] = [
+    { id: 'pm-001', name: 'Instapay', type: 'username', value: '@microchub', instructions: "Please send the total amount to this Instapay username and enter the transaction ID.", enabled: true },
+    { id: 'pm-002', name: 'Vodafone Cash', type: 'phoneNumber', value: '01012345678', instructions: "Please send the total amount to this Vodafone Cash number and enter the transaction ID.", enabled: true },
+    { id: 'pm-003', name: 'Credit Card (Stripe)', type: 'paymentLink', value: 'https://buy.stripe.com/test_1234', instructions: "Click the link to complete payment via credit card.", enabled: false },
+];
+
+export const mockOrders: OrderWithUserData[] = [
+    {
+        id: 'order-001',
+        userId: 'user-002',
+        items: [
+            { id: 'cart-001', productId: 'prod-001', name: 'Mochi v4', slug: 'mochi-v4', image: placeholderImagesById['mochi-v4-main'].imageUrl, quantity: 1, price: 1250, configuration: { 'Case Color': 'Cyber Purple' } }
+        ],
+        totalPrice: 1250,
+        status: 'In Production',
+        shippingAddress: { fullName: 'Alice', phoneNumber: '0111222333', address: '123 Main St', city: 'Cairo' },
+        paymentMethod: { id: 'pm-001', name: 'Instapay' },
+        transactionId: 'TXN123456',
+        createdAt: { seconds: new Date('2024-05-20T10:00:00Z').getTime() / 1000, nanoseconds: 0 },
+        user: { id: 'user-002', name: 'Alice', email: 'alice@example.com', phoneNumber: '0111222333' }
+    },
+    {
+        id: 'order-002',
+        userId: 'user-003',
+        items: [
+            { id: 'cart-002', productId: 'prod-002', name: 'ESP Jammer Pro', slug: 'esp-jammer-pro', image: placeholderImagesById['jammer-pro-main'].imageUrl, quantity: 1, price: 950, configuration: {} }
+        ],
+        totalPrice: 950,
+        status: 'Pending Verification',
+        shippingAddress: { fullName: 'Bob', phoneNumber: '0444555666', address: '456 Side St', city: 'Alexandria' },
+        paymentMethod: { id: 'pm-002', name: 'Vodafone Cash' },
+        transactionId: 'TXN654321',
+        requiresLegalApproval: true,
+        legalAgreementApproved: false,
+        legalAgreementUrl: '#',
+        createdAt: { seconds: new Date('2024-05-22T14:30:00Z').getTime() / 1000, nanoseconds: 0 },
+        user: { id: 'user-003', name: 'Bob', email: 'bob@example.com', phoneNumber: '0444555666' }
+    }
+];
+
+export const mockQuoteRequests: QuoteRequestWithUserData[] = [
+    {
+        id: 'quote-001',
+        userId: 'user-003',
+        items: [
+            { id: 'cart-quote-001', productId: 'prod-006', name: 'Arduino Stream Deck Kit', slug: 'arduino-stream-deck', image: placeholderImagesById['stream-deck-main'].imageUrl, quantity: 2, price: 800, configuration: { 'Keycap Style': 'Custom Printed' } }
+        ],
+        userNotes: 'I want a custom logo on each keycap. The logo is attached.',
+        fileUrl: '#',
+        status: 'Pending Review',
+        createdAt: { seconds: new Date('2024-05-21T11:00:00Z').getTime() / 1000, nanoseconds: 0 },
+        user: { id: 'user-003', name: 'Bob', email: 'bob@example.com', phoneNumber: '0444555666' }
+    },
+     {
+        id: 'quote-002',
+        userId: 'user-002',
+        items: [
+            { id: 'cart-quote-002', productId: 'prod-001', name: 'Mochi v4', slug: 'mochi-v4', image: placeholderImagesById['mochi-v4-main'].imageUrl, quantity: 1, price: 1200, configuration: {} }
+        ],
+        userNotes: 'I need a special firmware with a custom boot screen.',
+        status: 'Quoted',
+        quotedPrice: 2000,
+        adminNotes: 'Price includes 4 hours of firmware development.',
+        createdAt: { seconds: new Date('2024-05-20T09:00:00Z').getTime() / 1000, nanoseconds: 0 },
+        quotedAt: { seconds: new Date('2024-05-20T17:00:00Z').getTime() / 1000, nanoseconds: 0 },
+        user: { id: 'user-002', name: 'Alice', email: 'alice@example.com', phoneNumber: '0111222333' }
+    }
+]

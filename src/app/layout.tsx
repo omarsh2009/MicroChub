@@ -3,7 +3,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
 import { MainLayout } from "@/components/main-layout";
-import { FirebaseClientProvider } from "@/firebase/client-provider";
+import { AuthProvider } from "@/auth/provider";
 import { CartProvider } from "@/context/cart-provider";
 import { WishlistProvider } from "@/context/wishlist-provider";
 
@@ -41,13 +41,13 @@ export default function RootLayout({
           "font-body antialiased",
         )}
       >
-        <FirebaseClientProvider>
+        <AuthProvider>
           <CartProvider>
             <WishlistProvider>
               <MainLayout>{children}</MainLayout>
             </WishlistProvider>
           </CartProvider>
-        </FirebaseClientProvider>
+        </AuthProvider>
         <Toaster />
       </body>
     </html>

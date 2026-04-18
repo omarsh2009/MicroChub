@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   Package,
   ShoppingCart,
@@ -11,6 +11,7 @@ import {
   FileQuestion,
   Home,
   Wallet,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,10 +24,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/logo";
-import { useUser, useAuth } from "@/firebase";
-import { signOut } from "@/lib/auth";
+import { useUser } from "@/auth";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
 export default function AdminLayout({
@@ -35,36 +34,24 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const user = useUser();
-  const auth = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (user === undefined) return; // Still loading
-
-    if (user === null) {
-      router.replace(`/login?redirect=${pathname}`);
-    } else if (!user.profile?.role || !['admin', 'super_admin'].includes(user.profile.role)) {
-      router.replace('/');
-    }
-  }, [user, router, pathname]);
-
   const handleLogout = async () => {
-    if (!auth) return;
-    try {
-      await signOut(auth);
-      toast({ title: "Logged Out" });
-      router.push("/login");
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Logout Failed", description: error.message });
-    }
+    toast({ title: "Logged Out" });
+    router.push("/");
   };
 
-  if (user === undefined || !user || !user.profile?.role || !['admin', 'super_admin'].includes(user.profile.role)) {
+  if (!user || !user.profile?.role || !['admin', 'super_admin'].includes(user.profile.role)) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <div className="text-center">
+            <h1 className="text-2xl font-bold">Access Denied</h1>
+            <p className="text-muted-foreground">You do not have permission to view this page.</p>
+            <Button asChild className="mt-4">
+                <Link href="/">Return to Home</Link>
+            </Button>
+        </div>
       </div>
     );
   }
@@ -202,7 +189,10 @@ export default function AdminLayout({
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -214,5 +204,3 @@ export default function AdminLayout({
     </div>
   );
 }
-
-    

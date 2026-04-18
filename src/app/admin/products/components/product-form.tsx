@@ -19,7 +19,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Product } from '@/lib/types';
 import { Loader2, Sparkles, PlusCircle, Trash2 } from 'lucide-react';
-import { adminProductDescriptionGenerator } from '@/ai/flows/admin-product-description-generator';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -56,7 +55,6 @@ export function ProductForm({
   onFinished: () => void;
 }) {
   const { toast } = useToast();
-  const [isAiLoading, setIsAiLoading] = useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -76,49 +74,13 @@ export function ProductForm({
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+    console.log("Mock Product Submit:", values);
     
     toast({
       title: `Product ${product ? 'Updated' : 'Created'}`,
       description: `${values.name} has been saved. (This is a demo)`,
     });
     onFinished();
-  }
-
-  async function handleGenerateDescription() {
-    const { name, category, technicalSpecs } = form.getValues();
-    if (!name || !category || !technicalSpecs) {
-      toast({
-        variant: 'destructive',
-        title: 'Missing Information',
-        description: 'Please fill out Name, Category, and Technical Specs to generate a description.',
-      });
-      return;
-    }
-    setIsAiLoading(true);
-    try {
-      const result = await adminProductDescriptionGenerator({
-        productName: name,
-        category,
-        technicalSpecs,
-      });
-      if (result.productDescription) {
-        form.setValue('description', result.productDescription);
-        toast({
-          title: 'Description Generated!',
-          description: 'The AI has written a product description for you.',
-        });
-      }
-    } catch (e) {
-      console.error(e);
-      toast({
-        variant: 'destructive',
-        title: 'AI Error',
-        description: 'Could not generate a description. Please try again.',
-      });
-    } finally {
-      setIsAiLoading(false);
-    }
   }
 
   return (
@@ -183,17 +145,7 @@ export function ProductForm({
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="flex items-center justify-between">
-                <span>Description</span>
-                <Button variant="ghost" size="sm" type="button" onClick={handleGenerateDescription} disabled={isAiLoading}>
-                  {isAiLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Sparkles className="mr-2 h-4 w-4" />
-                  )}
-                  Generate with AI
-                </Button>
-              </FormLabel>
+              <FormLabel>Description</FormLabel>
               <FormControl>
                 <Textarea placeholder="A versatile, customizable hardware companion..." {...field} rows={5} />
               </FormControl>

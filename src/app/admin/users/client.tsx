@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useFirestore, useUser } from '@/firebase';
+import { useUser } from '@/auth';
 import { getAllUsers, updateUserRole } from '@/lib/admin';
 import type { UserWithId, UserProfile } from '@/lib/types';
 import { UsersTable } from './components/users-table';
@@ -15,29 +15,26 @@ import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export function UsersClientPage() {
-  const firestore = useFirestore();
-  const user = useUser(); // The current admin user
+  const currentUser = useUser();
   const { toast } = useToast();
   const [users, setUsers] = useState<UserWithId[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!firestore || user?.profile?.role !== 'super_admin') return;
+    if (currentUser?.profile?.role !== 'super_admin') return;
 
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        const fetchedUsers = await getAllUsers(firestore);
+        const fetchedUsers = await getAllUsers();
         // Filter out the current super_admin from the list to prevent self-demotion
-        setUsers(fetchedUsers.filter(u => u.id !== user.uid));
+        setUsers(fetchedUsers.filter(u => u.id !== currentUser.uid));
       } catch (error: any) {
         console.error('Failed to fetch users:', error);
         toast({
           variant: 'destructive',
           title: 'Error Fetching Users',
-          description: error.message.includes('permission-denied') 
-            ? "You don't have permission to view users."
-            : 'Could not fetch users. Please try again.',
+          description: 'Could not fetch users. Please try again.',
         });
       } finally {
         setLoading(false);
@@ -45,12 +42,11 @@ export function UsersClientPage() {
     };
 
     fetchUsers();
-  }, [firestore, user, toast]);
+  }, [currentUser, toast]);
 
   const handleRoleChange = async (userId: string, newRole: UserProfile['role']) => {
-    if (!firestore) return;
     try {
-        await updateUserRole(firestore, userId, newRole);
+        await updateUserRole(userId, newRole);
         setUsers(prevUsers => prevUsers.map(u => u.id === userId ? { ...u, role: newRole } : u));
         toast({
             title: 'User Role Updated',
@@ -66,7 +62,7 @@ export function UsersClientPage() {
     }
   };
   
-  if (user?.profile?.role !== 'super_admin') {
+  if (currentUser?.profile?.role !== 'super_admin') {
       return (
           <Card>
               <CardHeader>

@@ -15,7 +15,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import type { PaymentMethod } from '@/lib/types';
 import { getPaymentMethods, addPaymentMethod, updatePaymentMethod, deletePaymentMethod } from '@/lib/admin';
@@ -23,7 +22,6 @@ import { PaymentMethodsTable } from './components/payment-methods-table';
 import { PaymentMethodForm } from './components/payment-method-form';
 
 export function PaymentMethodsClientPage() {
-  const firestore = useFirestore();
   const { toast } = useToast();
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,13 +29,12 @@ export function PaymentMethodsClientPage() {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | undefined>(undefined);
 
   useEffect(() => {
-    if (!firestore) return;
     setLoading(true);
-    getPaymentMethods(firestore)
+    getPaymentMethods()
       .then(setMethods)
       .catch(err => toast({ variant: 'destructive', title: 'Error fetching payment methods' }))
       .finally(() => setLoading(false));
-  }, [firestore, toast]);
+  }, [toast]);
 
   const handleAdd = () => {
     setSelectedMethod(undefined);
@@ -50,9 +47,8 @@ export function PaymentMethodsClientPage() {
   };
   
   const handleDelete = async (methodId: string) => {
-    if (!firestore) return;
     try {
-        await deletePaymentMethod(firestore, methodId);
+        await deletePaymentMethod(methodId);
         setMethods(prev => prev.filter(m => m.id !== methodId));
         toast({ title: 'Payment Method Deleted' });
     } catch (error) {
@@ -61,14 +57,13 @@ export function PaymentMethodsClientPage() {
   }
 
   const onFormSubmit = async (values: Omit<PaymentMethod, 'id'>, id?: string) => {
-    if (!firestore) return;
     try {
       if (id) {
-        await updatePaymentMethod(firestore, id, values);
-        setMethods(prev => prev.map(m => m.id === id ? { ...m, ...values } : m));
+        await updatePaymentMethod(id, values);
+        setMethods(prev => prev.map(m => m.id === id ? { ...m, ...values, id } : m));
         toast({ title: 'Payment Method Updated' });
       } else {
-        const newId = await addPaymentMethod(firestore, values);
+        const newId = await addPaymentMethod(values);
         setMethods(prev => [...prev, { id: newId, ...values }]);
         toast({ title: 'Payment Method Added' });
       }
@@ -121,5 +116,3 @@ export function PaymentMethodsClientPage() {
     </>
   );
 }
-
-    

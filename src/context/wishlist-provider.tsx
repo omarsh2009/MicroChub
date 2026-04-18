@@ -2,21 +2,20 @@
 
 import {
   createContext,
+  useState,
+  useEffect,
   useCallback,
   useMemo,
+  ReactNode,
 } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { collection, addDoc, serverTimestamp, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { useUser } from '@/auth';
 
 export interface WishlistItem {
-    id: string;
+    id: string; // Will be the productId for simplicity in mock
     productId: string;
     userId: string;
-    addedAt: {
-        seconds: number;
-        nanoseconds: number;
-    };
+    addedAt: number; // Use a timestamp
 }
 
 interface WishlistContextType {
@@ -29,70 +28,74 @@ interface WishlistContextType {
 
 export const WishlistContext = createContext<WishlistContextType | null>(null);
 
-export function WishlistProvider({ children }: { children: React.ReactNode }) {
+const WISHLIST_KEY = 'microchub-wishlist';
+
+export function WishlistProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const user = useUser();
-  const firestore = useFirestore();
+  const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const wishlistCollectionRef = useMemoFirebase(() => {
-    if (!user || !firestore) return null;
-    return collection(firestore, 'users', user.uid, 'wishlist_items');
-  }, [user, firestore]);
+  // Use a user-specific key for localStorage
+  const userWishlistKey = useMemo(() => user ? `${WISHLIST_KEY}-${user.uid}` : WISHLIST_KEY, [user]);
 
-  const { data: wishlist, loading } = useCollection<WishlistItem>(wishlistCollectionRef);
+  useEffect(() => {
+    setLoading(true);
+    try {
+      const storedWishlist = localStorage.getItem(userWishlistKey);
+      if (storedWishlist) {
+        setWishlist(JSON.parse(storedWishlist));
+      } else {
+        setWishlist([]);
+      }
+    } catch (error) {
+      console.error("Failed to load wishlist from localStorage", error);
+      setWishlist([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [userWishlistKey]);
+
+  const updateWishlist = (newWishlist: WishlistItem[]) => {
+    setWishlist(newWishlist);
+    try {
+      localStorage.setItem(userWishlistKey, JSON.stringify(newWishlist));
+    } catch (error) {
+      console.error("Failed to save wishlist to localStorage", error);
+    }
+  };
 
   const addToWishlist = useCallback(async (productId: string) => {
-    if (!wishlistCollectionRef || !user) {
+    if (!user) {
         toast({ variant: 'destructive', title: 'You must be logged in.' });
         return;
     }
-
-    // Check if item already exists
-    const q = query(wishlistCollectionRef, where("productId", "==", productId));
-    const querySnapshot = await getDocs(q);
-
-    if (!querySnapshot.empty) {
+    
+    if (wishlist.some(item => item.productId === productId)) {
         toast({ variant: 'default', title: 'Already in Wishlist', description: 'This item is already in your wishlist.' });
         return;
     }
 
-    try {
-        await addDoc(wishlistCollectionRef, {
-            productId,
-            userId: user.uid,
-            addedAt: serverTimestamp()
-        });
-        toast({ title: 'Added to Wishlist', description: 'The item has been added to your wishlist.' });
-    } catch (error: any) {
-        console.error("Error adding to wishlist:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not add item to wishlist.' });
-    }
-  }, [wishlistCollectionRef, user, toast]);
+    const newItem: WishlistItem = {
+      id: productId,
+      productId,
+      userId: user.uid,
+      addedAt: Date.now(),
+    };
+
+    updateWishlist([...wishlist, newItem]);
+    toast({ title: 'Added to Wishlist', description: 'The item has been added to your wishlist.' });
+  }, [wishlist, user, userWishlistKey, toast]);
 
   const removeFromWishlist = useCallback(async (productId: string) => {
-     if (!wishlistCollectionRef) {
+    if (!user) {
         toast({ variant: 'destructive', title: 'You must be logged in.' });
         return;
     }
-
-    try {
-        const q = query(wishlistCollectionRef, where("productId", "==", productId));
-        const querySnapshot = await getDocs(q);
-
-        if (querySnapshot.empty) {
-            console.warn("Item not found in wishlist to remove.");
-            return;
-        }
-        
-        const docToDelete = querySnapshot.docs[0];
-        await deleteDoc(doc(wishlistCollectionRef, docToDelete.id));
-
-        toast({ title: 'Removed from Wishlist', description: 'The item has been removed from your wishlist.' });
-    } catch (error: any) {
-        console.error("Error removing from wishlist:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not remove item from wishlist.' });
-    }
-  }, [wishlistCollectionRef, toast]);
+    const newWishlist = wishlist.filter(item => item.productId !== productId);
+    updateWishlist(newWishlist);
+    toast({ title: 'Removed from Wishlist', description: 'The item has been removed from your wishlist.' });
+  }, [wishlist, user, userWishlistKey, toast]);
   
   const isInWishlist = useCallback((productId: string) => {
       return !!wishlist?.some(item => item.productId === productId);

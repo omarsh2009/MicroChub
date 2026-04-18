@@ -10,6 +10,7 @@ import {
   Package,
   FileQuestion,
   Shield,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,10 +29,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Logo } from "./logo";
-import { useUser, useAuth } from "@/firebase";
-import { signOut } from "@/lib/auth";
+import { useUser } from "@/auth";
 import { useToast } from "@/hooks/use-toast";
-import { Skeleton } from "./ui/skeleton";
 import { useCart } from "@/hooks/use-cart";
 import { Badge } from "@/components/ui/badge";
 
@@ -45,20 +44,15 @@ const navLinks = [
 
 export function Header() {
   const user = useUser();
-  const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const { itemCount } = useCart();
 
   const handleLogout = async () => {
-    if (!auth) return;
-    try {
-      await signOut(auth);
-      toast({ title: "Logged Out", description: "You have been successfully logged out." });
-      router.push("/");
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Logout Failed", description: error.message });
-    }
+    // In a real app, this would call a sign-out function.
+    // Here, we just simulate it and redirect.
+    toast({ title: "Logged Out", description: "You have been successfully logged out." });
+    router.push("/");
   };
 
   const isAdmin = user?.profile?.role === 'admin' || user?.profile?.role === 'super_admin';
@@ -107,21 +101,15 @@ export function Header() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {user === undefined ? (
-                 <div className="p-2">
-                    <Skeleton className="h-4 w-24 mb-2" />
-                    <Skeleton className="h-3 w-32" />
-                </div>
-              ) : user ? (
+              {user ? (
                 <>
-                  <DropdownMenuLabel>Hi, {user.profile?.name || user.email?.split('@')[0]}</DropdownMenuLabel>
+                  <DropdownMenuLabel>Hi, {user.displayName}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>My Account</DropdownMenuItem>
-                   <DropdownMenuItem asChild>
-                    <Link href="/orders">
-                      <Package className="mr-2 h-4 w-4" />
-                      My Orders
-                    </Link>
+                  <DropdownMenuItem asChild>
+                     <Link href="/orders">
+                       <Package className="mr-2 h-4 w-4" />
+                       My Orders
+                     </Link>
                   </DropdownMenuItem>
                    <DropdownMenuItem asChild>
                     <Link href="/quotes">
@@ -134,11 +122,14 @@ export function Header() {
                     <DropdownMenuItem asChild>
                       <Link href="/admin">
                         <Shield className="mr-2 h-4 w-4" />
-                        Admin
+                        Admin Panel
                       </Link>
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
+                  </DropdownMenuItem>
                 </>
               ) : (
                 <>

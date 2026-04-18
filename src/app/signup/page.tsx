@@ -18,7 +18,6 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
-import { useAuth, useFirestore } from "@/firebase";
 import { signUpWithEmail } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -35,8 +34,6 @@ export type SignUpFormValues = z.infer<typeof formSchema>;
 export default function SignupPage() {
   const { toast } = useToast();
   const router = useRouter();
-  const auth = useAuth();
-  const firestore = useFirestore();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<SignUpFormValues>({
@@ -50,20 +47,12 @@ export default function SignupPage() {
   });
 
   async function onSubmit(values: SignUpFormValues) {
-    if (!auth || !firestore) {
-        toast({
-            variant: "destructive",
-            title: "Firebase not initialized",
-            description: "Please try again in a moment.",
-        });
-        return;
-    }
     setIsLoading(true);
     try {
-      await signUpWithEmail(auth, firestore, values);
+      await signUpWithEmail(values);
       toast({
         title: "Account Created!",
-        description: "Welcome to the MicroChub community.",
+        description: "Welcome to the MicroChub community. (This is a mock sign-up)",
       });
       router.push("/");
     } catch (error: any) {
@@ -71,9 +60,7 @@ export default function SignupPage() {
       toast({
         variant: "destructive",
         title: "Signup Failed",
-        description: error.code === 'auth/email-already-in-use' 
-          ? 'This email is already registered.' 
-          : (error.message || "An unknown error occurred."),
+        description: error.message || "An unknown error occurred.",
       });
     } finally {
       setIsLoading(false);

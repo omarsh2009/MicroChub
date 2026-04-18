@@ -1,8 +1,7 @@
 'use client';
-
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { useUser } from '@/auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,18 +9,26 @@ import { Loader2, PackageSearch } from 'lucide-react';
 import type { Order } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
+import { getAllOrders } from '@/lib/admin'; // We can reuse admin service for getting all orders
 
 export default function OrdersPage() {
   const user = useUser();
-  const firestore = useFirestore();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-  const ordersQuery = useMemoFirebase(() => {
-    if (!user || !firestore) return null;
-    return query(collection(firestore, 'orders'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
-  }, [user, firestore]);
+  useEffect(() => {
+    if (!user) return;
+    setLoading(true);
+    getAllOrders()
+      .then(allOrders => {
+        // Filter orders for the current mock user
+        setOrders(allOrders.filter(o => o.userId === user.uid));
+      })
+      .catch(err => setError(err))
+      .finally(() => setLoading(false));
+  }, [user]);
 
-  const { data: orders, loading, error } = useCollection<Order>(ordersQuery);
-  
   const renderConfiguration = (config: Record<string, string | string[]>) => {
     const entries = Object.entries(config);
     if (entries.length === 0) return null;
@@ -53,22 +60,10 @@ export default function OrdersPage() {
   }
 
 
-  if (loading || user === undefined) {
+  if (loading || !user) {
     return (
       <div className="container flex items-center justify-center py-20">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="container text-center py-20">
-        <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-        <p className="text-muted-foreground mb-6">Please log in to view your orders.</p>
-        <Button asChild>
-            <Link href="/login?redirect=/orders">Login</Link>
-        </Button>
       </div>
     );
   }
@@ -133,5 +128,3 @@ export default function OrdersPage() {
     </div>
   );
 }
-
-    

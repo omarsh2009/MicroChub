@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useUser } from '@/firebase';
+import { useUser } from '@/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, HeartCrack } from 'lucide-react';
@@ -13,22 +13,10 @@ export default function WishlistPage() {
   const user = useUser();
   const { wishlist, loading: wishlistLoading } = useWishlist();
 
-  if (user === undefined || wishlistLoading) {
+  if (!user || wishlistLoading) {
     return (
       <div className="container flex items-center justify-center py-20">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="container text-center py-20">
-        <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-        <p className="text-muted-foreground mb-6">Please log in to view your wishlist.</p>
-        <Button asChild>
-          <Link href="/login?redirect=/wishlist">Login</Link>
-        </Button>
       </div>
     );
   }

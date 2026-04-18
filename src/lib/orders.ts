@@ -1,7 +1,6 @@
 'use client';
-import { addDoc, collection, serverTimestamp, Firestore, doc, updateDoc } from 'firebase/firestore';
 import type { CartItem, PaymentMethod, ShippingAddress } from './types';
-import { uploadFile } from './supabase';
+import { mockOrders } from './data';
 
 interface OrderPayload {
   userId: string;
@@ -15,10 +14,14 @@ interface OrderPayload {
   legalAgreementFile?: File;
 }
 
+// MOCK API - simulates a network delay
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export async function createOrder(
-  firestore: Firestore,
   payload: OrderPayload
 ): Promise<string> {
+  await sleep(1000);
+  
   const { 
     userId, 
     cart, 
@@ -30,21 +33,15 @@ export async function createOrder(
     requiresLegalApproval, 
     legalAgreementFile 
   } = payload;
-
-  let legalAgreementUrl: string | undefined = undefined;
-
-  if (requiresLegalApproval && legalAgreementFile) {
-    // Upload the file to Supabase and get the public URL
-    legalAgreementUrl = await uploadFile(legalAgreementFile, userId);
-  } else if (requiresLegalApproval && !legalAgreementFile) {
+  
+  if (requiresLegalApproval && !legalAgreementFile) {
     throw new Error("A signed legal agreement is required for restricted items.");
   }
 
-
-  // Create order document in Firestore's top-level 'orders' collection
-  const ordersCollectionRef = collection(firestore, 'orders');
-
-  const orderData: any = {
+  const newOrderId = `mock-order-${Date.now()}`;
+  
+  const orderData = {
+    id: newOrderId,
     userId,
     items: cart,
     totalPrice,
@@ -56,21 +53,29 @@ export async function createOrder(
     },
     transactionId,
     requiresLegalApproval,
-    legalAgreementApproved: false, // This is always false on creation
+    legalAgreementApproved: false,
     status: 'Pending Verification',
-    createdAt: serverTimestamp(),
+    createdAt: { 
+        seconds: Math.floor(Date.now() / 1000), 
+        nanoseconds: 0 
+    },
+    user: {
+        id: userId,
+        name: shippingAddress.fullName,
+        email: 'test@example.com', // In real app, get from user object
+        phoneNumber: shippingAddress.phoneNumber,
+    }
   };
 
-  if (legalAgreementUrl) {
-    orderData.legalAgreementUrl = legalAgreementUrl;
+  if (legalAgreementFile) {
+    // In a real app, this would be uploaded and the URL stored.
+    console.log("Simulating file upload for:", legalAgreementFile.name);
+    (orderData as any).legalAgreementUrl = `/${legalAgreementFile.name}`;
   }
   
-  const newOrderDoc = await addDoc(ordersCollectionRef, orderData);
-  
-  // Update user's phone number if it has changed
-  const userDocRef = doc(firestore, 'users', userId);
-  await updateDoc(userDocRef, { phoneNumber: shippingAddress.phoneNumber });
+  // Add to our in-memory mock data array
+  mockOrders.unshift(orderData);
 
-
-  return newOrderDoc.id;
+  console.log("Mock Order Submitted:", orderData);
+  return newOrderId;
 }

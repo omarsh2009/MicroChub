@@ -1,7 +1,6 @@
 'use client';
-import { addDoc, collection, serverTimestamp, Firestore, doc, updateDoc } from 'firebase/firestore';
-import type { CartItem, Product, SelectedConfiguration } from './types';
-import { uploadFile } from './supabase';
+import type { Product, SelectedConfiguration } from './types';
+import { mockQuoteRequests } from './data';
 
 interface QuoteRequestPayload {
   userId: string;
@@ -13,61 +12,63 @@ interface QuoteRequestPayload {
   file?: File;
 }
 
+// MOCK API - simulates a network delay
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+
 export async function createQuoteRequest(
-  firestore: Firestore,
   payload: QuoteRequestPayload
 ): Promise<string> {
+  await sleep(1000);
   const { userId, product, quantity, configuration, basePrice, userNotes, file } = payload;
+  
+  const newQuoteId = `mock-quote-${Date.now()}`;
 
-  let fileUrl: string | undefined = undefined;
-
-  if (file) {
-    try {
-        fileUrl = await uploadFile(file, userId);
-    } catch (uploadError) {
-        console.error("FULL QUOTE UPLOAD ERROR:", uploadError);
-        // Re-throw the error so the calling component can handle it and show a toast.
-        throw uploadError;
-    }
-  }
-
-  // Create a CartItem-like object to store in the quote
-  const quoteItem: Omit<CartItem, 'id'> = {
+  const quoteItem = {
       productId: product.id,
       name: product.name,
       slug: product.slug,
-      image: product.images[0] || '', // Use the first image
+      image: product.images[0] || '',
       quantity: quantity,
-      price: basePrice, // Store the base price at time of quote
+      price: basePrice,
       configuration: configuration,
   };
 
-
-  const quotesCollectionRef = collection(firestore, 'quote_requests');
-  
   const quoteData: any = {
+    id: newQuoteId,
     userId,
     items: [quoteItem],
     userNotes: userNotes || '',
     status: 'Pending Review',
-    createdAt: serverTimestamp(),
+    createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 },
+    user: {
+        id: userId,
+        name: 'Test User',
+        email: 'test@example.com',
+        phoneNumber: '01234567890',
+    }
   };
 
-  if (fileUrl) {
-    quoteData.fileUrl = fileUrl;
+   if (file) {
+    console.log("Simulating file upload for quote:", file.name);
+    quoteData.fileUrl = `/${file.name}`;
   }
 
-  const newQuoteDoc = await addDoc(quotesCollectionRef, quoteData);
-
-  return newQuoteDoc.id;
+  mockQuoteRequests.unshift(quoteData);
+  
+  console.log("Mock Quote Request Submitted:", quoteData);
+  return newQuoteId;
 }
 
 
 export async function updateUserQuoteStatus(
-    firestore: Firestore,
     quoteId: string,
     status: 'Accepted' | 'Rejected'
 ): Promise<void> {
-    const quoteRef = doc(firestore, 'quote_requests', quoteId);
-    await updateDoc(quoteRef, { status });
+    await sleep(300);
+    const quote = mockQuoteRequests.find(q => q.id === quoteId);
+    if(quote) {
+        quote.status = status;
+    }
+    console.log(`Mock API: Updated quote ${quoteId} status to ${status}`);
 }

@@ -16,7 +16,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { submitQuote } from '@/lib/admin';
-import { useFirestore } from '@/firebase';
 import type { QuoteRequestWithUserData } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ExternalLink } from 'lucide-react';
@@ -30,20 +29,19 @@ interface QuoteDetailsDialogProps {
 }
 
 export function QuoteDetailsDialog({ isOpen, onClose, quote, onQuoteUpdate }: QuoteDetailsDialogProps) {
-    const firestore = useFirestore();
     const { toast } = useToast();
     const [quotedPrice, setQuotedPrice] = useState(quote.quotedPrice || '');
     const [adminNotes, setAdminNotes] = useState(quote.adminNotes || '');
     const [isSaving, setIsSaving] = useState(false);
 
     const handleSaveChanges = async () => {
-        if (!firestore || !quotedPrice) {
+        if (!quotedPrice) {
             toast({ variant: 'destructive', title: 'Missing Price', description: 'Please enter a quoted price.'});
             return;
         };
         setIsSaving(true);
         try {
-            await submitQuote(firestore, quote.id, Number(quotedPrice), adminNotes);
+            await submitQuote(quote.id, Number(quotedPrice), adminNotes);
             toast({
                 title: 'Quote Submitted',
                 description: `Quote for #${quote.id.slice(0, 7)} has been sent to the customer.`,
@@ -173,4 +171,3 @@ export function QuoteDetailsDialog({ isOpen, onClose, quote, onQuoteUpdate }: Qu
         </Dialog>
     );
 }
-    

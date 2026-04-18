@@ -1,6 +1,6 @@
 'use client';
 
-import { notFound, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { placeholderImagesById } from "@/lib/data";
@@ -28,7 +28,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useMemo } from "react";
 import { useCart } from '@/hooks/use-cart';
-import { useUser, useFirestore } from "@/firebase";
+import { useUser } from "@/auth";
 import { createQuoteRequest } from "@/lib/quotes";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,7 +41,6 @@ export function ProductClientPage({ product }: { product: Product }) {
   const { toast } = useToast();
   const { addToCart } = useCart();
   const user = useUser();
-  const firestore = useFirestore();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string | string[]>>({});
@@ -142,14 +141,10 @@ export function ProductClientPage({ product }: { product: Product }) {
           router.push(`/login?redirect=/products/${product.slug}`);
           return;
       }
-      if (!firestore) {
-          toast({ variant: 'destructive', title: 'Error', description: 'Services not available. Please try again.'});
-          return;
-      }
 
       setIsRequestingQuote(true);
       try {
-        await createQuoteRequest(firestore, {
+        await createQuoteRequest({
             userId: user.uid,
             product,
             quantity,
@@ -175,10 +170,6 @@ export function ProductClientPage({ product }: { product: Product }) {
       router.push(`/products/${product.slug}`);
       return;
     }
-    if (!firestore) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Services not available. Please try again.' });
-      return;
-    }
     if (!customNotes) {
       toast({ variant: 'destructive', title: 'Description needed', description: 'Please describe your custom modification.' });
       return;
@@ -186,16 +177,8 @@ export function ProductClientPage({ product }: { product: Product }) {
 
     setIsRequestingCustomQuote(true);
 
-    if (customFile) {
-        if (customFile.size > 5 * 1024 * 1024) { // 5MB limit
-            toast({ variant: 'destructive', title: 'File Too Large', description: 'File size must be less than 5MB.' });
-            setIsRequestingCustomQuote(false);
-            return;
-        }
-    }
-
     try {
-      await createQuoteRequest(firestore, {
+      await createQuoteRequest({
         userId: user.uid,
         product,
         quantity: 1, // Default to 1 for custom requests
@@ -400,6 +383,7 @@ export function ProductClientPage({ product }: { product: Product }) {
                     <div className="grid w-full max-w-sm items-center gap-1.5">
                         <Label htmlFor="custom-file">Reference File (Optional)</Label>
                         <Input id="custom-file" type="file" accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf" onChange={(e) => setCustomFile(e.target.files ? e.target.files[0] : null)} />
+                         <p className="text-xs text-muted-foreground">File uploads are simulated in this prototype.</p>
                     </div>
                 </CardContent>
                 <CardFooter>

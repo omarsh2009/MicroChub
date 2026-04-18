@@ -18,7 +18,6 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
-import { useAuth } from "@/firebase";
 import { signInWithEmail } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -34,7 +33,6 @@ type LoginFormValues = z.infer<typeof formSchema>;
 export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
-  const auth = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LoginFormValues>({
@@ -46,32 +44,20 @@ export default function LoginPage() {
   });
 
   async function onSubmit(values: LoginFormValues) {
-     if (!auth) {
-        toast({
-            variant: "destructive",
-            title: "Firebase not initialized",
-            description: "Please try again in a moment.",
-        });
-        return;
-    }
     setIsLoading(true);
     try {
-      await signInWithEmail(auth, values);
+      await signInWithEmail(values);
       toast({
         title: "Logged In Successfully!",
-        description: "Welcome back.",
+        description: "Welcome back. (This is a mock login)",
       });
       router.push("/");
     } catch (error: any) {
       console.error(error);
-      let description = "Please check your credentials and try again.";
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        description = "Invalid email or password.";
-      }
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description,
+        description: "Invalid email or password.",
       });
     } finally {
       setIsLoading(false);

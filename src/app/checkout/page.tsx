@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/hooks/use-cart';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser } from '@/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -44,7 +44,7 @@ const formSchema = z.object({
     required_error: 'You need to select a payment method.',
   }),
   transactionId: z.string().min(4, 'Please enter a valid transaction ID.'),
-  legalAgreement: z.custom<FileList>().optional(),
+  legalAgreement: z.any().optional(),
 });
 
 type CheckoutFormValues = z.infer<typeof formSchema>;
@@ -54,19 +54,18 @@ export default function CheckoutPage() {
   const { toast } = useToast();
   const { cart, totalPrice, clearCart } = useCart();
   const user = useUser();
-  const firestore = useFirestore();
 
   const [isLoading, setIsLoading] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null);
   
   useEffect(() => {
-    if (firestore) {
-      getPaymentMethods(firestore).then(methods => {
-        setPaymentMethods(methods.filter(m => m.enabled));
-      });
-    }
-  }, [firestore]);
+    setIsLoading(true);
+    getPaymentMethods().then(methods => {
+      setPaymentMethods(methods.filter(m => m.enabled));
+      setIsLoading(false);
+    });
+  }, []);
 
   const hasRestrictedItem = useMemo(() => {
     return cart.some(item => {
@@ -88,8 +87,7 @@ export default function CheckoutPage() {
   });
   
   useEffect(() => {
-    if (user === undefined) return;
-    if (user === null) {
+    if (!user) {
       toast({ variant: 'destructive', title: 'Not Logged In', description: 'Please log in to proceed to checkout.' });
       router.push('/login?redirect=/checkout');
     } else {
@@ -99,7 +97,7 @@ export default function CheckoutPage() {
   }, [user, router, toast, form]);
 
   useEffect(() => {
-    if (user !== undefined && cart.length === 0) {
+    if (user && cart.length === 0) {
       toast({ title: 'Your cart is empty', description: 'Redirecting you to the products page.' });
       router.push('/products');
     }
@@ -117,8 +115,8 @@ export default function CheckoutPage() {
   };
 
   async function onSubmit(values: CheckoutFormValues) {
-    if (!firestore || !user || !selectedPaymentMethod) {
-        toast({ variant: 'destructive', title: 'Initialization Error', description: 'Services not ready or payment method not selected. Please try again.' });
+    if (!user || !selectedPaymentMethod) {
+        toast({ variant: 'destructive', title: 'Initialization Error', description: 'User or payment method not selected. Please try again.' });
         return;
     }
     setIsLoading(true);
@@ -132,14 +130,8 @@ export default function CheckoutPage() {
             return;
         }
 
-        if (legalAgreementFile && legalAgreementFile.size > 5 * 1024 * 1024) { // 5MB limit
-            toast({ variant: 'destructive', title: 'File Too Large', description: 'Legal agreement file must be under 5MB.' });
-            setIsLoading(false);
-            return;
-        }
-        
-        console.log("Proceeding to create order...");
-        await createOrder(firestore, {
+        console.log("Proceeding to create order (mock)...");
+        await createOrder({
             userId: user.uid,
             cart,
             totalPrice,
@@ -156,13 +148,13 @@ export default function CheckoutPage() {
             legalAgreementFile: legalAgreementFile,
         });
 
-        console.log("Order created successfully.");
+        console.log("Order submitted (mock).");
         toast({ title: 'Order Placed!', description: 'Your order has been received and is pending verification.' });
         clearCart();
         router.push('/orders');
 
     } catch (error: any) {
-        console.error('FULL ORDER SUBMISSION ERROR:', error);
+        console.error('MOCK ORDER SUBMISSION ERROR:', error);
         toast({ variant: 'destructive', title: 'Order Failed', description: error.message || 'Could not place your order.' });
     } finally {
         console.log("Finishing submission process.");
@@ -170,7 +162,7 @@ export default function CheckoutPage() {
     }
   }
   
-  if (user === undefined || cart.length === 0) {
+  if (!user || cart.length === 0) {
     return <div className="container flex justify-center items-center py-20"><Loader2 className="w-12 h-12 animate-spin text-primary" /></div>
   }
 
@@ -288,7 +280,7 @@ export default function CheckoutPage() {
                             <FormField
                                 control={form.control}
                                 name="legalAgreement"
-                                render={({ field }) => (
+                                render={({ field: { onChange, ...fieldProps } }) => (
                                     <FormItem>
                                         <FormLabel>Signed Legal Agreement</FormLabel>
                                         <FormDescription>
@@ -300,14 +292,15 @@ export default function CheckoutPage() {
                                                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                                         <UploadCloud className="w-8 h-8 mb-2 text-muted-foreground" />
                                                         <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                                                        <p className="text-xs text-muted-foreground">{field.value?.[0]?.name || 'PDF, PNG, JPG, WEBP (MAX. 5MB)'}</p>
+                                                        <p className="text-xs text-muted-foreground">{form.watch('legalAgreement')?.[0]?.name || 'PDF, PNG, JPG, WEBP (MAX. 5MB)'}</p>
                                                     </div>
                                                     <Input
                                                       id="legal-dropzone-file"
                                                       type="file"
                                                       className="hidden"
                                                       accept={ACCEPTED_FILE_TYPES.join(',')}
-                                                      onChange={(e) => field.onChange(e.target.files)}
+                                                      onChange={(e) => onChange(e.target.files)}
+                                                      {...fieldProps}
                                                     />
                                                 </label>
                                             </div> 
