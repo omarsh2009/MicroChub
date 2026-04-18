@@ -3,17 +3,9 @@
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { placeholderImagesById } from "@/lib/data";
 import { type Product } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import {
   Table,
@@ -53,8 +45,6 @@ export function ProductClientPage({ product }: { product: Product }) {
 
 
   const inWishlist = isInWishlist(product.id);
-
-  const productImages = product.images.map(id => placeholderImagesById[id]).filter(Boolean);
 
   const calculatedPrice = useMemo(() => {
     let price = product.price;
@@ -132,7 +122,7 @@ export function ProductClientPage({ product }: { product: Product }) {
   };
   
   const handleAddToCart = () => {
-    addToCart(product, quantity, selectedOptions, calculatedPrice);
+    addToCart(product, quantity, selectedOptions, discountedPrice);
   };
   
   const handleRequestQuote = async () => {
@@ -189,7 +179,7 @@ export function ProductClientPage({ product }: { product: Product }) {
       });
       toast({
         title: 'Custom Quote Request Sent!',
-        description: "We've received your request and will get back to you shortly.",
+        description: "We've received your request and will get back to you with a quote shortly.",
       });
       router.push('/quotes');
     } catch (error: any) {
@@ -216,33 +206,39 @@ export function ProductClientPage({ product }: { product: Product }) {
 
   const priceSuffix = needsQuote ? '+' : '';
 
+  const discountedPrice = useMemo(() => {
+    if (!product.discountValue || !product.discountType) {
+      return calculatedPrice;
+    }
+    let discounted = calculatedPrice;
+    if (product.discountType === 'fixed') {
+      discounted = calculatedPrice - product.discountValue;
+    }
+    if (product.discountType === 'percentage') {
+      discounted = calculatedPrice * (1 - product.discountValue / 100);
+    }
+    return discounted > 0 ? discounted : 0;
+  }, [product, calculatedPrice]);
+  
+  const hasDiscount = discountedPrice !== calculatedPrice;
+
+
   return (
     <div className="py-12 md:py-20">
       <div className="container px-4 md:px-6">
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
           <div>
-            <Carousel className="w-full">
-              <CarouselContent>
-                {productImages.map((img, index) => (
-                  <CarouselItem key={index}>
-                    <Card className="overflow-hidden">
-                      <CardContent className="p-0">
-                        <Image
-                          src={img.imageUrl}
-                          alt={`${product.name} image ${index + 1}`}
-                          width={600}
-                          height={600}
-                          className="aspect-square object-cover w-full"
-                          data-ai-hint={img.imageHint}
-                        />
-                      </CardContent>
-                    </Card>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="hidden sm:flex" />
-              <CarouselNext className="hidden sm:flex" />
-            </Carousel>
+            <Card className="overflow-hidden">
+                <CardContent className="p-0">
+                <Image
+                    src={product.image}
+                    alt={product.name}
+                    width={600}
+                    height={600}
+                    className="aspect-square object-cover w-full"
+                />
+                </CardContent>
+            </Card>
           </div>
           <div className="flex flex-col gap-6">
             <div>
@@ -278,8 +274,15 @@ export function ProductClientPage({ product }: { product: Product }) {
                 </Alert>
             )}
 
-            <div className="text-4xl font-bold">
-              EGP {calculatedPrice.toLocaleString()}{priceSuffix}
+            <div className="flex items-baseline gap-4">
+              <span className="text-4xl font-bold">
+                EGP {discountedPrice.toLocaleString()}{priceSuffix}
+              </span>
+              {hasDiscount && (
+                <span className="text-2xl font-medium text-muted-foreground line-through">
+                  EGP {calculatedPrice.toLocaleString()}
+                </span>
+              )}
             </div>
             
             {product.customizationGroups && product.customizationGroups.length > 0 && (

@@ -12,29 +12,36 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { type Product } from "@/lib/types";
-import { placeholderImagesById } from "@/lib/data";
 
 interface ProductCardProps {
   product: Product;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const primaryImageId = product.images[0];
-  const placeholderImage = placeholderImagesById[primaryImageId];
+  const primaryImage = product.image;
+
+  let discountedPrice: number | null = null;
+  if (product.discountValue && product.discountType) {
+    if (product.discountType === 'fixed') {
+      discountedPrice = product.price - product.discountValue;
+    }
+    if (product.discountType === 'percentage') {
+      discountedPrice = product.price * (1 - product.discountValue / 100);
+    }
+  }
 
   return (
     <Card className="flex flex-col overflow-hidden group transition-all duration-300 hover:shadow-primary/20 hover:shadow-lg hover:-translate-y-1">
       <CardHeader className="p-0">
         <Link href={`/products/${product.slug}`} aria-label={product.name}>
           <div className="aspect-video overflow-hidden">
-            {placeholderImage ? (
+            {primaryImage ? (
               <Image
-                src={placeholderImage.imageUrl}
+                src={primaryImage}
                 alt={product.name}
                 width={600}
                 height={400}
                 className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
-                data-ai-hint={placeholderImage.imageHint}
               />
             ) : (
               <div className="bg-muted aspect-video w-full flex items-center justify-center">
@@ -58,9 +65,22 @@ export function ProductCard({ product }: ProductCardProps) {
         </CardDescription>
       </CardContent>
       <CardFooter className="p-4 pt-0 flex justify-between items-center">
-        <p className="text-xl font-bold">
-          EGP {product.price.toLocaleString()}
-        </p>
+        <div>
+          {discountedPrice !== null ? (
+            <>
+              <p className="text-xl font-bold">
+                EGP {discountedPrice.toLocaleString()}
+              </p>
+              <p className="text-sm text-muted-foreground line-through">
+                EGP {product.price.toLocaleString()}
+              </p>
+            </>
+          ) : (
+            <p className="text-xl font-bold">
+              EGP {product.price.toLocaleString()}
+            </p>
+          )}
+        </div>
         <Button asChild>
           <Link href={`/products/${product.slug}`}>View Details</Link>
         </Button>
