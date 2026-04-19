@@ -4,7 +4,7 @@ import type { CartItem, Product, SelectedConfiguration, ServiceResponse } from '
 import { api } from '@/lib/api';
 
 export async function getCart(): Promise<ServiceResponse<CartItem[]>> {
-    throw new Error('API not implemented: getCart');
+    return api.get<CartItem[]>('/cart');
 }
 
 export async function addToCart(
@@ -13,17 +13,23 @@ export async function addToCart(
     configuration: SelectedConfiguration,
     price: number
 ): Promise<ServiceResponse<CartItem[]>> {
-    throw new Error('API not implemented: addToCart');
+    const payload = {
+        productId: product.id,
+        quantity,
+        configuration,
+        price
+    };
+    return api.post<CartItem[]>('/cart/items', payload);
 }
 
 export async function removeFromCart(itemId: string): Promise<ServiceResponse<CartItem[]>> {
-    throw new Error('API not implemented: removeFromCart');
+    return api.delete<CartItem[]>(`/cart/items/${itemId}`);
 }
 
 export async function updateItemQuantity(itemId: string, newQuantity: number): Promise<ServiceResponse<CartItem[]>> {
-    throw new Error('API not implemented: updateItemQuantity');
+    return api.patch<CartItem[]>(`/cart/items/${itemId}`, { quantity: newQuantity });
 }
 
 export async function clearCart(): Promise<ServiceResponse<void>> {
-    throw new Error('API not implemented: clearCart');
+    return api.delete<void>('/cart');
 }

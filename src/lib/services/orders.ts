@@ -1,5 +1,4 @@
 
-'use client';
 import type { Order, OrderWithUserData, CartItem, PaymentMethod, ShippingAddress, ServiceResponse } from '../types';
 import { api } from '@/lib/api';
 
@@ -32,6 +31,10 @@ export async function getUserOrders(): Promise<ServiceResponse<OrderWithUserData
 
 export async function getAllOrders(): Promise<ServiceResponse<OrderWithUserData[]>> {
   return api.get<OrderWithUserData[]>('/orders');
+}
+
+export async function getOrdersByUserId(userId: string): Promise<ServiceResponse<OrderWithUserData[]>> {
+  return api.get<OrderWithUserData[]>(`/orders/user/${userId}`);
 }
 
 export async function updateOrderStatus(

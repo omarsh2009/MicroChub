@@ -1,5 +1,4 @@
 
-'use client';
 import type { Product, QuoteRequestWithUserData, SelectedConfiguration, ServiceResponse } from '../types';
 import { api } from '@/lib/api';
 

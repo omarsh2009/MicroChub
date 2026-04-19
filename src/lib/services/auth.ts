@@ -1,5 +1,4 @@
 
-'use client';
 import type { SignUpFormValues } from '@/app/signup/page';
 import type { ServiceResponse } from '../types';
 import type { UserData } from '@/auth/use-user';

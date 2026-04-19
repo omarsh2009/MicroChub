@@ -1,5 +1,4 @@
 
-'use client';
 import type { Coupon, ServiceResponse } from '../types';
 import { api } from '@/lib/api';
 

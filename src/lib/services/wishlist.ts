@@ -4,13 +4,13 @@ import type { WishlistItem, ServiceResponse } from '../types';
 import { api } from '@/lib/api';
 
 export async function getWishlist(): Promise<ServiceResponse<WishlistItem[]>> {
-    throw new Error('API not implemented: getWishlist');
+    return api.get<WishlistItem[]>('/wishlist');
 }
 
 export async function addToWishlist(productId: string): Promise<ServiceResponse<WishlistItem>> {
-    throw new Error('API not implemented: addToWishlist');
+    return api.post<WishlistItem>('/wishlist', { productId });
 }
 
 export async function removeFromWishlist(productId: string): Promise<ServiceResponse<void>> {
-    throw new Error('API not implemented: removeFromWishlist');
+    return api.delete<void>(`/wishlist/${productId}`);
 }

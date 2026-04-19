@@ -1,5 +1,4 @@
 
-'use client';
 import type { UserWithId, UserProfile, ServiceResponse } from '../types';
 import { api } from '@/lib/api';
 
