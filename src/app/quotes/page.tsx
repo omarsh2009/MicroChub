@@ -8,13 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader2, FileQuestion } from 'lucide-react';
-import type { QuoteRequest, Product } from '@/lib/types';
+import type { QuoteRequestWithUserData, Product } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/hooks/use-cart';
 import { getProducts } from '@/lib/services/products';
-import { updateUserQuoteStatus, getAllQuoteRequests } from '@/lib/services/quotes';
+import { updateUserQuoteStatus, getUserQuotes } from '@/lib/services/quotes';
 
 
 export default function QuotesPage() {
@@ -23,27 +23,31 @@ export default function QuotesPage() {
   const { toast } = useToast();
   const { addToCart } = useCart();
   
-  const [quotes, setQuotes] = useState<QuoteRequest[]>([]);
+  const [quotes, setQuotes] = useState<QuoteRequestWithUserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [products, setProductsData] = useState<Product[]>([]);
 
   useEffect(() => {
-    getProducts().then(setProductsData);
+    getProducts().then(({ data }) => setProductsData(data || []));
   }, []);
 
   useEffect(() => {
     if (!user) return;
     setLoading(true);
-    getAllQuoteRequests()
-      .then(allQuotes => {
-        setQuotes(allQuotes.filter(q => q.userId === user.uid));
+    getUserQuotes(user.uid)
+      .then(({ data, error }) => {
+          if (error || !data) {
+              setError(new Error(error || 'Failed to fetch quotes.'));
+          } else {
+              setQuotes(data);
+          }
       })
       .catch(err => setError(err))
       .finally(() => setLoading(false));
   }, [user]);
 
-  const handleAcceptQuote = (quote: QuoteRequest) => {
+  const handleAcceptQuote = (quote: QuoteRequestWithUserData) => {
     if (!quote.quotedPrice) return;
     const item = quote.items[0];
     const product = products.find(p => p.id === item.productId);
@@ -80,7 +84,7 @@ export default function QuotesPage() {
     ));
   };
 
-  const getStatusColor = (status: QuoteRequest['status']): "default" | "secondary" | "destructive" | "outline" => {
+  const getStatusColor = (status: QuoteRequestWithUserData['status']): "default" | "secondary" | "destructive" | "outline" => {
      switch (status) {
         case 'Pending Review':
             return 'outline';

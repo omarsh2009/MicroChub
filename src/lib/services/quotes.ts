@@ -1,5 +1,5 @@
 'use client';
-import type { Product, QuoteRequestWithUserData, SelectedConfiguration, ServiceResponse, QuoteRequest } from '../types';
+import type { Product, QuoteRequestWithUserData, SelectedConfiguration, ServiceResponse } from '../types';
 
 import {
     createQuoteRequest as mockCreateQuoteRequest,
@@ -42,6 +42,6 @@ export async function submitQuote(
   return mockSubmitQuote(quoteId, price, notes);
 }
 
-export async function getUserQuotes(userId: string): Promise<ServiceResponse<QuoteRequest[]>> {
+export async function getUserQuotes(userId: string): Promise<ServiceResponse<QuoteRequestWithUserData[]>> {
     return mockGetUserQuotes(userId);
 }

@@ -13,6 +13,22 @@ interface QuoteRequestPayload {
 }
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const QUOTES_STORAGE_KEY = 'microchub-quotes';
+
+function getStoredQuoteRequests(): QuoteRequestWithUserData[] {
+    if (typeof window === 'undefined') return mockQuoteRequests;
+    const stored = localStorage.getItem(QUOTES_STORAGE_KEY);
+    if (!stored || JSON.parse(stored).length === 0) {
+        setStoredQuoteRequests(mockQuoteRequests);
+        return mockQuoteRequests;
+    }
+    return JSON.parse(stored);
+}
+
+function setStoredQuoteRequests(quotes: QuoteRequestWithUserData[]) {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(QUOTES_STORAGE_KEY, JSON.stringify(quotes));
+}
 
 
 export async function createQuoteRequest(
@@ -40,8 +56,7 @@ export async function createQuoteRequest(
       return { data: null, error: "User not found.", status: 404 };
     }
 
-
-    const quoteData: any = {
+    const quoteData: QuoteRequestWithUserData = {
       id: newQuoteId,
       userId,
       items: [quoteItem],
@@ -61,9 +76,11 @@ export async function createQuoteRequest(
       quoteData.fileUrl = `/${file.name}`;
     }
 
-    mockQuoteRequests.unshift(quoteData);
+    const allQuotes = getStoredQuoteRequests();
+    allQuotes.unshift(quoteData);
+    setStoredQuoteRequests(allQuotes);
     
-    console.log("Mock Quote Request Submitted:", quoteData);
+    console.log("Mock Quote Request Submitted and stored in localStorage:", quoteData);
     return { data: newQuoteId, error: null, status: 201 };
   } catch(e: any) {
     return { data: null, error: e.message || 'Failed to create quote request.', status: 500 };
@@ -76,29 +93,37 @@ export async function updateUserQuoteStatus(
     status: 'Accepted' | 'Rejected'
 ): Promise<ServiceResponse<void>> {
     await sleep(300);
-    const quote = mockQuoteRequests.find(q => q.id === quoteId);
-    if(quote) {
-        quote.status = status;
-        console.log(`Mock API: Updated quote ${quoteId} status to ${status}`);
-        return { data: null, error: null, status: 200 };
+    try {
+        const quotes = getStoredQuoteRequests();
+        const quoteIndex = quotes.findIndex(q => q.id === quoteId);
+        if (quoteIndex !== -1) {
+            quotes[quoteIndex].status = status;
+            setStoredQuoteRequests(quotes);
+            console.log(`Mock API: Updated quote ${quoteId} status to ${status}`);
+            return { data: null, error: null, status: 200 };
+        }
+        return { data: null, error: 'Quote not found', status: 404 };
+    } catch (e: any) {
+        return { data: null, error: e.message || 'Failed to update quote status.', status: 500 };
     }
-    return { data: null, error: 'Quote not found', status: 404 };
 }
 
 export async function getAllQuoteRequests(): Promise<ServiceResponse<QuoteRequestWithUserData[]>> {
   await sleep(500);
   try {
-    console.log("Mock API: Fetched all quote requests");
-    return { data: JSON.parse(JSON.stringify(mockQuoteRequests)), error: null, status: 200 };
+    const quotes = getStoredQuoteRequests();
+    console.log("Mock API: Fetched all quote requests from localStorage");
+    return { data: quotes, error: null, status: 200 };
   } catch (e: any) {
     return { data: null, error: e.message || 'Failed to fetch quote requests.', status: 500 };
   }
 }
 
-export async function getUserQuotes(userId: string): Promise<ServiceResponse<QuoteRequest[]>> {
+export async function getUserQuotes(userId: string): Promise<ServiceResponse<QuoteRequestWithUserData[]>> {
     await sleep(200);
     try {
-        const userQuotes = mockQuoteRequests.filter(q => q.userId === userId);
+        const allQuotes = getStoredQuoteRequests();
+        const userQuotes = allQuotes.filter(q => q.userId === userId);
         return { data: userQuotes, error: null, status: 200 };
     } catch(e: any) {
         return { data: null, error: e.message || 'Failed to fetch user quotes.', status: 500 };
@@ -111,13 +136,19 @@ export async function submitQuote(
   notes: string,
 ): Promise<ServiceResponse<void>> {
   await sleep(300);
-   const quote = mockQuoteRequests.find(q => q.id === quoteId);
-    if(quote) {
-        quote.status = 'Quoted';
-        quote.quotedPrice = price;
-        quote.adminNotes = notes;
+  try {
+    const quotes = getStoredQuoteRequests();
+    const quoteIndex = quotes.findIndex(q => q.id === quoteId);
+    if(quoteIndex !== -1) {
+        quotes[quoteIndex].status = 'Quoted';
+        quotes[quoteIndex].quotedPrice = price;
+        quotes[quoteIndex].adminNotes = notes;
+        setStoredQuoteRequests(quotes);
         console.log(`Mock API: Submitted quote for ${quoteId} with price ${price}`);
         return { data: null, error: null, status: 200 };
     }
     return { data: null, error: 'Quote not found', status: 404 };
+  } catch (e: any) {
+      return { data: null, error: e.message || 'Failed to submit quote.', status: 500 };
+  }
 }
