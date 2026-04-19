@@ -40,15 +40,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     async function loadCart() {
       if (user) {
         setIsLoading(true);
-        try {
-          const userCart = await cartService.getCart(user.uid);
-          setCart(userCart);
-        } catch (e) {
-          console.error('Failed to load cart', e);
+        const { data, error } = await cartService.getCart(user.uid);
+        if (error) {
+          console.error('Failed to load cart', error);
           setCart([]);
-        } finally {
-          setIsLoading(false);
+        } else {
+          setCart(data || []);
         }
+        setIsLoading(false);
       } else {
         setCart([]);
         setIsLoading(false);
@@ -68,16 +67,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
         toast({ variant: 'destructive', title: 'Please log in to add items to your cart.' });
         return;
       }
-      try {
-        const newCart = await cartService.addToCart(user.uid, product, quantity, configuration, price);
-        setCart(newCart);
+      const { data, error } = await cartService.addToCart(user.uid, product, quantity, configuration, price);
+      if (error) {
+        console.error('Failed to add to cart', error);
+        toast({ variant: 'destructive', title: 'Could not add to cart.' });
+      } else {
+        setCart(data || []);
         toast({
           title: 'Added to Cart',
           description: `${quantity} x ${product.name} was added.`,
         });
-      } catch (e) {
-        console.error('Failed to add to cart', e);
-        toast({ variant: 'destructive', title: 'Could not add to cart.' });
       }
     },
     [user, toast]
@@ -85,26 +84,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const removeFromCart = useCallback(async (itemId: string) => {
     if (!user) return;
-    try {
-        const newCart = await cartService.removeFromCart(user.uid, itemId);
-        setCart(newCart);
-        toast({
-            variant: 'default',
-            title: 'Item Removed',
-            description: 'The item has been removed from your cart.',
-        });
-    } catch (e) {
-        console.error('Failed to remove from cart', e);
-        toast({ variant: 'destructive', title: 'Could not remove item.' });
+    const { data, error } = await cartService.removeFromCart(user.uid, itemId);
+    if (error) {
+      console.error('Failed to remove from cart', error);
+      toast({ variant: 'destructive', title: 'Could not remove item.' });
+    } else {
+      setCart(data || []);
+      toast({
+          variant: 'default',
+          title: 'Item Removed',
+          description: 'The item has been removed from your cart.',
+      });
     }
   }, [user, toast]);
 
   const updateItemQuantity = useCallback(
     async (itemId: string, newQuantity: number) => {
       if (!user) return;
-      try {
-        const newCart = await cartService.updateItemQuantity(user.uid, itemId, newQuantity);
-        setCart(newCart);
+      const { data, error } = await cartService.updateItemQuantity(user.uid, itemId, newQuantity);
+      if (error) {
+        console.error('Failed to update quantity', error);
+        toast({ variant: 'destructive', title: 'Could not update quantity.' });
+      } else {
+        setCart(data || []);
         if (newQuantity < 1) {
             toast({
                 variant: 'default',
@@ -112,9 +114,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 description: 'The item has been removed from your cart.',
             });
         }
-      } catch (e) {
-        console.error('Failed to update quantity', e);
-        toast({ variant: 'destructive', title: 'Could not update quantity.' });
       }
     },
     [user, toast]
@@ -122,12 +121,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   
   const clearCart = useCallback(async () => {
     if (!user) return;
-    try {
-        await cartService.clearCart(user.uid);
-        setCart([]);
-    } catch(e) {
-        console.error('Failed to clear cart', e);
-        toast({ variant: 'destructive', title: 'Could not clear cart.' });
+    const { error } = await cartService.clearCart(user.uid);
+    if (error) {
+      console.error('Failed to clear cart', error);
+      toast({ variant: 'destructive', title: 'Could not clear cart.' });
+    } else {
+      setCart([]);
     }
   }, [user, toast]);
 

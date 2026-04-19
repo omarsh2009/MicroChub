@@ -15,7 +15,7 @@ export default function OrdersPage() {
   const user = useUser();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -26,10 +26,13 @@ export default function OrdersPage() {
     
     setLoading(true);
     getUserOrders(user.uid)
-      .then(userOrders => {
-        setOrders(userOrders);
+      .then(({ data, error }) => {
+        if(error || !data) {
+            setError(error || "Failed to fetch orders.");
+        } else {
+            setOrders(data);
+        }
       })
-      .catch(err => setError(err))
       .finally(() => setLoading(false));
   }, [user]);
 
@@ -73,7 +76,7 @@ export default function OrdersPage() {
   }
   
   if (error) {
-    return <div className="container text-center py-20 text-destructive">Error: {error.message}</div>;
+    return <div className="container text-center py-20 text-destructive">Error: {error}</div>;
   }
 
   return (

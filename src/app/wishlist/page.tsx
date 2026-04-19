@@ -7,8 +7,11 @@ import { getCategories } from '@/lib/services/categories';
 import { WishlistClientPage } from './client';
 
 export default async function WishlistPage() {
-    const products = await getProducts();
-    const categories = await getCategories();
+    const { data: productsData } = await getProducts();
+    const { data: categoriesData } = await getCategories();
+
+    const products = productsData || [];
+    const categories = categoriesData || [];
 
     if (products.length === 0) {
         return (

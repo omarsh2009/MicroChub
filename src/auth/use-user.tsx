@@ -10,15 +10,15 @@ export interface MockUserData {
 
 const mockUser: MockUserData = {
     uid: 'mock-user-123',
-    email: 'superadmin@example.com',
-    displayName: 'Super Admin',
+    email: 'admin@example.com',
+    displayName: 'Admin User',
     profile: {
         id: 'mock-user-123',
-        name: 'Super Admin',
-        email: 'superadmin@example.com',
+        name: 'Admin User',
+        email: 'admin@example.com',
         phoneNumber: '01234567890',
         wishlist: [],
-        role: 'super_admin',
+        role: 'admin', // Changed from 'super_admin' to 'admin'
     },
 };
 

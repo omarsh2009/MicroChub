@@ -67,15 +67,12 @@ export default function CheckoutPage() {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    getProducts().then(setProducts);
-  }, []);
-  
-  useEffect(() => {
-    getPaymentMethods().then(methods => {
-      setPaymentMethods(methods.filter(m => m.enabled));
+    getProducts().then(({ data }) => setProducts(data || []));
+    getPaymentMethods().then(({ data }) => {
+      setPaymentMethods((data || []).filter(m => m.enabled));
     });
   }, []);
-
+  
   const hasRestrictedItem = useMemo(() => {
     return cart.some(item => {
       const product = products.find(p => p.id === item.productId);
@@ -146,14 +143,14 @@ export default function CheckoutPage() {
     if (!couponCode) return;
     setIsApplyingCoupon(true);
     setAppliedCoupon(null); // Clear previous coupon
-    const result = await validateCoupon(couponCode);
+    const { data, error } = await validateCoupon(couponCode);
     
-    if ('error' in result) {
-        toast({ variant: 'destructive', title: 'Coupon Invalid', description: result.error });
+    if (error || !data) {
+        toast({ variant: 'destructive', title: 'Coupon Invalid', description: error });
         setAppliedCoupon(null);
     } else {
-        setAppliedCoupon(result);
-        toast({ title: 'Coupon Applied!', description: `Discount of ${result.type === 'fixed' ? `EGP ${result.value}` : `${result.value}%`} applied.`});
+        setAppliedCoupon(data);
+        toast({ title: 'Coupon Applied!', description: `Discount of ${data.type === 'fixed' ? `EGP ${data.value}` : `${data.value}%`} applied.`});
     }
     setIsApplyingCoupon(false);
   };
@@ -180,36 +177,35 @@ export default function CheckoutPage() {
 
     setIsLoading(true);
 
-    try {
-        await createOrder({
-            userId: user.uid,
-            cart,
-            totalPrice: finalPrice,
-            notes: values.notes,
-            shippingAddress: {
-              fullName: values.fullName,
-              phoneNumber: values.phoneNumber,
-              address: values.address,
-              city: values.city,
-            },
-            paymentMethod: selectedPaymentMethod,
-            transactionId: values.transactionId,
-            requiresLegalApproval: hasRestrictedItem,
-            legalAgreementFile: legalAgreementFile,
-            couponCode: appliedCoupon?.code,
-            discountAmount: discountAmount,
-        });
+    const { data, error } = await createOrder({
+        userId: user.uid,
+        cart,
+        totalPrice: finalPrice,
+        notes: values.notes,
+        shippingAddress: {
+          fullName: values.fullName,
+          phoneNumber: values.phoneNumber,
+          address: values.address,
+          city: values.city,
+        },
+        paymentMethod: selectedPaymentMethod,
+        transactionId: values.transactionId,
+        requiresLegalApproval: hasRestrictedItem,
+        legalAgreementFile: legalAgreementFile,
+        couponCode: appliedCoupon?.code,
+        discountAmount: discountAmount,
+    });
 
+    if (error || !data) {
+        console.error('Order submission error:', error);
+        toast({ variant: 'destructive', title: 'Order Failed', description: error || 'Could not place your order.' });
+    } else {
         toast({ title: 'Order Placed!', description: 'Your order has been received and is pending verification.' });
         clearCart();
         router.push('/orders');
-
-    } catch (error: any) {
-        console.error('Order submission error:', error);
-        toast({ variant: 'destructive', title: 'Order Failed', description: error.message || 'Could not place your order.' });
-    } finally {
-        setIsLoading(false);
     }
+
+    setIsLoading(false);
   }
   
   if (!user || cart.length === 0) {

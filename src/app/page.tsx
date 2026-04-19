@@ -19,14 +19,17 @@ import { Badge } from "@/components/ui/badge";
 
 const categoryIcons: Record<string, React.ReactNode> = {
   mochi: <Fingerprint className="h-8 w-8" />,
-  esp: <Cpu className="h-8 w-8" />,
-  arduino: <CircuitBoard className="h-8 w-8" />,
-  displays: <HardDrive className="h-8 w-8" />,
+  "esp-devices": <Cpu className="h-8 w-8" />,
+  "arduino-projects": <CircuitBoard className="h-8 w-8" />,
+  "smart-displays": <HardDrive className="h-8 w-8" />,
 };
 
 export default async function Home() {
-  const featuredProducts = await getFeaturedProducts();
-  const categories = await getCategories();
+  const { data: featuredProductsData } = await getFeaturedProducts();
+  const { data: categoriesData } = await getCategories();
+
+  const featuredProducts = featuredProductsData || [];
+  const categories = categoriesData || [];
 
   return (
     <div className="flex flex-col min-h-[100dvh] bg-background text-foreground">
@@ -68,7 +71,7 @@ export default async function Home() {
                 <Card className="group hover:border-primary transition-colors duration-300 transform hover:-translate-y-1">
                   <CardHeader className="flex flex-col items-center justify-center text-center p-6">
                     <div className="p-4 bg-primary/10 rounded-full mb-4">
-                      {categoryIcons[category.id] || (
+                      {categoryIcons[category.slug] || (
                         <Wrench className="h-8 w-8" />
                       )}
                     </div>

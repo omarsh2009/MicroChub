@@ -4,8 +4,11 @@ import { ProductCard } from "@/components/product-card";
 import { Badge } from "@/components/ui/badge";
 
 export default async function DiyKitsPage() {
-  const allProducts = await getProducts();
-  const categories = await getCategories();
+  const { data: allProductsData } = await getProducts();
+  const { data: categoriesData } = await getCategories();
+
+  const allProducts = allProductsData || [];
+  const categories = categoriesData || [];
 
   console.log("ALL PRODUCTS:", allProducts);
 

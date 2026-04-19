@@ -8,8 +8,11 @@ export default async function ProductsPage({
 }: {
   searchParams?: { category?: string };
 }) {
-  const products = await getProducts();
-  const categories = await getCategories();
+  const { data: productsData } = await getProducts();
+  const { data: categoriesData } = await getCategories();
+
+  const products = productsData || [];
+  const categories = categoriesData || [];
 
   const selectedCategorySlug = searchParams?.category;
   const selectedCategory = categories.find(

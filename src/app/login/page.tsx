@@ -45,23 +45,23 @@ export default function LoginPage() {
 
   async function onSubmit(values: LoginFormValues) {
     setIsLoading(true);
-    try {
-      await signInWithEmail(values);
+    const result = await signInWithEmail(values);
+    
+    if (result.error) {
+       toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: result.error,
+      });
+    } else {
       toast({
         title: "Logged In Successfully!",
         description: "Welcome back. (This is a mock login)",
       });
       router.push("/");
-    } catch (error: any) {
-      console.error(error);
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: "Invalid email or password.",
-      });
-    } finally {
-      setIsLoading(false);
     }
+
+    setIsLoading(false);
   }
 
   return (

@@ -28,12 +28,20 @@ export function CategoriesClientPage() {
   const [open, setOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | undefined>(undefined);
 
-  useEffect(() => {
+  const fetchCategories = async () => {
     setLoading(true);
-    getCategories()
-      .then(setCategories)
-      .catch(err => toast({ variant: 'destructive', title: 'Error fetching categories' }))
-      .finally(() => setLoading(false));
+    const { data, error } = await getCategories();
+    if (error || !data) {
+        toast({ variant: 'destructive', title: 'Error fetching categories', description: error });
+        setCategories([]);
+    } else {
+        setCategories(data);
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    fetchCategories();
   }, [toast]);
 
   const handleAdd = () => {
@@ -47,30 +55,34 @@ export function CategoriesClientPage() {
   };
   
   const handleDelete = async (categoryId: string) => {
-    try {
-        await deleteCategory(categoryId);
+    const { error } = await deleteCategory(categoryId);
+    if (error) {
+        toast({ variant: 'destructive', title: 'Failed to delete category' });
+    } else {
         setCategories(prev => prev.filter(c => c.id !== categoryId));
         toast({ title: 'Category Deleted' });
-    } catch (error) {
-        toast({ variant: 'destructive', title: 'Failed to delete category' });
     }
   }
 
   const onFormSubmit = async (values: Omit<Category, 'id' | 'slug'>, id?: string) => {
-    try {
-      if (id) {
-        await updateCategory(id, values);
-        const slug = values.name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-        setCategories(prev => prev.map(m => m.id === id ? { ...m, ...values, id, slug } : m));
-        toast({ title: 'Category Updated' });
+    if (id) {
+      const { error } = await updateCategory(id, values);
+      if (error) {
+        toast({ variant: 'destructive', title: 'Update failed', description: error });
       } else {
-        const newSlug = await addCategory(values);
-        setCategories(prev => [...prev, { id: newSlug, slug: newSlug, ...values }]);
-        toast({ title: 'Category Added' });
+        await fetchCategories(); // Refetch to get updated data
+        toast({ title: 'Category Updated' });
+        setOpen(false);
       }
-      setOpen(false);
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Save failed' });
+    } else {
+      const { data: newSlug, error } = await addCategory(values);
+      if (error || !newSlug) {
+        toast({ variant: 'destructive', title: 'Save failed', description: error });
+      } else {
+        await fetchCategories(); // Refetch to get new data
+        toast({ title: 'Category Added' });
+        setOpen(false);
+      }
     }
   };
 

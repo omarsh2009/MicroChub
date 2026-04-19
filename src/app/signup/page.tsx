@@ -48,23 +48,23 @@ export default function SignupPage() {
 
   async function onSubmit(values: SignUpFormValues) {
     setIsLoading(true);
-    try {
-      await signUpWithEmail(values);
+    const result = await signUpWithEmail(values);
+    
+    if (result.error) {
+      toast({
+        variant: "destructive",
+        title: "Signup Failed",
+        description: result.error,
+      });
+    } else {
       toast({
         title: "Account Created!",
         description: "Welcome to the MicroChub community. (This is a mock sign-up)",
       });
       router.push("/");
-    } catch (error: any) {
-      console.error(error);
-      toast({
-        variant: "destructive",
-        title: "Signup Failed",
-        description: error.message || "An unknown error occurred.",
-      });
-    } finally {
-      setIsLoading(false);
     }
+    
+    setIsLoading(false);
   }
 
   return (

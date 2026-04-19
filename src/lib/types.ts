@@ -1,3 +1,9 @@
+export type ServiceResponse<T> = {
+  data: T | null;
+  error: string | null;
+  status: number;
+};
+
 export type Category = {
   id: string;
   name: string;
@@ -31,7 +37,7 @@ export type Product = {
   isRestricted?: boolean;
   customizationGroups?: CustomizationGroup[];
   discountValue?: number;
-  discountType?: 'fixed' | 'percentage';
+  discountType?: 'fixed' | 'percentage' | 'none';
   productType?: 'ready' | 'build_to_order';
 };
 
@@ -158,4 +164,11 @@ export type SocialLink = {
     platform: string;
     url: string;
     enabled: boolean;
+}
+
+export interface WishlistItem {
+    id: string;
+    productId: string;
+    userId: string;
+    addedAt: number;
 }

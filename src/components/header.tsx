@@ -52,7 +52,7 @@ export function Header() {
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
-    getCategories().then(setCategories);
+    getCategories().then(({ data }) => setCategories(data || []));
   }, []);
 
   const handleLogout = async () => {

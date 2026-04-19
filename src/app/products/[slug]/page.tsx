@@ -4,13 +4,13 @@ import { notFound } from "next/navigation";
 import { ProductClientPage } from "./client";
 
 export default async function ProductPage({ params }: { params: { slug: string } }) {
-  const product = await getProductBySlug(params.slug);
-  const allProducts = await getProducts();
-  const categories = await getCategories();
+  const { data: product } = await getProductBySlug(params.slug);
+  const { data: allProducts } = await getProducts();
+  const { data: categories } = await getCategories();
 
   if (!product) {
     notFound();
   }
 
-  return <ProductClientPage product={product} allProducts={allProducts} categories={categories} />;
+  return <ProductClientPage product={product} allProducts={allProducts || []} categories={categories || []} />;
 }

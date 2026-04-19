@@ -10,7 +10,7 @@ export function Footer() {
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
 
   useEffect(() => {
-    getSocialLinks(true).then(setSocialLinks);
+    getSocialLinks(true).then(({ data }) => setSocialLinks(data || []));
   }, []);
 
   return (
