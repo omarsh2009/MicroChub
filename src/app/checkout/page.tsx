@@ -28,7 +28,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, UploadCloud, Copy, Ticket } from 'lucide-react';
 import { createOrder } from '@/lib/services/orders';
 import { getProducts } from '@/lib/services/products';
-import { getPaymentMethods } from '@/lib/services/admin';
+import { getPaymentMethods } from '@/lib/services/payment-methods';
 import type { PaymentMethod, Coupon, Product } from '@/lib/types';
 import { validateCoupon } from '@/lib/services/coupons';
 

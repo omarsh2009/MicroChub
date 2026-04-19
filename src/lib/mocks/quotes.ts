@@ -1,5 +1,5 @@
 'use client';
-import type { Product, SelectedConfiguration } from '../types';
+import type { Product, QuoteRequestWithUserData, SelectedConfiguration } from '../types';
 import { mockQuoteRequests, mockUsers } from './data';
 
 interface QuoteRequestPayload {
@@ -78,4 +78,25 @@ export async function updateUserQuoteStatus(
         quote.status = status;
     }
     console.log(`Mock API: Updated quote ${quoteId} status to ${status}`);
+}
+
+export async function getAllQuoteRequests(): Promise<QuoteRequestWithUserData[]> {
+  await sleep(500);
+  console.log("Mock API: Fetched all quote requests");
+  return JSON.parse(JSON.stringify(mockQuoteRequests));
+}
+
+export async function submitQuote(
+  quoteId: string,
+  price: number,
+  notes: string,
+): Promise<void> {
+  await sleep(300);
+   const quote = mockQuoteRequests.find(q => q.id === quoteId);
+    if(quote) {
+        quote.status = 'Quoted';
+        quote.quotedPrice = price;
+        quote.adminNotes = notes;
+    }
+  console.log(`Mock API: Submitted quote for ${quoteId} with price ${price}`);
 }

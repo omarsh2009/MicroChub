@@ -1,6 +1,6 @@
 'use client';
 import { getInitialMockOrders } from './data';
-import type { CartItem, OrderWithUserData, PaymentMethod, ShippingAddress } from '../types';
+import type { CartItem, Order, OrderWithUserData, PaymentMethod, ShippingAddress } from '../types';
 import { mockUsers } from './data';
 
 interface OrderPayload {
@@ -112,4 +112,46 @@ export async function getUserOrders(userId: string): Promise<OrderWithUserData[]
   await sleep(200);
   const orders = getStoredOrders();
   return orders.filter(o => o.userId === userId);
+}
+
+
+export async function getAllOrders(): Promise<OrderWithUserData[]> {
+  await sleep(500);
+  console.log("Mock API: Fetched all orders from localStorage");
+  return getStoredOrders();
+}
+
+export async function getOrdersByUserId(userId: string): Promise<OrderWithUserData[]> {
+  await sleep(500);
+  console.log(`Mock API: Fetched orders for user ${userId} from localStorage`);
+  const allOrders = getStoredOrders();
+  const userOrders = allOrders.filter(o => o.userId === userId);
+  return JSON.parse(JSON.stringify(userOrders));
+}
+
+export async function updateOrderStatus(
+    orderId: string,
+    status: Order['status']
+): Promise<void> {
+    await sleep(300);
+    const orders = getStoredOrders();
+    const orderIndex = orders.findIndex(o => o.id === orderId);
+    if(orderIndex !== -1) {
+        orders[orderIndex].status = status;
+        setStoredOrders(orders);
+    }
+    console.log(`Mock API: Updated order ${orderId} status to ${status} in localStorage`);
+}
+
+export async function approveLegalAgreement(
+    orderId: string
+): Promise<void> {
+    await sleep(300);
+    const orders = getStoredOrders();
+    const orderIndex = orders.findIndex(o => o.id === orderId);
+    if(orderIndex !== -1) {
+        orders[orderIndex].legalAgreementApproved = true;
+        setStoredOrders(orders);
+    }
+    console.log(`Mock API: Approved legal agreement for order ${orderId} in localStorage`);
 }

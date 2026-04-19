@@ -14,8 +14,8 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/hooks/use-cart';
 import { getProducts } from '@/lib/services/products';
-import { updateUserQuoteStatus } from '@/lib/services/quotes';
-import { getAllQuoteRequests } from '@/lib/services/admin';
+import { updateUserQuoteStatus, getAllQuoteRequests } from '@/lib/services/quotes';
+
 
 export default function QuotesPage() {
   const user = useUser();

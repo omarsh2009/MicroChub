@@ -15,7 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { submitQuote } from '@/lib/services/admin';
+import { submitQuote } from '@/lib/services/quotes';
 import type { QuoteRequestWithUserData } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ExternalLink } from 'lucide-react';
