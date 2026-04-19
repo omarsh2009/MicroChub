@@ -1,13 +1,13 @@
 
 export type ApiError = {
   message: string;
-  code?: string; // Optional error code from the backend
-}
+  code?: string;
+};
 
 export type ServiceResponse<T> = {
+  success: boolean;
   data: T | null;
   error: ApiError | null;
-  status: number;
 };
 
 export type Category = {

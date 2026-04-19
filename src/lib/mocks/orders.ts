@@ -1,9 +1,8 @@
 
 'use client';
-import type { CartItem, Order, OrderWithUserData, PaymentMethod, ShippingAddress, ServiceResponse } from '../types';
+import type { Order, OrderWithUserData, PaymentMethod, CartItem, ShippingAddress, ServiceResponse } from '../types';
 
 interface OrderPayload {
-  userId: string;
   cart: CartItem[];
   totalPrice: number;
   notes?: string;
@@ -18,31 +17,31 @@ interface OrderPayload {
 
 export async function createOrder(
   payload: OrderPayload
-): Promise<ServiceResponse<string>> {
-  throw new Error('API not implemented: mockCreateOrder');
+): Promise<ServiceResponse<{orderId: string}>> {
+  throw new Error('API not implemented: createOrder');
 }
 
-export async function getUserOrders(userId: string): Promise<ServiceResponse<OrderWithUserData[]>> {
-  throw new Error('API not implemented: mockGetUserOrders');
+export async function getUserOrders(): Promise<ServiceResponse<OrderWithUserData[]>> {
+  throw new Error('API not implemented: getUserOrders');
 }
 
 export async function getAllOrders(): Promise<ServiceResponse<OrderWithUserData[]>> {
-  throw new Error('API not implemented: mockGetAllOrders');
+  throw new Error('API not implemented: getAllOrders');
 }
 
 export async function getOrdersByUserId(userId: string): Promise<ServiceResponse<OrderWithUserData[]>> {
-  throw new Error('API not implemented: mockGetOrdersByUserId');
+  throw new Error('API not implemented: getOrdersByUserId');
 }
 
 export async function updateOrderStatus(
     orderId: string,
     status: Order['status']
 ): Promise<ServiceResponse<void>> {
-    throw new Error('API not implemented: mockUpdateOrderStatus');
+    throw new Error('API not implemented: updateOrderStatus');
 }
 
 export async function approveLegalAgreement(
     orderId: string
 ): Promise<ServiceResponse<void>> {
-    throw new Error('API not implemented: mockApproveLegalAgreement');
+    throw new Error('API not implemented: approveLegalAgreement');
 }

@@ -22,6 +22,3 @@ export async function deleteCoupon(id: string): Promise<ServiceResponse<void>> {
 export async function validateCoupon(code: string): Promise<ServiceResponse<Coupon>> {
     return api.post<Coupon>('/coupons/apply', { code });
 }
-
-// Coupon usage would be incremented on the backend when an order is successfully processed.
-// No direct service call is needed from the client for this.

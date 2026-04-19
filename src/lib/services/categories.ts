@@ -1,4 +1,5 @@
 
+'use client';
 import type { Category, ServiceResponse } from '../types';
 import { api } from '@/lib/api';
 

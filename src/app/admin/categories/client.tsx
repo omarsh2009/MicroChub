@@ -31,12 +31,12 @@ export function CategoriesClientPage() {
 
   const fetchCategories = async () => {
     setLoading(true);
-    const { data, error } = await getCategories();
-    if (error || !data) {
-        toast({ variant: 'destructive', title: 'Error fetching categories', description: error?.message });
+    const response = await getCategories();
+    if (!response.success) {
+        toast({ variant: 'destructive', title: 'Error fetching categories', description: response.error?.message });
         setCategories([]);
     } else {
-        setCategories(data);
+        setCategories(response.data || []);
     }
     setLoading(false);
   }
@@ -56,9 +56,9 @@ export function CategoriesClientPage() {
   };
   
   const handleDelete = async (categoryId: string) => {
-    const { error } = await deleteCategory(categoryId);
-    if (error) {
-        toast({ variant: 'destructive', title: 'Failed to delete category', description: error.message });
+    const response = await deleteCategory(categoryId);
+    if (!response.success) {
+        toast({ variant: 'destructive', title: 'Failed to delete category', description: response.error?.message });
     } else {
         setCategories(prev => prev.filter(c => c.id !== categoryId));
         toast({ title: 'Category Deleted' });
@@ -67,18 +67,18 @@ export function CategoriesClientPage() {
 
   const onFormSubmit = async (values: Omit<Category, 'id' | 'slug'>, id?: string) => {
     if (id) {
-      const { error } = await updateCategory(id, values);
-      if (error) {
-        toast({ variant: 'destructive', title: 'Update failed', description: error.message });
+      const response = await updateCategory(id, values);
+      if (!response.success) {
+        toast({ variant: 'destructive', title: 'Update failed', description: response.error?.message });
       } else {
         await fetchCategories(); // Refetch to get updated data
         toast({ title: 'Category Updated' });
         setOpen(false);
       }
     } else {
-      const { data: newCategory, error } = await addCategory(values);
-      if (error || !newCategory) {
-        toast({ variant: 'destructive', title: 'Save failed', description: error?.message });
+      const response = await addCategory(values);
+      if (!response.success) {
+        toast({ variant: 'destructive', title: 'Save failed', description: response.error?.message });
       } else {
         await fetchCategories(); // Refetch to get new data
         toast({ title: 'Category Added' });

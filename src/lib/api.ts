@@ -12,19 +12,15 @@ async function apiFetch<T>(
     ...options.headers,
   };
   
-  // The backend will use HttpOnly cookies for session management.
-  // The browser will automatically send the cookie on each request.
-  // We set `credentials: 'include'` to ensure this happens.
-
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
-      credentials: 'include', // Important for cookie-based auth
+      credentials: 'include',
       headers,
     });
 
     if (!response.ok) {
-      let error: ApiError = { message: `HTTP error! status: ${response.status}` };
+      let error: ApiError = { message: `Request failed with status: ${response.status}` };
       try {
         const errorData = await response.json();
         error = {
@@ -32,21 +28,20 @@ async function apiFetch<T>(
             code: errorData.code,
         };
       } catch (e) {
-        // Not a JSON response, stick with the generic HTTP error
+        // Not a JSON response or failed to parse
       }
-      return { data: null, error, status: response.status };
+      return { success: false, data: null, error };
     }
 
-    // Handle responses with no content (e.g., DELETE, 204 No Content)
     if (response.status === 204) {
-      return { data: null as T, error: null, status: 204 };
+      return { success: true, data: null, error: null };
     }
 
     const data: T = await response.json();
-    return { data, error: null, status: response.status };
+    return { success: true, data, error: null };
   } catch (error: any) {
     console.error('API request failed:', error);
-    return { data: null, error: { message: error.message || 'Network request failed' }, status: 500 };
+    return { success: false, data: null, error: { message: error.message || 'A network error occurred.' } };
   }
 }
 

@@ -17,22 +17,10 @@ interface OrderPayload {
 }
 
 export async function createOrder(payload: OrderPayload): Promise<ServiceResponse<{orderId: string}>> {
-  // File uploads require multipart/form-data, which our basic api wrapper doesn't handle.
-  // This would need a more advanced implementation in a real app.
+  // This is a placeholder. The actual implementation would handle multipart/form-data
+  // for file uploads, which requires a more complex setup than the basic api wrapper provides.
   if (payload.legalAgreementFile) {
-    const formData = new FormData();
-    Object.entries(payload).forEach(([key, value]) => {
-      if (key === 'legalAgreementFile') {
-        formData.append(key, value as File);
-      } else if (typeof value === 'object' && value !== null) {
-        formData.append(key, JSON.stringify(value));
-      } else {
-        formData.append(key, String(value));
-      }
-    });
-    // This fetch call is made directly because it uses FormData
-    // return api.post('/orders', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-    console.warn("File upload in createOrder is not implemented in the base api wrapper.");
+    console.warn("File upload in createOrder is not fully implemented in the frontend service layer and requires a multipart/form-data fetch call.");
   }
   
   return api.post<{orderId: string}>('/orders', payload);
