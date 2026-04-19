@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import {
   Table,
   TableHeader,
@@ -16,30 +17,35 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { Product, Category } from '@/lib/types';
-import Image from 'next/image';
-import { useToast } from '@/hooks/use-toast';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export function ProductTable({
   products,
   categories,
   onEdit,
+  onDelete,
+  isDeleting,
 }: {
   products: Product[];
   categories: Category[];
   onEdit: (product: Product) => void;
+  onDelete: (productId: string) => void;
+  isDeleting: string | null;
 }) {
-  const { toast } = useToast();
   const categoryMap = new Map(categories.map(c => [c.id, c.name]));
-
-  const handleDelete = (product: Product) => {
-    toast({
-      title: 'Product Deleted',
-      description: `${product.name} has been deleted. (This is a demo)`,
-    });
-  };
 
   return (
     <Table>
@@ -82,27 +88,51 @@ export function ProductTable({
                 EGP {product.price.toLocaleString()}
               </TableCell>
               <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      aria-haspopup="true"
-                      size="icon"
-                      variant="ghost"
-                    >
-                      <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Toggle menu</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => onEdit(product)}>
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDelete(product)}>
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <AlertDialog>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        aria-haspopup="true"
+                        size="icon"
+                        variant="ghost"
+                        disabled={isDeleting === product.id}
+                      >
+                        {isDeleting === product.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreHorizontal className="h-4 w-4" />}
+                        <span className="sr-only">Toggle menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => onEdit(product)}>
+                        Edit
+                      </DropdownMenuItem>
+                       <DropdownMenuSeparator />
+                        <AlertDialogTrigger asChild>
+                          <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
+                            Delete
+                          </DropdownMenuItem>
+                        </AlertDialogTrigger>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                   <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete the product
+                                <span className="font-bold"> {product.name}</span>.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                                className="bg-destructive hover:bg-destructive/90"
+                                onClick={() => onDelete(product.id)}
+                            >
+                                Yes, delete product
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
               </TableCell>
             </TableRow>
           );

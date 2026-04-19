@@ -7,17 +7,17 @@ export const mockCategories: Category[] = [
     slug: 'mochi-co'
   },
   {
-    id: "esp",
+    id: "esp-devices",
     name: "ESP Devices",
     slug: 'esp-devices'
   },
   {
-    id: "arduino",
+    id: "arduino-projects",
     name: "Arduino Projects",
     slug: 'arduino-projects'
   },
   {
-    id: "displays",
+    id: "smart-displays",
     name: "Smart Displays",
     slug: 'smart-displays'
   },
@@ -28,7 +28,7 @@ export const mockCategories: Category[] = [
   },
 ];
 
-export const products: Product[] = [
+export const mockProducts: Product[] = [
   {
     id: "prod-001",
     slug: "mochi-v4",
@@ -36,7 +36,7 @@ export const products: Product[] = [
     description:
       "A versatile, customizable hardware companion for developers and makers. Features advanced connectivity and a modular design.",
     price: 1200,
-    categoryIds: ["mochi", "esp"],
+    categoryIds: ["mochi", "esp-devices"],
     image: "https://picsum.photos/seed/mochi4main/600/400",
     productType: 'build_to_order',
     specs: {
@@ -81,7 +81,7 @@ export const products: Product[] = [
     description:
       "An advanced toolkit for Wi-Fi network testing and security research. Comes pre-flashed with Bruce OS for maximum functionality.",
     price: 950,
-    categoryIds: ["esp"],
+    categoryIds: ["esp-devices"],
     image: "https://picsum.photos/seed/jammerpro/600/400",
     productType: 'ready',
     specs: {
@@ -103,7 +103,7 @@ export const products: Product[] = [
     description:
       "A complete DIY kit to build your own desktop CNC machine. Perfect for milling soft materials like wood, plastic, and PCBs.",
     price: 3500,
-    categoryIds: ["arduino", "diy-kits"],
+    categoryIds: ["arduino-projects", "diy-kits"],
     image: "https://picsum.photos/seed/cnckit/600/400",
     productType: 'build_to_order',
     specs: {
@@ -122,7 +122,7 @@ export const products: Product[] = [
     description:
       "A sleek, smart display that shows what's currently playing on your Spotify. A perfect desk companion for music lovers.",
     price: 750,
-    categoryIds: ["displays", "esp"],
+    categoryIds: ["smart-displays", "esp-devices"],
     image: "https://picsum.photos/seed/spotifydisplay/600/400",
     productType: 'ready',
     specs: {
@@ -160,7 +160,7 @@ export const products: Product[] = [
     description:
       "Build your own customizable stream deck. Assign macros, hotkeys, and custom actions to 12 mechanical keys.",
     price: 800,
-    categoryIds: ["arduino", "diy-kits"],
+    categoryIds: ["arduino-projects", "diy-kits"],
     image: "https://picsum.photos/seed/streamdeck/600/400",
     productType: 'build_to_order',
     specs: {
@@ -204,10 +204,8 @@ export const products: Product[] = [
   },
 ];
 
-export const featuredProducts = products.filter((p) => p.featured);
-
 export const mockUsers: UserWithId[] = [
-    { id: 'mock-user-123', name: 'Test User', email: 'test@example.com', phoneNumber: '01234567890', role: 'super_admin', wishlist: [] },
+    { id: 'mock-user-123', name: 'Admin User', email: 'admin@example.com', phoneNumber: '01234567890', role: 'super_admin', wishlist: [] },
     { id: 'user-002', name: 'Alice', email: 'alice@example.com', phoneNumber: '0111222333', role: 'admin', wishlist: [] },
     { id: 'user-003', name: 'Bob', email: 'bob@example.com', phoneNumber: '0444555666', role: 'user', wishlist: [] },
 ];

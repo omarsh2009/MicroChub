@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray, useFormContext } from 'react-hook-form';
 import { z } from 'zod';
@@ -27,6 +28,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { addProduct, updateProduct } from '@/lib/services/products';
 
 const customizationOptionSchema = z.object({
   name: z.string().min(1, 'Option name is required.'),
@@ -65,6 +67,8 @@ export function ProductForm({
   onFinished: () => void;
 }) {
   const { toast } = useToast();
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(product?.image || null);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -103,13 +107,43 @@ export function ProductForm({
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Mock Product Submit:", values);
+    setIsSubmitting(true);
     
-    toast({
-      title: `Product ${product ? 'Updated' : 'Created'}`,
-      description: `${values.name} has been saved. (This is a demo)`,
-    });
-    onFinished();
+    const specsObject = values.technicalSpecs.split('\n').reduce((acc, line) => {
+      const [key, ...valueParts] = line.split(':');
+      if (key && valueParts.length > 0) {
+        acc[key.trim()] = valueParts.join(':').trim();
+      }
+      return acc;
+    }, {} as Record<string, string>);
+
+    const productData = {
+        ...values,
+        specs: specsObject,
+        image: values.image || '',
+        useCases: product?.useCases || [], // Preserve existing use cases
+        featured: product?.featured || false,
+    };
+    
+    const { error } = product
+      ? await updateProduct(product.id, productData)
+      : await addProduct(productData);
+
+    if (error) {
+        toast({
+            variant: 'destructive',
+            title: `Failed to ${product ? 'update' : 'create'} product`,
+            description: error,
+        });
+    } else {
+        toast({
+            title: `Product ${product ? 'Updated' : 'Created'}`,
+            description: `${values.name} has been saved successfully.`,
+        });
+        onFinished();
+    }
+    
+    setIsSubmitting(false);
   }
 
   return (
@@ -399,9 +433,13 @@ export function ProductForm({
             </CardContent>
         </Card>
         
-        <Button type="submit" className="mt-4">
-          {product ? 'Save Changes' : 'Create Product'}
-        </Button>
+        <div className="flex justify-end gap-2 pt-4">
+             <Button type="button" variant="outline" onClick={onFinished}>Cancel</Button>
+            <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {product ? 'Save Changes' : 'Create Product'}
+            </Button>
+        </div>
       </form>
     </Form>
   );

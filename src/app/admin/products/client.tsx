@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
-import { PlusCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { PlusCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Product, Category } from '@/lib/types';
 import {
@@ -19,10 +20,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { deleteProduct } from '@/lib/services/products';
+import { useToast } from '@/hooks/use-toast';
 
 export function ProductClientPage({ products, categories }: { products: Product[], categories: Category[] }) {
   const [open, setOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | undefined>(undefined);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const router = useRouter();
+  const { toast } = useToast();
 
   const handleAdd = () => {
     setSelectedProduct(undefined);
@@ -33,6 +39,30 @@ export function ProductClientPage({ products, categories }: { products: Product[
     setSelectedProduct(product);
     setOpen(true);
   };
+
+  const handleDelete = async (productId: string) => {
+    setIsDeleting(productId);
+    const { error } = await deleteProduct(productId);
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error Deleting Product',
+        description: error,
+      });
+    } else {
+      toast({
+        title: 'Product Deleted',
+        description: 'The product has been successfully removed.',
+      });
+      router.refresh();
+    }
+    setIsDeleting(null);
+  }
+  
+  const handleFormFinished = () => {
+      setOpen(false);
+      router.refresh();
+  }
 
   return (
     <>
@@ -52,7 +82,13 @@ export function ProductClientPage({ products, categories }: { products: Product[
           <CardDescription>View, edit, and add new products to your store.</CardDescription>
         </CardHeader>
         <CardContent>
-            <ProductTable products={products} categories={categories} onEdit={handleEdit} />
+            <ProductTable 
+              products={products} 
+              categories={categories} 
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              isDeleting={isDeleting}
+            />
         </CardContent>
          <CardFooter>
           <div className="text-xs text-muted-foreground">
@@ -66,7 +102,11 @@ export function ProductClientPage({ products, categories }: { products: Product[
           <DialogHeader>
             <DialogTitle>{selectedProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
           </DialogHeader>
-          <ProductForm product={selectedProduct} categories={categories} onFinished={() => setOpen(false)} />
+          <ProductForm 
+            product={selectedProduct} 
+            categories={categories} 
+            onFinished={handleFormFinished} 
+          />
         </DialogContent>
       </Dialog>
     </>
