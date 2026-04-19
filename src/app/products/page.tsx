@@ -51,6 +51,7 @@ export default async function ProductsPage({
                 <ProductCard
                   key={product.id}
                   product={product}
+                  categories={categories}
                 />
               ))}
             </div>

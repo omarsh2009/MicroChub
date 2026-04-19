@@ -1,9 +1,11 @@
 import { getProducts } from "@/lib/services/products";
+import { getCategories } from "@/lib/services/categories";
 import { ProductCard } from "@/components/product-card";
 import { Badge } from "@/components/ui/badge";
 
 export default async function DiyKitsPage() {
   const allProducts = await getProducts();
+  const categories = await getCategories();
 
   console.log("ALL PRODUCTS:", allProducts);
 
@@ -38,7 +40,8 @@ export default async function DiyKitsPage() {
               {diyKits.map((product) => (
                 <ProductCard 
                   key={product.id} 
-                  product={product} 
+                  product={product}
+                  categories={categories}
                 />
               ))}
             </div>

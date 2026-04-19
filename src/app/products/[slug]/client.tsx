@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { type Product } from "@/lib/types";
+import { type Product, type Category } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -30,7 +30,7 @@ import { cn } from "@/lib/utils";
 import { ProductCard } from "@/components/product-card";
 import { Separator } from "@/components/ui/separator";
 
-export function ProductClientPage({ product, allProducts }: { product: Product, allProducts: Product[] }) {
+export function ProductClientPage({ product, allProducts, categories }: { product: Product, allProducts: Product[], categories: Category[] }) {
   const router = useRouter();
   const { toast } = useToast();
   const { addToCart } = useCart();
@@ -45,7 +45,7 @@ export function ProductClientPage({ product, allProducts }: { product: Product, 
   const [customFile, setCustomFile] = useState<File | null>(null);
   const [isRequestingCustomQuote, setIsRequestingCustomQuote] = useState(false);
 
-
+  const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
   const inWishlist = isInWishlist(product.id);
 
   const calculatedPrice = useMemo(() => {
@@ -261,7 +261,7 @@ export function ProductClientPage({ product, allProducts }: { product: Product, 
                 &larr; Back to Products
               </Link>
               <div className="flex items-center gap-2 mt-4">
-                {product.categoryIds.map(catId => <Badge key={catId} variant="outline">{catId}</Badge>)}
+                {product.categoryIds.map(catId => <Badge key={catId} variant="outline">{categoryMap.get(catId) || catId}</Badge>)}
                 {product.productType === 'build_to_order' ? (
                   <Badge variant="secondary">Made to Order</Badge>
                 ) : (
@@ -455,7 +455,7 @@ export function ProductClientPage({ product, allProducts }: { product: Product, 
                     <h2 className="font-headline text-3xl font-bold tracking-tighter text-center sm:text-4xl mb-8">Related Products</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         {relatedProducts.map(p => (
-                            <ProductCard key={p.id} product={p} categoryName="Related" />
+                            <ProductCard key={p.id} product={p} categories={categories} />
                         ))}
                     </div>
                 </div>

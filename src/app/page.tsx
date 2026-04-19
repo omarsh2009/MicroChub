@@ -97,7 +97,8 @@ export default async function Home() {
             {featuredProducts.map((product) => (
               <ProductCard 
                 key={product.id} 
-                product={product} 
+                product={product}
+                categories={categories}
               />
             ))}
           </div>

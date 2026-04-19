@@ -10,14 +10,17 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { type Product } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
+import { type Product, type Category } from "@/lib/types";
 
 interface ProductCardProps {
   product: Product;
+  categories: Category[];
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, categories }: ProductCardProps) {
   const primaryImage = product.image;
+  const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
 
   let discountedPrice: number | null = null;
   if (product.discountValue && product.discountType && product.discountType !== 'none') {
@@ -61,10 +64,10 @@ export function ProductCard({ product }: ProductCardProps) {
         </CardDescription>
         {product.categoryIds && product.categoryIds.length > 0 && (
           <div className="flex gap-1 flex-wrap mt-2">
-            {product.categoryIds.map((cat) => (
-              <span key={cat} className="text-xs px-2 py-1 bg-muted text-muted-foreground rounded-md">
-                {cat}
-              </span>
+            {product.categoryIds.map((catId) => (
+              <Badge key={catId} variant="secondary">
+                {categoryMap.get(catId) || catId}
+              </Badge>
             ))}
           </div>
         )}
