@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -25,7 +26,7 @@ export default function QuotesPage() {
   
   const [quotes, setQuotes] = useState<QuoteRequestWithUserData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [products, setProductsData] = useState<Product[]>([]);
 
   useEffect(() => {
@@ -34,17 +35,18 @@ export default function QuotesPage() {
 
   useEffect(() => {
     if (!user) return;
-    setLoading(true);
-    getUserQuotes(user.uid)
-      .then(({ data, error }) => {
-          if (error || !data) {
-              setError(new Error(error || 'Failed to fetch quotes.'));
-          } else {
-              setQuotes(data);
-          }
-      })
-      .catch(err => setError(err))
-      .finally(() => setLoading(false));
+    
+    const fetchQuotes = async () => {
+        setLoading(true);
+        const { data, error } = await getUserQuotes();
+        if (error || !data) {
+            setError(error?.message || 'Failed to fetch quotes.');
+        } else {
+            setQuotes(data);
+        }
+        setLoading(false);
+    }
+    fetchQuotes();
   }, [user]);
 
   const handleAcceptQuote = (quote: QuoteRequestWithUserData) => {
@@ -66,9 +68,13 @@ export default function QuotesPage() {
   };
 
   const handleRejectQuote = async (quoteId: string) => {
-    await updateUserQuoteStatus(quoteId, 'Rejected');
-    setQuotes(prev => prev.map(q => q.id === quoteId ? {...q, status: 'Rejected'} : q));
-    toast({ variant: 'destructive', title: 'Quote Rejected'});
+    const { error } = await updateUserQuoteStatus(quoteId, 'Rejected');
+    if (error) {
+        toast({ variant: 'destructive', title: 'Action Failed', description: error.message });
+    } else {
+        setQuotes(prev => prev.map(q => q.id === quoteId ? {...q, status: 'Rejected'} : q));
+        toast({ variant: 'destructive', title: 'Quote Rejected'});
+    }
   };
 
 
@@ -110,7 +116,7 @@ export default function QuotesPage() {
   }
 
   if (error) {
-    return <div className="container text-center py-20 text-destructive">Error: {error.message}</div>;
+    return <div className="container text-center py-20 text-destructive">Error: {error}</div>;
   }
 
   return (

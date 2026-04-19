@@ -1,6 +1,12 @@
+
+export type ApiError = {
+  message: string;
+  code?: string; // Optional error code from the backend
+}
+
 export type ServiceResponse<T> = {
   data: T | null;
-  error: string | null;
+  error: ApiError | null;
   status: number;
 };
 

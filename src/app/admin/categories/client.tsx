@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import { PlusCircle, Loader2 } from 'lucide-react';
@@ -32,7 +33,7 @@ export function CategoriesClientPage() {
     setLoading(true);
     const { data, error } = await getCategories();
     if (error || !data) {
-        toast({ variant: 'destructive', title: 'Error fetching categories', description: error });
+        toast({ variant: 'destructive', title: 'Error fetching categories', description: error?.message });
         setCategories([]);
     } else {
         setCategories(data);
@@ -42,7 +43,7 @@ export function CategoriesClientPage() {
 
   useEffect(() => {
     fetchCategories();
-  }, [toast]);
+  }, []);
 
   const handleAdd = () => {
     setSelectedCategory(undefined);
@@ -57,7 +58,7 @@ export function CategoriesClientPage() {
   const handleDelete = async (categoryId: string) => {
     const { error } = await deleteCategory(categoryId);
     if (error) {
-        toast({ variant: 'destructive', title: 'Failed to delete category' });
+        toast({ variant: 'destructive', title: 'Failed to delete category', description: error.message });
     } else {
         setCategories(prev => prev.filter(c => c.id !== categoryId));
         toast({ title: 'Category Deleted' });
@@ -68,16 +69,16 @@ export function CategoriesClientPage() {
     if (id) {
       const { error } = await updateCategory(id, values);
       if (error) {
-        toast({ variant: 'destructive', title: 'Update failed', description: error });
+        toast({ variant: 'destructive', title: 'Update failed', description: error.message });
       } else {
         await fetchCategories(); // Refetch to get updated data
         toast({ title: 'Category Updated' });
         setOpen(false);
       }
     } else {
-      const { data: newSlug, error } = await addCategory(values);
-      if (error || !newSlug) {
-        toast({ variant: 'destructive', title: 'Save failed', description: error });
+      const { data: newCategory, error } = await addCategory(values);
+      if (error || !newCategory) {
+        toast({ variant: 'destructive', title: 'Save failed', description: error?.message });
       } else {
         await fetchCategories(); // Refetch to get new data
         toast({ title: 'Category Added' });

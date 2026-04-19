@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -24,16 +25,17 @@ export default function OrdersPage() {
       return;
     };
     
-    setLoading(true);
-    getUserOrders(user.uid)
-      .then(({ data, error }) => {
-        if(error || !data) {
-            setError(error || "Failed to fetch orders.");
-        } else {
-            setOrders(data);
-        }
-      })
-      .finally(() => setLoading(false));
+    const fetchOrders = async () => {
+      setLoading(true);
+      const { data, error } = await getUserOrders();
+      if(error || !data) {
+          setError(error?.message || "Failed to fetch orders.");
+      } else {
+          setOrders(data);
+      }
+      setLoading(false);
+    }
+    fetchOrders();
   }, [user]);
 
   const renderConfiguration = (config: Record<string, string | string[]>) => {

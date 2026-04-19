@@ -1,7 +1,6 @@
 
-import { ServiceResponse } from './types';
+import { ServiceResponse, ApiError } from './types';
 
-// In a real application, this would be in a .env file
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 async function apiFetch<T>(
@@ -13,28 +12,29 @@ async function apiFetch<T>(
     ...options.headers,
   };
   
-  // This is a placeholder for real auth. In a real app, you'd get the token
-  // from a secure cookie or storage and add the Authorization header.
-  // const token = (typeof window !== 'undefined') ? localStorage.getItem('auth_token') : null;
-  // if (token) {
-  //   headers['Authorization'] = `Bearer ${token}`;
-  // }
+  // The backend will use HttpOnly cookies for session management.
+  // The browser will automatically send the cookie on each request.
+  // We set `credentials: 'include'` to ensure this happens.
 
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
+      credentials: 'include', // Important for cookie-based auth
       headers,
     });
 
     if (!response.ok) {
-      let errorMessage = `HTTP error! status: ${response.status}`;
+      let error: ApiError = { message: `HTTP error! status: ${response.status}` };
       try {
         const errorData = await response.json();
-        errorMessage = errorData.message || errorMessage;
+        error = {
+            message: errorData.message || error.message,
+            code: errorData.code,
+        };
       } catch (e) {
-        // Not a JSON response
+        // Not a JSON response, stick with the generic HTTP error
       }
-      return { data: null, error: errorMessage, status: response.status };
+      return { data: null, error, status: response.status };
     }
 
     // Handle responses with no content (e.g., DELETE, 204 No Content)
@@ -46,7 +46,7 @@ async function apiFetch<T>(
     return { data, error: null, status: response.status };
   } catch (error: any) {
     console.error('API request failed:', error);
-    return { data: null, error: error.message || 'Network request failed', status: 500 };
+    return { data: null, error: { message: error.message || 'Network request failed' }, status: 500 };
   }
 }
 

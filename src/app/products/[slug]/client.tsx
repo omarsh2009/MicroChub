@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useRouter } from "next/navigation";
@@ -135,25 +136,25 @@ export function ProductClientPage({ product, allProducts, categories }: { produc
       }
 
       setIsRequestingQuote(true);
-      try {
-        await createQuoteRequest({
-            userId: user.uid,
-            product,
-            quantity,
-            configuration: selectedOptions,
-            basePrice: product.price,
-        });
+      const { error } = await createQuoteRequest({
+          product,
+          quantity,
+          configuration: selectedOptions,
+          basePrice: product.price,
+      });
+
+      if (error) {
+          console.error("Failed to create quote request:", error.message);
+          toast({ variant: 'destructive', title: 'Request Failed', description: error.message || 'Could not send your quote request.' });
+      } else {
         toast({
             title: 'Quote Request Sent!',
             description: "We've received your request and will get back to you with a quote shortly.",
         });
         router.push('/quotes');
-      } catch (error: any) {
-          console.error("Failed to create quote request:", error);
-          toast({ variant: 'destructive', title: 'Request Failed', description: error.message || 'Could not send your quote request.' });
-      } finally {
-          setIsRequestingQuote(false);
       }
+
+      setIsRequestingQuote(false);
   };
 
   const handleCustomQuoteRequest = async () => {
@@ -169,9 +170,7 @@ export function ProductClientPage({ product, allProducts, categories }: { produc
 
     setIsRequestingCustomQuote(true);
 
-    try {
-      await createQuoteRequest({
-        userId: user.uid,
+    const { error } = await createQuoteRequest({
         product,
         quantity: 1, // Default to 1 for custom requests
         configuration: { Customization: 'See Notes' },
@@ -179,17 +178,19 @@ export function ProductClientPage({ product, allProducts, categories }: { produc
         userNotes: customNotes,
         file: customFile || undefined,
       });
+
+    if (error) {
+      console.error("Failed to create custom quote request:", error.message);
+      toast({ variant: 'destructive', title: 'Request Failed', description: error.message || 'Could not send your quote request.' });
+    } else {
       toast({
         title: 'Custom Quote Request Sent!',
         description: "We've received your request and will get back to you with a quote shortly.",
       });
       router.push('/quotes');
-    } catch (error: any) {
-      console.error("Failed to create custom quote request:", error);
-      toast({ variant: 'destructive', title: 'Request Failed', description: error.message || 'Could not send your quote request.' });
-    } finally {
-      setIsRequestingCustomQuote(false);
     }
+
+    setIsRequestingCustomQuote(false);
   };
 
   const handleWishlistToggle = () => {

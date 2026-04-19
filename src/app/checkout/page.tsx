@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -146,7 +147,7 @@ export default function CheckoutPage() {
     const { data, error } = await validateCoupon(couponCode);
     
     if (error || !data) {
-        toast({ variant: 'destructive', title: 'Coupon Invalid', description: error });
+        toast({ variant: 'destructive', title: 'Coupon Invalid', description: error?.message });
         setAppliedCoupon(null);
     } else {
         setAppliedCoupon(data);
@@ -178,7 +179,6 @@ export default function CheckoutPage() {
     setIsLoading(true);
 
     const { data, error } = await createOrder({
-        userId: user.uid,
         cart,
         totalPrice: finalPrice,
         notes: values.notes,
@@ -197,8 +197,8 @@ export default function CheckoutPage() {
     });
 
     if (error || !data) {
-        console.error('Order submission error:', error);
-        toast({ variant: 'destructive', title: 'Order Failed', description: error || 'Could not place your order.' });
+        console.error('Order submission error:', error?.message);
+        toast({ variant: 'destructive', title: 'Order Failed', description: error?.message || 'Could not place your order.' });
     } else {
         toast({ title: 'Order Placed!', description: 'Your order has been received and is pending verification.' });
         clearCart();

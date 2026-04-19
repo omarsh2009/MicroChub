@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -41,10 +42,10 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     let isMounted = true;
     const loadWishlist = async () => {
         setLoading(true);
-        const { data, error } = await getWishlist(user.uid);
+        const { data, error } = await getWishlist();
         if (isMounted) {
             if (error) {
-                console.error("Failed to load wishlist", error);
+                console.error("Failed to load wishlist", error.message);
                 toast({ variant: 'destructive', title: 'Could not load wishlist' });
             } else {
                 setWishlist(data || []);
@@ -68,9 +69,9 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         return; // Already in wishlist
     }
 
-    const { data, error } = await addService(user.uid, productId);
+    const { data, error } = await addService(productId);
     if(error){
-        console.error("Failed to add to wishlist", error);
+        console.error("Failed to add to wishlist", error.message);
         toast({ variant: 'destructive', title: 'Could not add to wishlist' });
     } else if (data) {
         setWishlist(prev => [...prev, data]);
@@ -83,10 +84,10 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         toast({ variant: 'destructive', title: 'You must be logged in.' });
         return;
     }
-    const { error } = await removeService(user.uid, productId);
+    const { error } = await removeService(productId);
 
     if (error) {
-        console.error("Failed to remove from wishlist", error);
+        console.error("Failed to remove from wishlist", error.message);
         toast({ variant: 'destructive', title: 'Could not remove from wishlist' });
     } else {
         setWishlist(prev => prev.filter(item => item.productId !== productId));
