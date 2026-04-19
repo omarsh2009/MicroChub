@@ -1,37 +1,34 @@
+
 'use client';
 import type { CartItem, Product, SelectedConfiguration, ServiceResponse } from '../types';
+import { api } from '@/lib/api';
 
-import {
-    getCart as mockGetCart,
-    addToCart as mockAddToCart,
-    removeFromCart as mockRemoveFromCart,
-    updateItemQuantity as mockUpdateItemQuantity,
-    clearCart as mockClearCart
-} from '@/lib/mocks/cart';
-
-
-export async function getCart(userId: string): Promise<ServiceResponse<CartItem[]>> {
-    return mockGetCart(userId);
+export async function getCart(): Promise<ServiceResponse<CartItem[]>> {
+    return api.get<CartItem[]>('/cart');
 }
 
 export async function addToCart(
-    userId: string,
     product: Product,
     quantity: number,
     configuration: SelectedConfiguration,
     price: number
 ): Promise<ServiceResponse<CartItem[]>> {
-    return mockAddToCart(userId, product, quantity, configuration, price);
+    return api.post<CartItem[]>('/cart/items', { 
+        productId: product.id, 
+        quantity, 
+        configuration, 
+        price 
+    });
 }
 
-export async function removeFromCart(userId: string, itemId: string): Promise<ServiceResponse<CartItem[]>> {
-    return mockRemoveFromCart(userId, itemId);
+export async function removeFromCart(itemId: string): Promise<ServiceResponse<CartItem[]>> {
+    return api.delete<CartItem[]>(`/cart/items/${itemId}`);
 }
 
-export async function updateItemQuantity(userId: string, itemId: string, newQuantity: number): Promise<ServiceResponse<CartItem[]>> {
-    return mockUpdateItemQuantity(userId, itemId, newQuantity);
+export async function updateItemQuantity(itemId: string, newQuantity: number): Promise<ServiceResponse<CartItem[]>> {
+    return api.patch<CartItem[]>(`/cart/items/${itemId}`, { quantity: newQuantity });
 }
 
-export async function clearCart(userId: string): Promise<ServiceResponse<void>> {
-    return mockClearCart(userId);
+export async function clearCart(): Promise<ServiceResponse<void>> {
+    return api.delete<void>('/cart');
 }

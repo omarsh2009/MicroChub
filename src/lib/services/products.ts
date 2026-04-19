@@ -1,34 +1,28 @@
+
 import type { Product, ServiceResponse } from '../types';
+import { api } from '@/lib/api';
 
-import {
-    getProducts as mockGetProducts,
-    getFeaturedProducts as mockGetFeaturedProducts,
-    getProductBySlug as mockGetProductBySlug,
-    addProduct as mockAddProduct,
-    updateProduct as mockUpdateProduct,
-    deleteProduct as mockDeleteProduct,
-} from '@/lib/mocks/products';
-
-export async function getProducts(): Promise<ServiceResponse<Product[]>> {
-    return mockGetProducts();
+export async function getProducts(categorySlug?: string): Promise<ServiceResponse<Product[]>> {
+    const endpoint = categorySlug ? `/products?category=${categorySlug}` : '/products';
+    return api.get<Product[]>(endpoint);
 }
 
 export async function getFeaturedProducts(): Promise<ServiceResponse<Product[]>> {
-    return mockGetFeaturedProducts();
+    return api.get<Product[]>('/products/featured');
 }
 
 export async function getProductBySlug(slug: string): Promise<ServiceResponse<Product | undefined>> {
-    return mockGetProductBySlug(slug);
+    return api.get<Product | undefined>(`/products/${slug}`);
 }
 
 export async function addProduct(productData: Omit<Product, 'id' | 'slug'>): Promise<ServiceResponse<Product>> {
-    return mockAddProduct(productData);
+    return api.post<Product>('/products', productData);
 }
 
 export async function updateProduct(productId: string, productData: Partial<Product>): Promise<ServiceResponse<Product>> {
-    return mockUpdateProduct(productId, productData);
+    return api.put<Product>(`/products/${productId}`, productData);
 }
 
 export async function deleteProduct(productId: string): Promise<ServiceResponse<void>> {
-    return mockDeleteProduct(productId);
+    return api.delete<void>(`/products/${productId}`);
 }

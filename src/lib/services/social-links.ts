@@ -1,25 +1,20 @@
+
 'use client';
 import type { SocialLink, ServiceResponse } from '../types';
-
-import {
-    getSocialLinks as mockGetSocialLinks,
-    addSocialLink as mockAddSocialLink,
-    updateSocialLink as mockUpdateSocialLink,
-    deleteSocialLink as mockDeleteSocialLink,
-} from '@/lib/mocks/social-links';
+import { api } from '@/lib/api';
 
 export async function getSocialLinks(onlyEnabled = false): Promise<ServiceResponse<SocialLink[]>> {
-    return mockGetSocialLinks(onlyEnabled);
+    return api.get<SocialLink[]>(`/social-links${onlyEnabled ? '?enabled=true' : ''}`);
 }
 
-export async function addSocialLink(data: Omit<SocialLink, 'id'>): Promise<ServiceResponse<string>> {
-    return mockAddSocialLink(data);
+export async function addSocialLink(data: Omit<SocialLink, 'id'>): Promise<ServiceResponse<SocialLink>> {
+    return api.post<SocialLink>('/social-links', data);
 }
 
-export async function updateSocialLink(id: string, data: Partial<SocialLink>): Promise<ServiceResponse<void>> {
-  return mockUpdateSocialLink(id, data);
+export async function updateSocialLink(id: string, data: Partial<SocialLink>): Promise<ServiceResponse<SocialLink>> {
+  return api.put<SocialLink>(`/social-links/${id}`, data);
 }
 
 export async function deleteSocialLink(id: string): Promise<ServiceResponse<void>> {
-    return mockDeleteSocialLink(id);
+    return api.delete<void>(`/social-links/${id}`);
 }

@@ -1,16 +1,9 @@
+
 'use client';
 import type { Product, QuoteRequestWithUserData, SelectedConfiguration, ServiceResponse } from '../types';
-
-import {
-    createQuoteRequest as mockCreateQuoteRequest,
-    updateUserQuoteStatus as mockUpdateUserQuoteStatus,
-    getAllQuoteRequests as mockGetAllQuoteRequests,
-    submitQuote as mockSubmitQuote,
-    getUserQuotes as mockGetUserQuotes,
-} from '@/lib/mocks/quotes';
+import { api } from '@/lib/api';
 
 interface QuoteRequestPayload {
-  userId: string;
   product: Product;
   quantity: number;
   configuration: SelectedConfiguration;
@@ -19,19 +12,20 @@ interface QuoteRequestPayload {
   file?: File;
 }
 
-export async function createQuoteRequest(payload: QuoteRequestPayload): Promise<ServiceResponse<string>> {
-  return mockCreateQuoteRequest(payload);
+export async function createQuoteRequest(payload: QuoteRequestPayload): Promise<ServiceResponse<QuoteRequestWithUserData>> {
+  // File uploads would require special handling (multipart/form-data)
+  return api.post<QuoteRequestWithUserData>('/quotes', payload);
 }
 
 export async function updateUserQuoteStatus(
     quoteId: string,
     status: 'Accepted' | 'Rejected'
 ): Promise<ServiceResponse<void>> {
-    return mockUpdateUserQuoteStatus(quoteId, status);
+    return api.patch<void>(`/quotes/${quoteId}/status`, { status });
 }
 
 export async function getAllQuoteRequests(): Promise<ServiceResponse<QuoteRequestWithUserData[]>> {
-  return mockGetAllQuoteRequests();
+  return api.get<QuoteRequestWithUserData[]>('/quotes');
 }
 
 export async function submitQuote(
@@ -39,9 +33,9 @@ export async function submitQuote(
   price: number,
   notes: string,
 ): Promise<ServiceResponse<void>> {
-  return mockSubmitQuote(quoteId, price, notes);
+  return api.patch<void>(`/quotes/${quoteId}`, { quotedPrice: price, adminNotes: notes, status: 'Quoted' });
 }
 
-export async function getUserQuotes(userId: string): Promise<ServiceResponse<QuoteRequestWithUserData[]>> {
-    return mockGetUserQuotes(userId);
+export async function getUserQuotes(): Promise<ServiceResponse<QuoteRequestWithUserData[]>> {
+    return api.get<QuoteRequestWithUserData[]>('/quotes/me');
 }

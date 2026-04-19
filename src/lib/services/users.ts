@@ -1,23 +1,19 @@
+
 'use client';
 import type { UserWithId, UserProfile, ServiceResponse } from '../types';
-
-import {
-    getAllUsers as mockGetAllUsers,
-    getUserById as mockGetUserById,
-    updateUserRole as mockUpdateUserRole,
-} from '@/lib/mocks/users';
+import { api } from '@/lib/api';
 
 export async function getAllUsers(): Promise<ServiceResponse<UserWithId[]>> {
-    return mockGetAllUsers();
+    return api.get<UserWithId[]>('/users');
 }
 
 export async function getUserById(userId: string): Promise<ServiceResponse<UserWithId | undefined>> {
-    return mockGetUserById(userId);
+    return api.get<UserWithId>(`/users/${userId}`);
 }
 
 export async function updateUserRole(
     userId: string,
     role: UserProfile['role']
 ): Promise<ServiceResponse<void>> {
-    return mockUpdateUserRole(userId, role);
+    return api.patch<void>(`/users/${userId}/role`, { role });
 }

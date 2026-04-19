@@ -1,35 +1,27 @@
+
 'use client';
 import type { Coupon, ServiceResponse } from '../types';
-
-import {
-    getCoupons as mockGetCoupons,
-    addCoupon as mockAddCoupon,
-    updateCoupon as mockUpdateCoupon,
-    deleteCoupon as mockDeleteCoupon,
-    validateCoupon as mockValidateCoupon,
-    incrementCouponUsage as mockIncrementCouponUsage,
-} from '@/lib/mocks/coupons';
+import { api } from '@/lib/api';
 
 export async function getCoupons(): Promise<ServiceResponse<Coupon[]>> {
-    return mockGetCoupons();
+    return api.get<Coupon[]>('/coupons');
 }
 
-export async function addCoupon(data: Omit<Coupon, 'id' | 'usedCount'>): Promise<ServiceResponse<string>> {
-    return mockAddCoupon(data);
+export async function addCoupon(data: Omit<Coupon, 'id' | 'usedCount'>): Promise<ServiceResponse<Coupon>> {
+    return api.post<Coupon>('/coupons', data);
 }
 
-export async function updateCoupon(id: string, data: Partial<Coupon>): Promise<ServiceResponse<void>> {
-    return mockUpdateCoupon(id, data);
+export async function updateCoupon(id: string, data: Partial<Coupon>): Promise<ServiceResponse<Coupon>> {
+    return api.put<Coupon>(`/coupons/${id}`, data);
 }
 
 export async function deleteCoupon(id: string): Promise<ServiceResponse<void>> {
-    return mockDeleteCoupon(id);
+    return api.delete<void>(`/coupons/${id}`);
 }
 
 export async function validateCoupon(code: string): Promise<ServiceResponse<Coupon>> {
-    return mockValidateCoupon(code);
+    return api.post<Coupon>('/coupons/apply', { code });
 }
 
-export async function incrementCouponUsage(code: string): Promise<ServiceResponse<void>> {
-    return mockIncrementCouponUsage(code);
-}
+// Coupon usage would be incremented on the backend when an order is successfully processed.
+// No direct service call is needed from the client for this.

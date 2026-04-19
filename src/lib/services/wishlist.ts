@@ -1,21 +1,16 @@
+
 'use client';
 import type { WishlistItem, ServiceResponse } from '../types';
+import { api } from '@/lib/api';
 
-import {
-    getWishlist as mockGetWishlist,
-    addToWishlist as mockAddToWishlist,
-    removeFromWishlist as mockRemoveFromWishlist
-} from '@/lib/mocks/wishlist';
-
-
-export async function getWishlist(userId: string): Promise<ServiceResponse<WishlistItem[]>> {
-    return mockGetWishlist(userId);
+export async function getWishlist(): Promise<ServiceResponse<WishlistItem[]>> {
+    return api.get<WishlistItem[]>('/wishlist');
 }
 
-export async function addToWishlist(userId: string, productId: string): Promise<ServiceResponse<WishlistItem>> {
-    return mockAddToWishlist(userId, productId);
+export async function addToWishlist(productId: string): Promise<ServiceResponse<WishlistItem>> {
+    return api.post<WishlistItem>('/wishlist', { productId });
 }
 
-export async function removeFromWishlist(userId: string, productId: string): Promise<ServiceResponse<void>> {
-    return mockRemoveFromWishlist(userId, productId);
+export async function removeFromWishlist(productId: string): Promise<ServiceResponse<void>> {
+    return api.delete<void>(`/wishlist/${productId}`);
 }

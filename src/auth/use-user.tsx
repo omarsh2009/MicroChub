@@ -1,29 +1,30 @@
+
 'use client';
+import { useContext } from 'react';
+import { AuthContext } from './provider';
 import type { UserProfile } from '@/lib/types';
 
-export interface MockUserData {
+export interface UserData {
     uid: string;
-    email: string | null;
-    displayName: string | null;
+    email: string;
+    displayName: string;
     profile: UserProfile;
 }
 
-const mockUser: MockUserData = {
-    uid: 'mock-user-123',
-    email: 'admin@example.com',
-    displayName: 'Admin User',
-    profile: {
-        id: 'mock-user-123',
-        name: 'Admin User',
-        email: 'admin@example.com',
-        phoneNumber: '01234567890',
-        wishlist: [],
-        role: 'admin', // Changed from 'super_admin' to 'admin'
-    },
+// This hook provides the user object, which is null if not authenticated.
+export const useUser = (): UserData | null => {
+    const context = useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error('useUser must be used within an AuthProvider');
+    }
+    return context.user;
 };
 
-export const useUser = () => {
-    // In a real app, this would involve context, state, and effects.
-    // For this frontend-only prototype, we just return the static mock user.
-    return mockUser;
+// This hook provides the full auth context, including loading state and refetch function.
+export const useAuthContext = () => {
+    const context = useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error('useAuthContext must be used within an AuthProvider');
+    }
+    return context;
 };
