@@ -19,26 +19,24 @@ async function apiFetch<T>(
       headers,
     });
 
-    if (!response.ok) {
-      let error: ApiError = { message: `Request failed with status: ${response.status}` };
-      try {
-        const errorData = await response.json();
-        error = {
-            message: errorData.message || error.message,
-            code: errorData.code,
-        };
-      } catch (e) {
-        // Not a JSON response or failed to parse
-      }
-      return { success: false, data: null, error };
-    }
-
+    const success = response.ok;
+    
     if (response.status === 204) {
       return { success: true, data: null, error: null };
     }
+    
+    const responseData = await response.json();
 
-    const data: T = await response.json();
-    return { success: true, data, error: null };
+    if (!success) {
+      return { 
+        success: false, 
+        data: null, 
+        error: responseData.error || { message: `Request failed with status: ${response.status}` }
+      };
+    }
+
+    return { success: true, data: responseData.data, error: null };
+
   } catch (error: any) {
     console.error('API request failed:', error);
     return { success: false, data: null, error: { message: error.message || 'A network error occurred.' } };
