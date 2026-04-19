@@ -52,9 +52,7 @@ export default async function ProductsPage({
                 <ProductCard
                   key={product.id}
                   product={product}
-                  categoryName={
-                    categoryMap.get(product.categoryIds[0]) || "Uncategorized"
-                  }
+                  categoryMap={categoryMap}
                 />
               ))}
             </div>

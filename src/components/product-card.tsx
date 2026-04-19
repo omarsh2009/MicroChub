@@ -15,10 +15,10 @@ import { type Product } from "@/lib/types";
 
 interface ProductCardProps {
   product: Product;
-  categoryName: string;
+  categoryMap: Map<string, string>;
 }
 
-export function ProductCard({ product, categoryName }: ProductCardProps) {
+export function ProductCard({ product, categoryMap }: ProductCardProps) {
   const primaryImage = product.image;
 
   let discountedPrice: number | null = null;
@@ -55,9 +55,13 @@ export function ProductCard({ product, categoryName }: ProductCardProps) {
         </Link>
       </CardHeader>
       <CardContent className="p-4 flex-grow">
-        <Badge variant="outline" className="mb-2">
-          {categoryName}
-        </Badge>
+         <div className="flex flex-wrap gap-1 mb-2">
+            {product.categoryIds.map((catId) => (
+                <Badge key={catId} variant="secondary" className="font-normal">
+                    {categoryMap.get(catId) || catId}
+                </Badge>
+            ))}
+        </div>
         <CardTitle className="text-lg font-headline">
           <Link href={`/products/${product.slug}`}>{product.name}</Link>
         </CardTitle>

@@ -36,7 +36,7 @@ export function WishlistClientPage({ products, categories }: { products: Product
                 <ProductCard 
                   key={product.id} 
                   product={product} 
-                  categoryName={categoryMap.get(product.categoryIds[0]) || 'Uncategorized'}
+                  categoryMap={categoryMap}
                 />
             ))}
         </div>

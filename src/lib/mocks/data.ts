@@ -21,6 +21,11 @@ export const mockCategories: Category[] = [
     name: "Smart Displays",
     slug: 'smart-displays'
   },
+  {
+    id: "diy-kits",
+    name: "DIY Kits",
+    slug: 'diy-kits'
+  },
 ];
 
 export const products: Product[] = [
@@ -98,7 +103,7 @@ export const products: Product[] = [
     description:
       "A complete DIY kit to build your own desktop CNC machine. Perfect for milling soft materials like wood, plastic, and PCBs.",
     price: 3500,
-    categoryIds: ["arduino"],
+    categoryIds: ["arduino", "diy-kits"],
     image: "https://picsum.photos/seed/cnckit/600/400",
     productType: 'build_to_order',
     specs: {
@@ -155,7 +160,7 @@ export const products: Product[] = [
     description:
       "Build your own customizable stream deck. Assign macros, hotkeys, and custom actions to 12 mechanical keys.",
     price: 800,
-    categoryIds: ["arduino"],
+    categoryIds: ["arduino", "diy-kits"],
     image: "https://picsum.photos/seed/streamdeck/600/400",
     productType: 'build_to_order',
     specs: {
@@ -202,7 +207,7 @@ export const products: Product[] = [
 export const featuredProducts = products.filter((p) => p.featured);
 
 export const mockUsers: UserWithId[] = [
-    { id: 'mock-user-123', name: 'Test User', email: 'test@example.com', phoneNumber: '01234567890', role: 'user', wishlist: [] },
+    { id: 'mock-user-123', name: 'Test User', email: 'test@example.com', phoneNumber: '01234567890', role: 'super_admin', wishlist: [] },
     { id: 'user-002', name: 'Alice', email: 'alice@example.com', phoneNumber: '0111222333', role: 'admin', wishlist: [] },
     { id: 'user-003', name: 'Bob', email: 'bob@example.com', phoneNumber: '0444555666', role: 'user', wishlist: [] },
 ];

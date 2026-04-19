@@ -9,7 +9,7 @@ export default async function DiyKitsPage() {
 
   const categoryMap = new Map(allCategories.map(c => [c.id, c.name]));
   const diyKits = allProducts.filter(
-    (product) => product.categoryIds.includes("arduino")
+    (product) => product.categoryIds.includes("diy-kits")
   );
 
   return (
@@ -36,7 +36,7 @@ export default async function DiyKitsPage() {
                 <ProductCard 
                   key={product.id} 
                   product={product} 
-                  categoryName={categoryMap.get(product.categoryIds[0]) || 'Uncategorized'}
+                  categoryMap={categoryMap}
                 />
               ))}
             </div>
