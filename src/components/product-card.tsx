@@ -10,15 +10,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { type Product } from "@/lib/types";
 
 interface ProductCardProps {
   product: Product;
-  categoryMap: Map<string, string>;
 }
 
-export function ProductCard({ product, categoryMap }: ProductCardProps) {
+export function ProductCard({ product }: ProductCardProps) {
   const primaryImage = product.image;
 
   let discountedPrice: number | null = null;
@@ -55,19 +53,21 @@ export function ProductCard({ product, categoryMap }: ProductCardProps) {
         </Link>
       </CardHeader>
       <CardContent className="p-4 flex-grow">
-         <div className="flex flex-wrap gap-1 mb-2">
-            {product.categoryIds.map((catId) => (
-                <Badge key={catId} variant="secondary" className="font-normal">
-                    {categoryMap.get(catId) || catId}
-                </Badge>
-            ))}
-        </div>
         <CardTitle className="text-lg font-headline">
           <Link href={`/products/${product.slug}`}>{product.name}</Link>
         </CardTitle>
         <CardDescription className="mt-2 text-sm line-clamp-2">
           {product.description}
         </CardDescription>
+        {product.categoryIds && product.categoryIds.length > 0 && (
+          <div className="flex gap-1 flex-wrap mt-2">
+            {product.categoryIds.map((cat) => (
+              <span key={cat} className="text-xs px-2 py-1 bg-muted text-muted-foreground rounded-md">
+                {cat}
+              </span>
+            ))}
+          </div>
+        )}
       </CardContent>
       <CardFooter className="p-4 pt-0 flex justify-between items-center">
         <div>

@@ -10,7 +10,6 @@ export default async function ProductsPage({
 }) {
   const products = await getProducts();
   const categories = await getCategories();
-  const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
 
   const selectedCategorySlug = searchParams?.category;
   const selectedCategory = categories.find(
@@ -52,7 +51,6 @@ export default async function ProductsPage({
                 <ProductCard
                   key={product.id}
                   product={product}
-                  categoryMap={categoryMap}
                 />
               ))}
             </div>

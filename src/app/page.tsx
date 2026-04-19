@@ -27,7 +27,6 @@ const categoryIcons: Record<string, React.ReactNode> = {
 export default async function Home() {
   const featuredProducts = await getFeaturedProducts();
   const categories = await getCategories();
-  const categoryMap = new Map(categories.map(c => [c.id, c.name]));
 
   return (
     <div className="flex flex-col min-h-[100dvh] bg-background text-foreground">
@@ -99,7 +98,6 @@ export default async function Home() {
               <ProductCard 
                 key={product.id} 
                 product={product} 
-                categoryMap={categoryMap}
               />
             ))}
           </div>

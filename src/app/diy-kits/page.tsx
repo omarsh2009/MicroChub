@@ -1,16 +1,19 @@
 import { getProducts } from "@/lib/services/products";
-import { getCategories } from "@/lib/services/categories";
 import { ProductCard } from "@/components/product-card";
 import { Badge } from "@/components/ui/badge";
 
 export default async function DiyKitsPage() {
   const allProducts = await getProducts();
-  const allCategories = await getCategories();
 
-  const categoryMap = new Map(allCategories.map(c => [c.id, c.name]));
+  console.log("ALL PRODUCTS:", allProducts);
+
   const diyKits = allProducts.filter(
-    (product) => product.categoryIds.includes("diy-kits")
+    (product) =>
+      Array.isArray(product.categoryIds) &&
+      product.categoryIds.includes("diy-kits")
   );
+
+  console.log("FILTERED DIY:", diyKits);
 
   return (
     <div className="bg-background text-foreground">
@@ -36,7 +39,6 @@ export default async function DiyKitsPage() {
                 <ProductCard 
                   key={product.id} 
                   product={product} 
-                  categoryMap={categoryMap}
                 />
               ))}
             </div>

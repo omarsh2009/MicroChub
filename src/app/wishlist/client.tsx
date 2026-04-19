@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Loader2, HeartCrack } from 'lucide-react';
 import { useWishlist } from '@/hooks/use-wishlist';
 import { ProductCard } from '@/components/product-card';
-import type { Product, Category } from '@/lib/types';
+import type { Product } from '@/lib/types';
 
-export function WishlistClientPage({ products, categories }: { products: Product[], categories: Category[]}) {
+export function WishlistClientPage({ products }: { products: Product[]}) {
   const user = useUser();
   const { wishlist, loading: wishlistLoading } = useWishlist();
 
@@ -20,8 +20,6 @@ export function WishlistClientPage({ products, categories }: { products: Product
     );
   }
   
-  const categoryMap = new Map(categories.map(c => [c.id, c.name]));
-
   const wishlistedProducts = wishlist
     .map(item => products.find(p => p.id === item.productId))
     .filter((p): p is NonNullable<typeof p> => p !== undefined);
@@ -36,7 +34,6 @@ export function WishlistClientPage({ products, categories }: { products: Product
                 <ProductCard 
                   key={product.id} 
                   product={product} 
-                  categoryMap={categoryMap}
                 />
             ))}
         </div>
