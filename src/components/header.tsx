@@ -11,6 +11,7 @@ import {
   FileQuestion,
   Shield,
   LogOut,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,20 +34,26 @@ import { useUser } from "@/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/hooks/use-cart";
 import { Badge } from "@/components/ui/badge";
-
-
-const navLinks = [
-  { href: "/products", label: "Products" },
-  { href: "/custom-services", label: "Custom Services" },
-  { href: "/diy-kits", label: "DIY Kits" },
-  { href: "/about", label: "About" },
-];
+import { useEffect, useState } from "react";
+import { getCategories } from "@/lib/services/categories";
+import type { Category } from "@/lib/types";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export function Header() {
   const user = useUser();
   const router = useRouter();
   const { toast } = useToast();
   const { itemCount } = useCart();
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    getCategories().then(setCategories);
+  }, []);
 
   const handleLogout = async () => {
     // In a real app, this would call a sign-out function.
@@ -67,15 +74,47 @@ export function Header() {
         </Link>
 
         <nav className="hidden md:flex md:items-center md:gap-6 text-sm font-medium">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {link.label}
-            </Link>
-          ))}
+          <Link
+            href="/products"
+            className="text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Products
+          </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground focus:outline-none">
+              Categories
+              <ChevronDown className="h-4 w-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem asChild>
+                  <Link href="/products">All Products</Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {categories.map((category) => (
+                <DropdownMenuItem key={category.id} asChild>
+                  <Link href={`/products?category=${category.slug}`}>{category.name}</Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Link
+            href="/custom-services"
+            className="text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Custom Services
+          </Link>
+          <Link
+            href="/diy-kits"
+            className="text-muted-foreground transition-colors hover:text-foreground"
+          >
+            DIY Kits
+          </Link>
+          <Link
+            href="/about"
+            className="text-muted-foreground transition-colors hover:text-foreground"
+          >
+            About
+          </Link>
         </nav>
 
         <div className="flex flex-1 items-center justify-end gap-2">
@@ -165,15 +204,53 @@ export function Header() {
                 </SheetTitle>
               </SheetHeader>
               <nav className="grid gap-4 text-lg font-medium">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+                <Link
+                  href="/products"
+                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                >
+                  Products
+                </Link>
+                <Accordion type="single" collapsible className="w-full -my-2 text-lg font-medium">
+                    <AccordionItem value="categories" className="border-b-0">
+                    <AccordionTrigger className="flex items-center justify-between w-full px-2.5 py-2 text-muted-foreground hover:text-foreground hover:no-underline">
+                        <span className="flex items-center gap-4">Categories</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="pl-12">
+                        <div className="grid gap-2 pt-2">
+                        <Link href="/products" className="text-base text-muted-foreground hover:text-foreground">
+                            All Products
+                        </Link>
+                        {categories.map((category) => (
+                            <Link
+                            key={category.id}
+                            href={`/products?category=${category.slug}`}
+                            className="text-base text-muted-foreground hover:text-foreground"
+                            >
+                            {category.name}
+                            </Link>
+                        ))}
+                        </div>
+                    </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
+                <Link
+                  href="/custom-services"
+                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                >
+                  Custom Services
+                </Link>
+                <Link
+                  href="/diy-kits"
+                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                >
+                  DIY Kits
+                </Link>
+                <Link
+                  href="/about"
+                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                >
+                  About
+                </Link>
               </nav>
             </SheetContent>
           </Sheet>
