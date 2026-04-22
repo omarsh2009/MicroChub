@@ -113,7 +113,20 @@ const mockProducts = [
     useCases: ['Prototyping parts', 'Printing miniatures', 'Functional prints for home'],
     featured: false,
     productType: 'ready'
-  }
+  },
+  {
+    id: '7',
+    slug: 'soldering-station-pro',
+    name: 'Soldering Station Pro',
+    description: 'A professional-grade soldering station with digital temperature control and a variety of tips.',
+    price: 3500,
+    image: 'https://picsum.photos/seed/soldering/600/400',
+    categoryIds: ['5'],
+    specs: { 'Temperature Range': '100°C - 480°C', 'Power': '75W', 'Display': 'Digital LCD' },
+    useCases: ['PCB assembly', 'Component repair', 'DIY electronics'],
+    featured: false,
+    productType: 'ready'
+  },
 ];
 
 const mockUsers = [
@@ -147,6 +160,14 @@ const mockUsers = [
     email: 'fatima@example.com',
     phoneNumber: '01556677889',
     wishlist: ['6'],
+    role: 'user',
+  },
+  {
+    id: 'test-user-3',
+    name: 'Youssef Mohamed',
+    email: 'youssef@example.com',
+    phoneNumber: '01287654321',
+    wishlist: ['3', '4'],
     role: 'user',
   }
 ];
@@ -192,6 +213,14 @@ const mockOrders = [
     createdAt: { seconds: Math.floor(Date.now() / 1000) - (86400 * 10), nanoseconds: 0 },
     user: { id: 'admin-user-id', name: 'Admin User', email: 'admin@example.com', phoneNumber: '01000000000' }
   },
+  {
+    id: 'ord_mno90',
+    userId: 'test-user-3',
+    items: [{ id: '7', productId: '7', name: 'Soldering Station Pro', slug: 'soldering-station-pro', image: 'https://picsum.photos/seed/soldering/600/400', quantity: 1, price: 3500, configuration: {} }],
+    totalPrice: 3500, status: 'Ready', shippingAddress: { fullName: 'Youssef Mohamed', phoneNumber: '01287654321', address: '101 Rehab City', city: 'Cairo' }, paymentMethod: { id: 'pm_2', name: 'Vodafone Cash' }, transactionId: 'txn_mock_345',
+    createdAt: { seconds: Math.floor(Date.now() / 1000) - (86400 * 2), nanoseconds: 0 },
+    user: { id: 'test-user-3', name: 'Youssef Mohamed', email: 'youssef@example.com', phoneNumber: '01287654321' }
+  },
 ];
 
 const mockQuotes = [
@@ -224,7 +253,18 @@ const mockQuotes = [
         userNotes: 'I need a custom firmware with packet monitoring mode enabled by default.',
         createdAt: { seconds: Math.floor(Date.now() / 1000) - (86400 * 1), nanoseconds: 0 },
         user: { id: 'admin-user-id', name: 'Admin User', email: 'admin@example.com', phoneNumber: '01000000000' }
-    }
+    },
+    {
+        id: 'quote_pqrst',
+        userId: 'test-user-3',
+        items: [{ id: '4', productId: '4', name: 'Smart Display Hub 7"', slug: 'smart-display-hub-7', image: 'https://picsum.photos/seed/display7/600/400', quantity: 5, price: 1500, configuration: {} }],
+        status: 'Rejected',
+        userNotes: 'Need a bulk discount for 5 units.',
+        quotedPrice: 7250,
+        adminNotes: 'We can offer a 5% discount for a total of EGP 7125.',
+        createdAt: { seconds: Math.floor(Date.now() / 1000) - (86400 * 6), nanoseconds: 0 },
+        user: { id: 'test-user-3', name: 'Youssef Mohamed', email: 'youssef@example.com', phoneNumber: '01287654321' }
+    },
 ];
 
 const mockCoupons = [
@@ -267,55 +307,67 @@ async function handler(request: Request) {
     return createMockResponse(mockAuthenticatedUser);
   }
 
-  if (pathname.startsWith('/api/auth/me')) {
+  if (pathname === '/api/auth/me') {
       return createMockResponse(mockAuthenticatedUser);
   }
 
-  if (pathname.startsWith('/api/users')) {
-    const userId = pathname.split('/')[3];
-    if (userId) return createMockResponse(mockUsers.find(u => u.id === userId));
+  // User routes
+  const userMatch = pathname.match(/^\/api\/users\/([a-zA-Z0-9-]+)$/);
+  if (userMatch) {
+    const userId = userMatch[1];
+    return createMockResponse(mockUsers.find(u => u.id === userId));
+  }
+  if (pathname === '/api/users') {
     return createMockResponse(mockUsers);
   }
 
-  if (pathname.startsWith('/api/orders')) {
-    const userId = pathname.split('/user/')[1];
-    if (userId) return createMockResponse(mockOrders.filter(o => o.userId === userId));
+  // Order routes
+  const userOrdersMatch = pathname.match(/^\/api\/orders\/user\/([a-zA-Z0-9-]+)$/);
+  if (userOrdersMatch) {
+      const userId = userOrdersMatch[1];
+      return createMockResponse(mockOrders.filter(o => o.userId === userId));
+  }
+  if (pathname === '/api/orders') {
     return createMockResponse(mockOrders);
   }
 
-  if (pathname.startsWith('/api/quotes')) {
+  if (pathname === '/api/quotes') {
     return createMockResponse(mockQuotes);
   }
 
-  if (pathname.startsWith('/api/coupons')) {
+  if (pathname === '/api/coupons') {
       return createMockResponse(mockCoupons);
   }
 
-  if (pathname.startsWith('/api/payment-methods')) {
-      return createMockResponse(mockPaymentMethods);
+  if (pathname === '/api/payment-methods') {
+      const onlyEnabled = searchParams.get('enabled') === 'true';
+      return createMockResponse(onlyEnabled ? mockPaymentMethods.filter(l => l.enabled) : mockPaymentMethods);
   }
   
-  if (pathname.startsWith('/api/social-links')) {
+  if (pathname === '/api/social-links') {
       const onlyEnabled = searchParams.get('enabled') === 'true';
       return createMockResponse(onlyEnabled ? mockSocialLinks.filter(l => l.enabled) : mockSocialLinks);
   }
 
-  if (pathname.startsWith('/api/legal/agreement')) {
+  if (pathname === '/api/legal/agreement') {
       return createMockResponse(mockLegalAgreement);
   }
 
-  if (pathname.startsWith('/api/categories')) {
+  if (pathname === '/api/categories') {
     return createMockResponse(mockCategories);
   }
-  if (pathname.startsWith('/api/products/featured')) {
+  
+  // Product routes
+  if (pathname === '/api/products/featured') {
     return createMockResponse(mockProducts.filter(p => p.featured));
   }
-   if (pathname.startsWith('/api/products/')) {
-    const slug = pathname.split('/')[3];
+   const productSlugMatch = pathname.match(/^\/api\/products\/([a-zA-Z0-9-]+)$/);
+   if (productSlugMatch) {
+    const slug = productSlugMatch[1];
     const product = mockProducts.find(p => p.slug === slug);
     return createMockResponse(product || null);
   }
-  if (pathname.startsWith('/api/products')) {
+  if (pathname === '/api/products') {
     const categorySlug = searchParams.get('category');
     if (categorySlug) {
       const category = mockCategories.find(c => c.slug === categorySlug);
@@ -327,7 +379,11 @@ async function handler(request: Request) {
     return createMockResponse(mockProducts);
   }
 
+  // Fallback for any other route
   return createMockResponse([]);
 }
 
+
 export { handler as GET, handler as POST, handler as PUT, handler as PATCH, handler as DELETE };
+
+    
