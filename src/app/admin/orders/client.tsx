@@ -1,7 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { useUser } from '@/auth';
-import { getAllOrders } from '@/lib/services/orders';
+import { useState } from 'react';
 import type { OrderWithUserData } from '@/lib/types';
 import { OrdersTable } from './components/orders-table';
 import { OrderDetailsDialog } from './components/order-details-dialog';
@@ -13,38 +11,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 
-export function OrdersClientPage() {
-  const user = useUser();
-  const { toast } = useToast();
-  const [orders, setOrders] = useState<OrderWithUserData[]>([]);
-  const [loading, setLoading] = useState(true);
+export function OrdersClientPage({ initialOrders }: { initialOrders: OrderWithUserData[] }) {
+  const [orders, setOrders] = useState<OrderWithUserData[]>(initialOrders);
+  const [loading, setLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<OrderWithUserData | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        const fetchedOrders = await getAllOrders();
-        setOrders(fetchedOrders);
-      } catch (error: any) {
-        console.error('Failed to fetch orders:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error Fetching Orders',
-          description: 'Could not fetch orders. Please try again.',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrders();
-  }, [user, toast]);
 
   const handleViewDetails = (order: OrderWithUserData) => {
     setSelectedOrder(order);

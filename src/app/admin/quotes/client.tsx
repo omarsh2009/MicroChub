@@ -1,7 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { useUser } from '@/auth';
-import { getAllQuoteRequests } from '@/lib/services/quotes';
+import { useState } from 'react';
 import type { QuoteRequestWithUserData } from '@/lib/types';
 import { QuotesTable } from './components/quotes-table';
 import { QuoteDetailsDialog } from './components/quote-details-dialog';
@@ -13,38 +11,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 
-export function QuotesClientPage() {
-  const user = useUser();
-  const { toast } = useToast();
-  const [quotes, setQuotes] = useState<QuoteRequestWithUserData[]>([]);
-  const [loading, setLoading] = useState(true);
+export function QuotesClientPage({ initialQuotes }: { initialQuotes: QuoteRequestWithUserData[] }) {
+  const [quotes, setQuotes] = useState<QuoteRequestWithUserData[]>(initialQuotes);
+  const [loading, setLoading] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState<QuoteRequestWithUserData | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const fetchQuotes = async () => {
-      try {
-        setLoading(true);
-        const fetchedQuotes = await getAllQuoteRequests();
-        setQuotes(fetchedQuotes);
-      } catch (error: any) {
-        console.error('Failed to fetch quote requests:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error Fetching Quotes',
-          description: 'Could not fetch quote requests. Please try again.',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchQuotes();
-  }, [user, toast]);
 
   const handleViewDetails = (quote: QuoteRequestWithUserData) => {
     setSelectedQuote(quote);
