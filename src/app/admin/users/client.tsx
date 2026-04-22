@@ -26,9 +26,18 @@ export function UsersClientPage() {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        const fetchedUsers = await getAllUsers();
-        // Filter out the current super_admin from the list to prevent self-demotion
-        setUsers(fetchedUsers.filter(u => u.id !== currentUser.uid));
+        const { data: fetchedUsers, success, error } = await getAllUsers();
+        
+        if (success && fetchedUsers && currentUser) {
+            // Filter out the current super_admin from the list to prevent self-demotion
+            setUsers(fetchedUsers.filter(u => u.id !== currentUser.uid));
+        } else if (error) {
+             toast({
+              variant: 'destructive',
+              title: 'Error Fetching Users',
+              description: error.message || 'Could not fetch users. Please try again.',
+            });
+        }
       } catch (error: any) {
         console.error('Failed to fetch users:', error);
         toast({
@@ -45,19 +54,19 @@ export function UsersClientPage() {
   }, [currentUser, toast]);
 
   const handleRoleChange = async (userId: string, newRole: UserProfile['role']) => {
-    try {
-        await updateUserRole(userId, newRole);
+    const { success, error } = await updateUserRole(userId, newRole);
+    if (success) {
         setUsers(prevUsers => prevUsers.map(u => u.id === userId ? { ...u, role: newRole } : u));
         toast({
             title: 'User Role Updated',
             description: `The user role has been changed to ${newRole}.`,
         });
-    } catch (error: any) {
+    } else {
         console.error('Failed to update user role:', error);
         toast({
             variant: 'destructive',
             title: 'Update Failed',
-            description: 'Could not update user role. Please try again.',
+            description: error?.message || 'Could not update user role. Please try again.',
         });
     }
   };

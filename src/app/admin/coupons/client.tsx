@@ -29,11 +29,18 @@ export function CouponsClientPage() {
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | undefined>(undefined);
 
   useEffect(() => {
-    setLoading(true);
-    getCoupons()
-      .then(setCoupons)
-      .catch(err => toast({ variant: 'destructive', title: 'Error fetching coupons' }))
-      .finally(() => setLoading(false));
+    const fetchCoupons = async () => {
+        setLoading(true);
+        const { data, error } = await getCoupons();
+        if (error) {
+            toast({ variant: 'destructive', title: 'Error fetching coupons', description: error.message });
+            setCoupons([]);
+        } else {
+            setCoupons(data || []);
+        }
+        setLoading(false);
+    }
+    fetchCoupons();
   }, [toast]);
 
   const handleAdd = () => {
@@ -47,32 +54,29 @@ export function CouponsClientPage() {
   };
   
   const handleDelete = async (couponId: string) => {
-    try {
-        await deleteCoupon(couponId);
+    const { success, error } = await deleteCoupon(couponId);
+    if (success) {
         setCoupons(prev => prev.filter(c => c.id !== couponId));
         toast({ title: 'Coupon Deleted' });
-    } catch (error) {
-        toast({ variant: 'destructive', title: 'Failed to delete coupon' });
+    } else {
+        toast({ variant: 'destructive', title: 'Failed to delete coupon', description: error?.message });
     }
   }
 
   const onFormSubmit = async (values: Omit<Coupon, 'id' | 'usedCount'>, id?: string) => {
-    try {
-      if (id) {
-        await updateCoupon(id, values);
-        const existingCoupon = coupons.find(c => c.id === id);
-        if (existingCoupon) {
-          setCoupons(prev => prev.map(c => c.id === id ? { ...existingCoupon, ...values } : c));
+    const response = id ? await updateCoupon(id, values) : await addCoupon(values);
+
+    if (response.success && response.data) {
+        if (id) {
+            setCoupons(prev => prev.map(c => c.id === id ? response.data! : c));
+            toast({ title: 'Coupon Updated' });
+        } else {
+            setCoupons(prev => [...prev, response.data!]);
+            toast({ title: 'Coupon Added' });
         }
-        toast({ title: 'Coupon Updated' });
-      } else {
-        const newId = await addCoupon(values);
-        setCoupons(prev => [...prev, { id: newId, ...values, usedCount: 0 }]);
-        toast({ title: 'Coupon Added' });
-      }
-      setOpen(false);
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Save failed' });
+        setOpen(false);
+    } else {
+        toast({ variant: 'destructive', title: 'Save failed', description: response.error?.message });
     }
   };
 

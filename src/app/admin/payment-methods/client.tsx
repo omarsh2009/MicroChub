@@ -29,11 +29,18 @@ export function PaymentMethodsClientPage() {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | undefined>(undefined);
 
   useEffect(() => {
-    setLoading(true);
-    getPaymentMethods()
-      .then(setMethods)
-      .catch(err => toast({ variant: 'destructive', title: 'Error fetching payment methods' }))
-      .finally(() => setLoading(false));
+    const fetchMethods = async () => {
+        setLoading(true);
+        const { data, error } = await getPaymentMethods();
+        if (error) {
+            toast({ variant: 'destructive', title: 'Error fetching payment methods', description: error.message });
+            setMethods([]);
+        } else {
+            setMethods(data || []);
+        }
+        setLoading(false);
+    }
+    fetchMethods();
   }, [toast]);
 
   const handleAdd = () => {
@@ -47,29 +54,28 @@ export function PaymentMethodsClientPage() {
   };
   
   const handleDelete = async (methodId: string) => {
-    try {
-        await deletePaymentMethod(methodId);
+    const { success, error } = await deletePaymentMethod(methodId);
+    if (success) {
         setMethods(prev => prev.filter(m => m.id !== methodId));
         toast({ title: 'Payment Method Deleted' });
-    } catch (error) {
-        toast({ variant: 'destructive', title: 'Failed to delete method' });
+    } else {
+        toast({ variant: 'destructive', title: 'Failed to delete method', description: error?.message });
     }
   }
 
   const onFormSubmit = async (values: Omit<PaymentMethod, 'id'>, id?: string) => {
-    try {
-      if (id) {
-        await updatePaymentMethod(id, values);
-        setMethods(prev => prev.map(m => m.id === id ? { ...m, ...values, id } : m));
-        toast({ title: 'Payment Method Updated' });
-      } else {
-        const newId = await addPaymentMethod(values);
-        setMethods(prev => [...prev, { id: newId, ...values }]);
-        toast({ title: 'Payment Method Added' });
-      }
-      setOpen(false);
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Save failed' });
+    const response = id ? await updatePaymentMethod(id, values) : await addPaymentMethod(values);
+    if (response.success && response.data) {
+        if (id) {
+            setMethods(prev => prev.map(m => m.id === id ? response.data! : m));
+            toast({ title: 'Payment Method Updated' });
+        } else {
+            setMethods(prev => [...prev, response.data!]);
+            toast({ title: 'Payment Method Added' });
+        }
+        setOpen(false);
+    } else {
+        toast({ variant: 'destructive', title: 'Save failed', description: response.error?.message });
     }
   };
 

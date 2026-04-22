@@ -29,11 +29,18 @@ export function SocialLinksClientPage() {
   const [selectedLink, setSelectedLink] = useState<SocialLink | undefined>(undefined);
 
   useEffect(() => {
-    setLoading(true);
-    getSocialLinks()
-      .then(setLinks)
-      .catch(err => toast({ variant: 'destructive', title: 'Error fetching social links' }))
-      .finally(() => setLoading(false));
+    const fetchLinks = async () => {
+        setLoading(true);
+        const { data, error } = await getSocialLinks();
+        if (error) {
+            toast({ variant: 'destructive', title: 'Error fetching social links', description: error.message });
+            setLinks([]);
+        } else {
+            setLinks(data || []);
+        }
+        setLoading(false);
+    }
+    fetchLinks();
   }, [toast]);
 
   const handleAdd = () => {
@@ -47,29 +54,28 @@ export function SocialLinksClientPage() {
   };
   
   const handleDelete = async (linkId: string) => {
-    try {
-        await deleteSocialLink(linkId);
+    const { success, error } = await deleteSocialLink(linkId);
+    if (success) {
         setLinks(prev => prev.filter(l => l.id !== linkId));
         toast({ title: 'Social Link Deleted' });
-    } catch (error) {
-        toast({ variant: 'destructive', title: 'Failed to delete link' });
+    } else {
+        toast({ variant: 'destructive', title: 'Failed to delete link', description: error?.message });
     }
   }
 
   const onFormSubmit = async (values: Omit<SocialLink, 'id'>, id?: string) => {
-    try {
-      if (id) {
-        await updateSocialLink(id, values);
-        setLinks(prev => prev.map(l => l.id === id ? { ...l, ...values, id } : l));
-        toast({ title: 'Social Link Updated' });
-      } else {
-        const newId = await addSocialLink(values);
-        setLinks(prev => [...prev, { id: newId, ...values }]);
-        toast({ title: 'Social Link Added' });
-      }
-      setOpen(false);
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Save failed' });
+    const response = id ? await updateSocialLink(id, values) : await addSocialLink(values);
+    if (response.success && response.data) {
+        if (id) {
+            setLinks(prev => prev.map(l => l.id === id ? response.data! : l));
+            toast({ title: 'Social Link Updated' });
+        } else {
+            setLinks(prev => [...prev, response.data!]);
+            toast({ title: 'Social Link Added' });
+        }
+        setOpen(false);
+    } else {
+        toast({ variant: 'destructive', title: 'Save failed', description: response.error?.message });
     }
   };
 
