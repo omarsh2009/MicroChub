@@ -127,6 +127,83 @@ const mockProducts = [
     featured: false,
     productType: 'ready'
   },
+  {
+    id: '8',
+    slug: 'diy-mechanical-keyboard-kit',
+    name: 'DIY Mechanical Keyboard Kit',
+    description: 'Build your own 60% mechanical keyboard from scratch. Includes PCB, case, and stabilizers. Switches and keycaps not included.',
+    price: 1300,
+    image: 'https://picsum.photos/seed/keyboardkit/600/400',
+    categoryIds: ['5'],
+    specs: { 'Layout': '60%', 'Hot-swappable': 'Yes', 'Case Material': 'Acrylic' },
+    useCases: ['Learning keyboard assembly', 'Creating a personalized keyboard', 'Programming projects'],
+    featured: false,
+    productType: 'ready',
+    customizationGroups: [
+        {
+            name: 'Case Color',
+            type: 'single',
+            required: true,
+            options: [
+                { name: 'Frosted White', priceAdjustment: 0 },
+                { name: 'Smoked Black', priceAdjustment: 0 },
+                { name: 'Clear', priceAdjustment: 0 },
+            ]
+        }
+    ]
+  },
+  {
+    id: '9',
+    slug: 'desktop-cnc-3018',
+    name: 'Desktop CNC 3018 Kit',
+    description: 'A small desktop CNC machine for engraving and carving wood, plastic, and soft metals. A perfect introduction to CNC machining.',
+    price: 8500,
+    image: 'https://picsum.photos/seed/cnc3018/600/400',
+    categoryIds: ['5', '6'],
+    specs: { 'Working Area': '300x180x45mm', 'Spindle': '775 Motor', 'Control': 'GRBL' },
+    useCases: ['Custom PCB milling', 'Wood engraving', 'Plastic part fabrication'],
+    featured: false,
+    productType: 'ready'
+  },
+  {
+    id: '10',
+    slug: 'logic-analyzer-pro',
+    name: 'Logic Analyzer Pro (8-Channel)',
+    description: 'An 8-channel, 24MHz logic analyzer that helps you debug digital circuits and communication protocols like I2C, SPI, and UART.',
+    price: 450,
+    image: 'https://picsum.photos/seed/logicanalyzer/600/400',
+    categoryIds: [],
+    specs: { 'Channels': '8', 'Sample Rate': '24MHz', 'Supported Protocols': 'I2C, SPI, UART, and more' },
+    useCases: ['Debugging embedded systems', 'Reverse engineering protocols', 'Signal analysis'],
+    featured: true,
+    productType: 'ready'
+  },
+  {
+    id: '11',
+    slug: 'esp32-c3-mini',
+    name: 'ESP32-C3 SuperMini',
+    description: 'A tiny yet powerful board featuring the ESP32-C3 RISC-V processor with WiFi and Bluetooth LE.',
+    price: 250,
+    image: 'https://picsum.photos/seed/esp32c3/600/400',
+    categoryIds: ['2'],
+    specs: { 'MCU': 'ESP32-C3 (RISC-V)', 'Connectivity': 'Wi-Fi, Bluetooth LE 5.0', 'Form Factor': 'Mini' },
+    useCases: ['Compact IoT devices', 'Wearable electronics', 'Low-power projects'],
+    featured: false,
+    productType: 'ready'
+  },
+  {
+    id: '12',
+    slug: 'iot-sensor-pack',
+    name: 'IoT Sensor Pack (37-in-1)',
+    description: 'A comprehensive kit with 37 different sensors and modules for your Arduino or ESP32 projects. Everything you need to start experimenting.',
+    price: 950,
+    image: 'https://picsum.photos/seed/sensorpack/600/400',
+    categoryIds: ['3', '5'],
+    specs: { 'Sensors': '37 modules including temperature, humidity, light, sound, and more', 'Compatibility': 'Arduino, ESP32, Raspberry Pi' },
+    useCases: ['Educational workshops', 'Building weather stations', 'Home automation prototypes'],
+    featured: true,
+    productType: 'ready'
+  },
 ];
 
 const mockUsers = [

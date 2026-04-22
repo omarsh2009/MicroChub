@@ -10,15 +10,12 @@ export default async function DiyKitsPage() {
   const allProducts = allProductsData || [];
   const categories = categoriesData || [];
 
-  console.log("ALL PRODUCTS:", allProducts);
-
-  const diyKits = allProducts.filter(
-    (product) =>
-      Array.isArray(product.categoryIds) &&
-      product.categoryIds.includes("diy-kits")
-  );
-
-  console.log("FILTERED DIY:", diyKits);
+  const diyCategory = categories.find(c => c.slug === 'diy-kits');
+  const diyKits = diyCategory
+    ? allProducts.filter(product =>
+        Array.isArray(product.categoryIds) && product.categoryIds.includes(diyCategory.id)
+      )
+    : [];
 
   return (
     <div className="bg-background text-foreground">
