@@ -182,6 +182,7 @@ export const mockUsers = [
   { id: 'user-super-admin', name: 'Super Admin', email: 'super_admin@example.com', phoneNumber: '01000000001', role: 'super_admin', wishlist: [] },
   { id: 'user-admin', name: 'Admin User', email: 'admin@example.com', phoneNumber: '01000000002', role: 'admin', wishlist: [] },
   { id: 'user-regular', name: 'Ahmed Hossam', email: 'ahmed@example.com', phoneNumber: '01000000003', role: 'user', wishlist: ['prod-2', 'prod-7'] },
+  { id: 'user-new', name: 'Fatima Al-Sayed', email: 'fatima@example.com', phoneNumber: '01122334455', role: 'user', wishlist: [] },
 ];
 
 export const mockPaymentMethods = [
@@ -216,5 +217,30 @@ export const mockOrders = [
     ],
     totalPrice: 1450, status: 'Completed/Delivered', shippingAddress: { fullName: 'Ahmed Hossam', phoneNumber: '01000000003', address: '123 Abc Street', city: 'Cairo' }, paymentMethod: { id: 'pm-3', name: 'Vodafone Cash' }, transactionId: 'VF99887',
     createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 10, nanoseconds: 0 },
+  },
+];
+
+export const mockSocialLinks = [
+    { id: 'soc-fb', platform: 'Facebook', url: 'https://facebook.com/microchub', enabled: true },
+    { id: 'soc-gh', platform: 'GitHub', url: 'https://github.com/microchub', enabled: true },
+    { id: 'soc-in', platform: 'Instagram', url: 'https://instagram.com/microchub', enabled: true },
+];
+
+export const mockQuotes = [
+  {
+    id: 'quote_1', userId: 'user-regular', items: [{ id: 'prod-2-cart', productId: 'prod-2', name: 'Desktop CNC 3018 Pro Kit', slug: 'desktop-cnc-3018-pro', image: 'https://images.unsplash.com/photo-1620352538982-255a2a9b3f36?q=80&w=600&auto=format&fit=crop', quantity: 1, price: 8500, configuration: { "Material": "Black Acrylic instead of Clear" } }],
+    status: 'Quoted', userNotes: 'Is it possible to get this kit with black acrylic parts instead of the standard clear ones?', quotedPrice: 9000, adminNotes: 'Yes, we can cut it from black acrylic. The material cost is slightly higher.', createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 5, nanoseconds: 0 },
+  },
+  {
+    id: 'quote_2', userId: 'user-admin', items: [{ id: 'prod-7-cart', productId: 'prod-7', name: 'DIY Smart Watch Kit', slug: 'diy-smart-watch-kit', image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=600&auto=format&fit=crop', quantity: 10, price: 1800, configuration: { "Case Color": "Red" } }],
+    status: 'Pending Review', userNotes: 'Need a bulk order of 10 red smart watch kits for a workshop.', createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 2, nanoseconds: 0 },
+  },
+  {
+    id: 'quote_3', userId: 'user-regular', items: [{ id: 'prod-7-cart-2', productId: 'prod-7', name: 'DIY Smart Watch Kit', slug: 'diy-smart-watch-kit', image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=600&auto=format&fit=crop', quantity: 1, price: 1800, configuration: { "MCU": "ESP32-S3" } }],
+    status: 'Rejected', userNotes: 'Can you swap the ESP32 for an ESP32-S3? Need it for the AI features.', quotedPrice: 2200, adminNotes: 'We can do this, but it requires a custom PCB layout. The new price reflects this change.', createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 12, nanoseconds: 0 },
+  },
+  {
+    id: 'quote_4', userId: 'user-regular', items: [{ id: 'prod-1-cart-quote', productId: 'prod-1', name: 'Arduino Uno Ultimate Starter Kit', slug: 'arduino-uno-ultimate-starter-kit', image: 'https://images.unsplash.com/photo-1559386484-97dfc0e150a9?q=80&w=600&auto=format&fit=crop', quantity: 1, price: 1250, configuration: { "Board": "Arduino Nano instead of Uno" } }],
+    status: 'Accepted', userNotes: 'Can I get a Nano instead of an Uno in this kit?', quotedPrice: 1250, adminNotes: 'Sure, we can swap that for you at no extra cost.', createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 15, nanoseconds: 0 },
   },
 ];
