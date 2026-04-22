@@ -22,18 +22,18 @@ export function UserDetailsClientPage({ userId }: { userId: string }) {
     async function fetchData() {
       setLoading(true);
       try {
-        const [userData, ordersData] = await Promise.all([
+        const [userResponse, ordersResponse] = await Promise.all([
           getUserById(userId),
           getOrdersByUserId(userId),
         ]);
         
-        if (!userData) {
+        if (!userResponse.success || !userResponse.data) {
           toast({ variant: 'destructive', title: 'User not found' });
           return;
         }
 
-        setUser(userData);
-        setOrders(ordersData);
+        setUser(userResponse.data);
+        setOrders(ordersResponse.data || []);
       } catch (error) {
         toast({ variant: 'destructive', title: 'Failed to fetch user data' });
         console.error(error);
