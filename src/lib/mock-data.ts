@@ -34,6 +34,28 @@ export const mockProducts = [
     useCases: ['Custom PCB milling', 'Wood engraving', 'Prototyping mechanical parts'],
     featured: true,
     productType: 'build_to_order',
+    isRestricted: true,
+    customizationGroups: [
+        {
+            name: 'Spindle Upgrade',
+            type: 'single',
+            required: false,
+            options: [
+                { name: 'Standard 775 Spindle', priceAdjustment: 0 },
+                { name: '500W Brushless Spindle', priceAdjustment: 1500 },
+            ]
+        },
+        {
+            name: 'Laser Module',
+            type: 'single',
+            required: false,
+            options: [
+                { name: 'No Laser', priceAdjustment: 0 },
+                { name: '5.5W Laser Engraver', priceAdjustment: 2000 },
+                { name: '15W Laser Engraver', priceAdjustment: 0, requestQuote: true },
+            ]
+        }
+    ]
   },
   {
     id: 'prod-3',
@@ -60,6 +82,18 @@ export const mockProducts = [
     useCases: ['Portable IoT projects', 'Edge AI applications', 'Complex robotics'],
     productType: 'ready',
     featured: true,
+    customizationGroups: [
+        {
+            name: 'Header Options',
+            type: 'single',
+            required: true,
+            options: [
+                { name: 'Headers Not Included', priceAdjustment: 0 },
+                { name: 'Headers Included (Unsoldered)', priceAdjustment: 20 },
+                { name: 'Headers Soldered', priceAdjustment: 50 },
+            ]
+        }
+    ]
   },
   {
     id: 'prod-5',
@@ -98,6 +132,36 @@ export const mockProducts = [
     specs: { 'Display': '1.28" Round LCD', 'MCU': 'ESP32-WROOM-32', 'Battery': '150mAh LiPo' },
     useCases: ['Learning about wearables', 'Customizing your own watch faces', 'IoT notifications on your wrist'],
     productType: 'build_to_order',
+    customizationGroups: [
+        {
+            name: 'Case Color',
+            type: 'single',
+            required: true,
+            options: [
+                { name: 'Black', priceAdjustment: 0 },
+                { name: 'Clear', priceAdjustment: 0 },
+                { name: 'Orange', priceAdjustment: 50 },
+            ]
+        },
+        {
+            name: 'Strap Material',
+            type: 'single',
+            required: true,
+            options: [
+                { name: 'Silicone Strap', priceAdjustment: 0 },
+                { name: 'Leather Strap', priceAdjustment: 150 },
+            ]
+        },
+        {
+            name: 'Add-ons',
+            type: 'multi',
+            required: false,
+            options: [
+                { name: 'Extra Battery', priceAdjustment: 100 },
+                { name: 'Wireless Charging Module', priceAdjustment: 250 },
+            ]
+        }
+    ]
   },
   {
     id: 'prod-8',
