@@ -15,6 +15,7 @@ async function apiFetch<T>(
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
+      cache: 'no-store', // Prevent caching of API responses
       credentials: 'include',
       headers,
     });
