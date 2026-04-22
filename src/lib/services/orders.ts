@@ -1,6 +1,7 @@
 
 import type { Order, OrderWithUserData, CartItem, PaymentMethod, ShippingAddress, ServiceResponse } from '../types';
-import { mockOrders as rawMockOrders, mockUsers } from '@/lib/mock-data';
+import { mockRawOrders, mockUsers } from '@/lib/mock-data';
+import { getMe } from './auth';
 
 interface OrderPayload {
   cart: CartItem[];
@@ -16,9 +17,9 @@ interface OrderPayload {
 }
 
 // In-memory store for orders to simulate updates
-let mockOrders: OrderWithUserData[] = rawMockOrders.map(order => {
+let mockOrders: OrderWithUserData[] = mockRawOrders.map(order => {
     const user = mockUsers.find(u => u.id === order.userId);
-    if (!user) throw new Error("Mock data inconsistency: user not found");
+    if (!user) throw new Error(`Mock data inconsistency: user ${order.userId} not found for order ${order.id}`);
     return {
       ...order,
       user: {
@@ -31,24 +32,21 @@ let mockOrders: OrderWithUserData[] = rawMockOrders.map(order => {
 });
 
 export async function createOrder(payload: OrderPayload): Promise<ServiceResponse<{orderId: string}>> {
-  // This is a placeholder. The actual implementation would handle multipart/form-data
-  // for file uploads, which requires a more complex setup than the basic api wrapper provides.
   if (payload.legalAgreementFile) {
-    console.warn("File upload in createOrder is not fully implemented in the frontend service layer and requires a multipart/form-data fetch call.");
+    console.warn("File upload in createOrder is mocked. File is not actually uploaded.");
   }
   
-  // This is a mock implementation
   await new Promise(resolve => setTimeout(resolve, 500));
-  const newOrderId = `ord_${Math.random().toString(36).substring(2, 9)}`;
-  const orderUser = mockUsers.find(u => u.role === 'super_admin'); // Mock as current user
+  const me = await getMe();
+  const currentUser = mockUsers.find(u => u.id === me.data?.uid);
   
-  if (!orderUser) {
+  if (!currentUser) {
     return { success: false, data: null, error: { message: "Mock user not found to create order" }};
   }
 
   const newOrder: OrderWithUserData = {
-    id: newOrderId,
-    userId: orderUser.id,
+    id: `ord_${Math.random().toString(36).substring(2, 9)}`,
+    userId: currentUser.id,
     items: payload.cart,
     totalPrice: payload.totalPrice,
     status: 'Pending Verification',
@@ -66,21 +64,24 @@ export async function createOrder(payload: OrderPayload): Promise<ServiceRespons
     requiresLegalApproval: payload.requiresLegalApproval,
     legalAgreementApproved: false,
     user: {
-      id: orderUser.id,
-      name: orderUser.name,
-      email: orderUser.email,
-      phoneNumber: orderUser.phoneNumber,
+      id: currentUser.id,
+      name: currentUser.name,
+      email: currentUser.email,
+      phoneNumber: currentUser.phoneNumber,
     }
   };
   mockOrders.push(newOrder);
 
-  return { success: true, data: { orderId: newOrderId }, error: null };
+  return { success: true, data: { orderId: newOrder.id }, error: null };
 }
 
 export async function getUserOrders(): Promise<ServiceResponse<OrderWithUserData[]>> {
   await new Promise(resolve => setTimeout(resolve, 50));
-  // Hardcoding to a specific user for mock purposes, as we don't have real auth context here
-  const userId = 'user-regular'; 
+  const me = await getMe();
+  const userId = me.data?.uid;
+  if (!userId) {
+    return { success: false, data: null, error: { message: 'User not authenticated' } };
+  }
   const userOrders = mockOrders.filter(o => o.userId === userId);
   return { success: true, data: userOrders, error: null };
 }
@@ -123,3 +124,5 @@ export async function approveLegalAgreement(
     }
     return { success: false, data: null, error: { message: 'Order not found' } };
 }
+
+    

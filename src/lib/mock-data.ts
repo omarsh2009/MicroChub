@@ -1,14 +1,16 @@
 
 // A single source of truth for all mock data to ensure consistency.
+import type { Product, Category, UserWithId, PaymentMethod, OrderWithUserData, QuoteRequestWithUserData, Coupon, SocialLink, LegalAgreement, CartItem, Order } from './types';
 
-export const mockCategories = [
+
+export const mockCategories: Category[] = [
     { id: 'cat-1', name: 'DIY Kits', slug: 'diy-kits' },
     { id: 'cat-2', name: 'Arduino', slug: 'arduino' },
     { id: 'cat-3', name: 'Sensors', slug: 'sensors' },
     { id: 'cat-6', name: 'ESP Devices', slug: 'esp-devices' },
 ];
 
-export const mockProducts = [
+export const mockProducts: Product[] = [
   {
     id: 'prod-1',
     slug: 'arduino-uno-ultimate-starter-kit',
@@ -178,20 +180,20 @@ export const mockProducts = [
   },
 ];
 
-export const mockUsers = [
+export const mockUsers: UserWithId[] = [
   { id: 'user-super-admin', name: 'Super Admin', email: 'super_admin@example.com', phoneNumber: '01000000001', role: 'super_admin', wishlist: [] },
   { id: 'user-admin', name: 'Admin User', email: 'admin@example.com', phoneNumber: '01000000002', role: 'admin', wishlist: [] },
   { id: 'user-regular', name: 'Ahmed Hossam', email: 'ahmed@example.com', phoneNumber: '01000000003', role: 'user', wishlist: ['prod-2', 'prod-7'] },
   { id: 'user-new', name: 'Fatima Al-Sayed', email: 'fatima@example.com', phoneNumber: '01122334455', role: 'user', wishlist: [] },
 ];
 
-export const mockPaymentMethods = [
+export const mockPaymentMethods: PaymentMethod[] = [
     { id: 'pm-1', name: 'Cash on Delivery', type: 'username', value: 'N/A', instructions: 'Pay in cash when your order is delivered.', enabled: true },
     { id: 'pm-2', name: 'Credit Card', type: 'paymentLink', value: 'https://pay.example.com', instructions: 'Pay via our secure payment link.', enabled: false },
     { id: 'pm-3', name: 'Vodafone Cash', type: 'phoneNumber', value: '01012345678', instructions: 'Send the total amount to this number and enter the transaction ID.', enabled: true },
 ];
 
-export const mockOrders = [
+export const mockRawOrders: Omit<OrderWithUserData, 'user'>[] = [
   {
     id: 'ord_1', userId: 'user-regular', items: [{ id: 'prod-1-cart', productId: 'prod-1', name: 'Arduino Uno Ultimate Starter Kit', slug:'arduino-uno-ultimate-starter-kit', image: 'https://images.unsplash.com/photo-1559386484-97dfc0e150a9?q=80&w=600&auto=format&fit=crop', quantity: 1, price: 1250, configuration: {} }],
     totalPrice: 1250, status: 'Completed/Delivered', shippingAddress: { fullName: 'Ahmed Hossam', phoneNumber: '01000000003', address: '123 Abc Street', city: 'Cairo' }, paymentMethod: { id: 'pm-3', name: 'Vodafone Cash' }, transactionId: 'VF12345',
@@ -220,13 +222,19 @@ export const mockOrders = [
   },
 ];
 
-export const mockSocialLinks = [
+export const mockCoupons: Coupon[] = [
+    { id: 'coup-1', code: 'MAKERSPACE', type: 'percentage', value: 10, maxUses: 100, usedCount: 23, expiryDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0] },
+    { id: 'coup-2', code: 'WELCOME100', type: 'fixed', value: 100, maxUses: 500, usedCount: 150 },
+    { id: 'coup-3', code: 'EXPIRED', type: 'fixed', value: 50, maxUses: 100, usedCount: 10, expiryDate: '2022-01-01' },
+];
+
+export const mockSocialLinks: SocialLink[] = [
     { id: 'soc-fb', platform: 'Facebook', url: 'https://facebook.com/microchub', enabled: true },
     { id: 'soc-gh', platform: 'GitHub', url: 'https://github.com/microchub', enabled: true },
     { id: 'soc-in', platform: 'Instagram', url: 'https://instagram.com/microchub', enabled: true },
 ];
 
-export const mockQuotes = [
+export const mockRawQuotes: Omit<QuoteRequestWithUserData, 'user'>[] = [
   {
     id: 'quote_1', userId: 'user-regular', items: [{ id: 'prod-2-cart', productId: 'prod-2', name: 'Desktop CNC 3018 Pro Kit', slug: 'desktop-cnc-3018-pro', image: 'https://images.unsplash.com/photo-1620352538982-255a2a9b3f36?q=80&w=600&auto=format&fit=crop', quantity: 1, price: 8500, configuration: { "Material": "Black Acrylic instead of Clear" } }],
     status: 'Quoted', userNotes: 'Is it possible to get this kit with black acrylic parts instead of the standard clear ones?', quotedPrice: 9000, adminNotes: 'Yes, we can cut it from black acrylic. The material cost is slightly higher.', createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 5, nanoseconds: 0 },
@@ -244,3 +252,11 @@ export const mockQuotes = [
     status: 'Accepted', userNotes: 'Can I get a Nano instead of an Uno in this kit?', quotedPrice: 1250, adminNotes: 'Sure, we can swap that for you at no extra cost.', createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 15, nanoseconds: 0 },
   },
 ];
+
+export const mockLegalAgreement: LegalAgreement = {
+    fileName: 'MicroChub-Restricted-Item-Agreement-v1.pdf',
+    fileContent: 'data:application/pdf;base64,....', // a dummy base64 string
+    uploadedAt: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString(),
+};
+
+    

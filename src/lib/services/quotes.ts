@@ -1,6 +1,7 @@
 
 import type { Product, QuoteRequestWithUserData, SelectedConfiguration, ServiceResponse } from '../types';
-import { mockQuotes as rawMockQuotes, mockUsers } from '@/lib/mock-data';
+import { mockRawQuotes, mockUsers } from '@/lib/mock-data';
+import { getMe } from './auth';
 
 interface QuoteRequestPayload {
   product: Product;
@@ -11,9 +12,9 @@ interface QuoteRequestPayload {
   file?: File;
 }
 
-let mockQuotes: QuoteRequestWithUserData[] = rawMockQuotes.map(quote => {
+let mockQuotes: QuoteRequestWithUserData[] = mockRawQuotes.map(quote => {
     const user = mockUsers.find(u => u.id === quote.userId);
-    if (!user) throw new Error("Mock data inconsistency: user not found for quote");
+    if (!user) throw new Error(`Mock data inconsistency: user not found for quote`);
     return {
       ...quote,
       user: {
@@ -29,7 +30,8 @@ export async function createQuoteRequest(
   payload: QuoteRequestPayload
 ): Promise<ServiceResponse<QuoteRequestWithUserData>> {
   await new Promise(resolve => setTimeout(resolve, 500));
-  const currentUser = mockUsers.find(u => u.role === 'super_admin');
+  const me = await getMe();
+  const currentUser = mockUsers.find(u => u.id === me.data?.uid);
   if (!currentUser) {
     return { success: false, data: null, error: { message: "Mock user not found to create quote request" } };
   }
@@ -74,9 +76,6 @@ export async function updateUserQuoteStatus(
     const quoteIndex = mockQuotes.findIndex(q => q.id === quoteId);
     if (quoteIndex > -1) {
         mockQuotes[quoteIndex].status = status;
-        if (status === 'Accepted') {
-            mockQuotes[quoteIndex].status = 'Accepted';
-        }
         return { success: true, data: null, error: null };
     }
     return { success: false, data: null, error: { message: 'Quote not found' } };
@@ -89,7 +88,11 @@ export async function getAllQuoteRequests(): Promise<ServiceResponse<QuoteReques
 
 export async function getUserQuotes(): Promise<ServiceResponse<QuoteRequestWithUserData[]>> {
     await new Promise(resolve => setTimeout(resolve, 50));
-    const userId = 'user-regular'; // Mocking a specific user for now
+    const me = await getMe();
+    const userId = me.data?.uid;
+    if (!userId) {
+        return { success: false, data: null, error: { message: 'User not authenticated' }};
+    }
     return { success: true, data: mockQuotes.filter(q => q.userId === userId), error: null };
 }
 
@@ -112,3 +115,5 @@ export async function submitQuote(
     }
     return { success: false, data: null, error: { message: 'Quote not found' } };
 }
+
+    
