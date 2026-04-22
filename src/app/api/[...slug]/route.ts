@@ -1,18 +1,6 @@
 
 import { NextResponse } from 'next/server';
 
-/**
- * This is a temporary mock API catch-all route.
- * Its purpose is to prevent the application from crashing due to a "JSON Parse Error"
- * which occurs when the frontend expects a JSON response from an API endpoint but
- * receives an HTML page instead (because the backend API is not yet implemented).
- *
- * This handler intercepts all requests to `/api/*`, logs them, and returns
- * a valid, mock JSON response. For key endpoints needed for the app to be
- * minimally functional (like categories and featured products), it returns sample data.
- * For all other endpoints, it returns an empty array to prevent UI errors.
- */
-
 const mockCategories = [
     { id: '1', name: 'Mochi', slug: 'mochi' },
     { id: '2', name: 'ESP Devices', slug: 'esp-devices' },
@@ -73,22 +61,119 @@ const mockProducts = [
       useCases: ['Home Assistant dashboard', 'Weather station', 'Custom user interfaces'],
       featured: true,
       productType: 'build_to_order'
+  },
+  {
+    id: '5',
+    slug: 'simple-led-kit',
+    name: 'Simple LED Kit',
+    description: 'A beginner-friendly kit to get started with LEDs and basic circuits.',
+    price: 150,
+    image: 'https://picsum.photos/seed/ledkit/600/400',
+    categoryIds: ['5'],
+    specs: { 'Components': '5x LEDs, 5x Resistors, 1x Breadboard' },
+    useCases: ['Learning electronics', 'Blinking an LED', 'Simple projects'],
+    featured: false,
+    productType: 'ready'
   }
 ];
 
-const mockAdminUser = {
+const mockUsers = [
+  {
+    id: 'super-admin-user-id',
+    name: 'Super Admin',
+    email: 'super_admin@example.com',
+    phoneNumber: '0123456789',
+    wishlist: [],
+    role: 'super_admin',
+  },
+  {
+    id: 'test-user-1',
+    name: 'Test User',
+    email: 'test@example.com',
+    phoneNumber: '0111222333',
+    wishlist: ['1', '3'],
+    role: 'user',
+  }
+];
+
+const mockAuthenticatedUser = {
     uid: 'super-admin-user-id',
     email: 'super_admin@example.com',
     displayName: 'Super Admin',
-    profile: {
-        id: 'super-admin-user-id',
-        name: 'Super Admin',
-        email: 'super_admin@example.com',
-        phoneNumber: '0123456789',
-        wishlist: [],
-        role: 'super_admin',
-    }
+    profile: mockUsers[0]
 };
+
+const mockOrders = [
+  {
+    id: 'ord_12345',
+    userId: 'test-user-1',
+    items: [
+        {
+            id: '1',
+            productId: '1',
+            name: 'Mochi v5',
+            slug: 'mochi-v5',
+            image: 'https://picsum.photos/seed/mochi/600/400',
+            quantity: 1,
+            price: 1200,
+            configuration: { 'Case': 'Black' }
+        }
+    ],
+    totalPrice: 1200,
+    status: 'Confirmed',
+    shippingAddress: {
+        fullName: 'Test User',
+        phoneNumber: '0111222333',
+        address: '123 Test Street',
+        city: 'Cairo',
+    },
+    paymentMethod: {
+        id: 'pm_1',
+        name: 'MockPay',
+    },
+    transactionId: 'txn_mock_123',
+    createdAt: {
+        seconds: Math.floor(new Date().getTime() / 1000) - (86400 * 2), // 2 days ago
+        nanoseconds: 0
+    },
+    user: {
+        id: 'test-user-1',
+        name: 'Test User',
+        email: 'test@example.com',
+        phoneNumber: '0111222333',
+    }
+  }
+];
+
+const mockQuotes = [
+    {
+        id: 'quote_abcde',
+        userId: 'test-user-1',
+        items: [
+            {
+                id: '2',
+                productId: '2',
+                name: 'Pico Deck',
+                slug: 'pico-deck',
+                image: 'https://picsum.photos/seed/picodeck/600/400',
+                quantity: 1,
+                price: 650,
+                configuration: { 'Switches': 'Blue Switches', 'Keycaps': 'Custom' }
+            }
+        ],
+        status: 'Pending Review',
+        createdAt: {
+            seconds: Math.floor(new Date().getTime() / 1000) - (86400 * 1), // 1 day ago
+            nanoseconds: 0
+        },
+        user: {
+            id: 'test-user-1',
+            name: 'Test User',
+            email: 'test@example.com',
+            phoneNumber: '0111222333',
+        }
+    }
+];
 
 // Helper function to create a standardized response
 function createMockResponse(data: any) {
@@ -106,11 +191,31 @@ async function handler(request: Request) {
   
   if (request.method === 'POST' && pathname.startsWith('/api/auth/')) {
     // For any auth POST, just return the mock admin user to simulate a successful login/signup
-    return createMockResponse(mockAdminUser);
+    return createMockResponse(mockAuthenticatedUser);
   }
 
   if (pathname.startsWith('/api/auth/me')) {
-      return createMockResponse(mockAdminUser);
+      return createMockResponse(mockAuthenticatedUser);
+  }
+
+  if (pathname.startsWith('/api/users')) {
+    const userId = pathname.split('/')[3];
+    if (userId) {
+        return createMockResponse(mockUsers.find(u => u.id === userId));
+    }
+    return createMockResponse(mockUsers);
+  }
+
+  if (pathname.startsWith('/api/orders')) {
+    const userId = pathname.split('/user/')[1];
+    if (userId) {
+        return createMockResponse(mockOrders.filter(o => o.userId === userId));
+    }
+    return createMockResponse(mockOrders);
+  }
+
+  if (pathname.startsWith('/api/quotes')) {
+    return createMockResponse(mockQuotes);
   }
 
   // Route specific mock data
@@ -142,3 +247,5 @@ async function handler(request: Request) {
 }
 
 export { handler as GET, handler as POST, handler as PUT, handler as PATCH, handler as DELETE };
+
+    
