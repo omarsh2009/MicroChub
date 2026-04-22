@@ -177,3 +177,44 @@ export const mockProducts = [
     productType: 'ready',
   },
 ];
+
+export const mockUsers = [
+  { id: 'user-super-admin', name: 'Super Admin', email: 'super_admin@example.com', phoneNumber: '01000000001', role: 'super_admin', wishlist: [] },
+  { id: 'user-admin', name: 'Admin User', email: 'admin@example.com', phoneNumber: '01000000002', role: 'admin', wishlist: [] },
+  { id: 'user-regular', name: 'Ahmed Hossam', email: 'ahmed@example.com', phoneNumber: '01000000003', role: 'user', wishlist: ['prod-2', 'prod-7'] },
+];
+
+export const mockPaymentMethods = [
+    { id: 'pm-1', name: 'Cash on Delivery', type: 'username', value: 'N/A', instructions: 'Pay in cash when your order is delivered.', enabled: true },
+    { id: 'pm-2', name: 'Credit Card', type: 'paymentLink', value: 'https://pay.example.com', instructions: 'Pay via our secure payment link.', enabled: false },
+    { id: 'pm-3', name: 'Vodafone Cash', type: 'phoneNumber', value: '01012345678', instructions: 'Send the total amount to this number and enter the transaction ID.', enabled: true },
+];
+
+export const mockOrders = [
+  {
+    id: 'ord_1', userId: 'user-regular', items: [{ id: 'prod-1-cart', productId: 'prod-1', name: 'Arduino Uno Ultimate Starter Kit', slug:'arduino-uno-ultimate-starter-kit', image: 'https://images.unsplash.com/photo-1559386484-97dfc0e150a9?q=80&w=600&auto=format&fit=crop', quantity: 1, price: 1250, configuration: {} }],
+    totalPrice: 1250, status: 'Completed/Delivered', shippingAddress: { fullName: 'Ahmed Hossam', phoneNumber: '01000000003', address: '123 Abc Street', city: 'Cairo' }, paymentMethod: { id: 'pm-3', name: 'Vodafone Cash' }, transactionId: 'VF12345',
+    createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 7, nanoseconds: 0 },
+  },
+  {
+    id: 'ord_2', userId: 'user-regular', items: [{ id: 'prod-2-cart', productId: 'prod-2', name: 'Desktop CNC 3018 Pro Kit', slug: 'desktop-cnc-3018-pro', image: 'https://images.unsplash.com/photo-1620352538982-255a2a9b3f36?q=80&w=600&auto=format&fit=crop', quantity: 1, price: 8500, configuration: {} }],
+    totalPrice: 8500, status: 'In Production', shippingAddress: { fullName: 'Ahmed Hossam', phoneNumber: '01000000003', address: '123 Abc Street', city: 'Cairo' }, paymentMethod: { id: 'pm-3', name: 'Vodafone Cash' }, transactionId: 'VF67890',
+    createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 3, nanoseconds: 0 },
+    requiresLegalApproval: true,
+    legalAgreementApproved: false,
+    legalAgreementUrl: 'https://example.com/signed-agreement.pdf',
+  },
+  {
+    id: 'ord_3', userId: 'user-admin', items: [{ id: 'prod-4-cart', productId: 'prod-4', name: 'ESP32-S3 Development Board', slug: 'esp32-s3-dev-board', image: 'https://images.unsplash.com/photo-1629051871926-9d3023d6bdf1?q=80&w=600&auto=format&fit=crop', quantity: 5, price: 650, configuration: {} }],
+    totalPrice: 3250, status: 'Pending Verification', shippingAddress: { fullName: 'Admin User', phoneNumber: '01000000002', address: '456 Admin Ave', city: 'Giza' }, paymentMethod: { id: 'pm-1', name: 'Cash on Delivery' }, transactionId: 'N/A',
+    createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400, nanoseconds: 0 },
+  },
+   {
+    id: 'ord_4', userId: 'user-regular', items: [
+        { id: 'prod-6-cart', productId: 'prod-6', name: 'Ultrasonic Distance Sensor (HC-SR04)', slug:'ultrasonic-distance-sensor-hc-sr04', image: 'https://images.unsplash.com/photo-1615906655572-4d2de3431f2b?q=80&w=600&auto=format&fit=crop', quantity: 10, price: 75, configuration: {} },
+        { id: 'prod-8-cart', productId: 'prod-8', name: 'BME280 Environmental Sensor Module', slug:'bme280-environmental-sensor-module', image: 'https://images.unsplash.com/photo-1580371694726-a07cb18815f3?q=80&w=600&auto=format&fit=crop', quantity: 2, price: 350, configuration: {} },
+    ],
+    totalPrice: 1450, status: 'Completed/Delivered', shippingAddress: { fullName: 'Ahmed Hossam', phoneNumber: '01000000003', address: '123 Abc Street', city: 'Cairo' }, paymentMethod: { id: 'pm-3', name: 'Vodafone Cash' }, transactionId: 'VF99887',
+    createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 10, nanoseconds: 0 },
+  },
+];
