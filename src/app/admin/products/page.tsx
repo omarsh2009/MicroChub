@@ -3,8 +3,8 @@ import { ProductClientPage } from "./client";
 import { getCategories } from "@/lib/services/categories";
 
 export default async function AdminProductsPage() {
-  const products = await getProducts();
-  const categories = await getCategories();
+  const { data: productsData } = await getProducts();
+  const { data: categoriesData } = await getCategories();
   
-  return <ProductClientPage products={products} categories={categories} />;
+  return <ProductClientPage products={productsData || []} categories={categoriesData || []} />;
 }
