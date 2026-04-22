@@ -59,8 +59,6 @@ export async function signOut(): Promise<ServiceResponse<null>> {
 }
 
 export async function getMe(): Promise<ServiceResponse<UserData>> {
-    await new Promise(resolve => setTimeout(resolve, 50)); // Simulate network delay
-
     // If there is no current user ID (e.g., after logout or on a new device session),
     // default to the super admin. This ensures the app is never in a fully "anonymous"
     // state, which prevents infrastructure-level permission errors.
