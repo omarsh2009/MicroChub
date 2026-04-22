@@ -1,8 +1,11 @@
+
 import type { Category, ServiceResponse } from '../types';
 import { api } from '@/lib/api';
+import { mockCategories } from '@/lib/mock-data';
 
 export async function getCategories(): Promise<ServiceResponse<Category[]>> {
-    return api.get<Category[]>('/categories');
+    await new Promise(resolve => setTimeout(resolve, 50)); // Simulate network delay
+    return { success: true, data: mockCategories, error: null };
 }
 
 export async function addCategory(data: Omit<Category, 'id' | 'slug'>): Promise<ServiceResponse<Category>> {
