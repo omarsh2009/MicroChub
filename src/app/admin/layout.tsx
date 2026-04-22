@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -28,9 +29,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/logo";
-import { useUser } from "@/auth";
+import { useUser, useAuthContext } from "@/auth";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { signOut } from "@/lib/services/auth";
 
 const navLinks = [
     { href: "/admin/products", label: "Products", icon: Package },
@@ -49,11 +51,14 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const user = useUser();
+  const { refetchUser } = useAuthContext();
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
 
   const handleLogout = async () => {
+    await signOut();
+    refetchUser();
     toast({ title: "Logged Out" });
     router.push("/");
   };

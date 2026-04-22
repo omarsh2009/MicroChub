@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -30,7 +31,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Logo } from "./logo";
-import { useUser } from "@/auth";
+import { useUser, useAuthContext } from "@/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/hooks/use-cart";
 import { Badge } from "@/components/ui/badge";
@@ -43,9 +44,11 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { signOut } from "@/lib/services/auth";
 
 export function Header() {
   const user = useUser();
+  const { refetchUser } = useAuthContext();
   const router = useRouter();
   const { toast } = useToast();
   const { itemCount } = useCart();
@@ -56,8 +59,8 @@ export function Header() {
   }, []);
 
   const handleLogout = async () => {
-    // In a real app, this would call a sign-out function.
-    // Here, we just simulate it and redirect.
+    await signOut();
+    refetchUser();
     toast({ title: "Logged Out", description: "You have been successfully logged out." });
     router.push("/");
   };
