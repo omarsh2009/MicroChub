@@ -3,365 +3,256 @@ import { NextResponse } from 'next/server';
 
 // --- MOCK DATA DEFINITIONS ---
 
+// 1. Categories
 const mockCategories = [
-    { id: '1', name: 'Mochi', slug: 'mochi' },
-    { id: '2', name: 'ESP Devices', slug: 'esp-devices' },
-    { id: '3', name: 'Arduino Projects', slug: 'arduino-projects' },
-    { id: '4', name: 'Smart Displays', slug: 'smart-displays' },
-    { id: '5', name: 'DIY Kits', slug: 'diy-kits' },
-    { id: '6', name: 'Robotics', slug: 'robotics' },
-    { id: '7', name: '3D Printing', slug: '3d-printing' },
+    { id: 'cat-1', name: 'DIY Kits', slug: 'diy-kits' },
+    { id: 'cat-2', name: 'Arduino', slug: 'arduino' },
+    { id: 'cat-3', name: 'Sensors', slug: 'sensors' },
+    { id: 'cat-4', name: 'Robotics', slug: 'robotics' },
+    { id: 'cat-5', name: '3D Printing', slug: '3d-printing' },
+    { id: 'cat-6', name: 'ESP Devices', slug: 'esp-devices' },
 ];
 
+// 2. Products
 const mockProducts = [
   {
-    id: '1',
-    slug: 'mochi-v5-pro',
-    name: 'Mochi v5 Pro',
-    description: 'The ultimate tool for WiFi penetration testing and development, packed in a sleek, portable form factor with an external antenna.',
-    price: 1800,
-    image: 'https://picsum.photos/seed/mochipro/600/400',
-    categoryIds: ['1', '2'],
-    specs: { 'MCU': 'ESP32-S3', 'Connectivity': 'Wi-Fi, Bluetooth 5.0', 'Antenna': 'External SMA' },
-    useCases: ['Wi-Fi Deauthentication', 'Packet sniffing', 'Evil Twin attacks', 'Wardriving'],
-    featured: true,
-    isRestricted: true,
-    productType: 'build_to_order'
-  },
-  {
-    id: '2',
-    slug: 'pico-deck-plus',
-    name: 'Pico Deck Plus',
-    description: 'A versatile 8-key macro-pad powered by the Raspberry Pi Pico, perfect for custom shortcuts and commands.',
-    price: 850,
-    image: 'https://picsum.photos/seed/picodeckplus/600/400',
-    categoryIds: ['3', '5'],
-    specs: { 'MCU': 'RP2040', 'Keys': '8 programmable mechanical keys', 'Encoder': 'Rotary Encoder Knob' },
-    useCases: ['Custom macros for coding', 'Streaming controls (OBS)', 'Gaming shortcuts', 'Volume control'],
+    id: 'prod-1',
+    slug: 'arduino-uno-ultimate-starter-kit',
+    name: 'Arduino Uno Ultimate Starter Kit',
+    description: 'The perfect kit for beginners to dive into the world of Arduino. Includes an Arduino Uno, breadboard, and a huge assortment of sensors and components.',
+    price: 1200,
+    image: 'https://picsum.photos/seed/arduino-kit/600/400',
+    categoryIds: ['cat-2', 'cat-1'],
+    specs: { 'MCU': 'ATmega328P', 'Components': 'Over 200 included', 'Guide': '25 lessons included' },
+    useCases: ['Learning electronics', 'Prototyping IoT ideas', 'Building interactive projects'],
     featured: true,
     productType: 'ready',
-    customizationGroups: [
-        {
-            name: 'Switch Type',
-            type: 'single',
-            required: true,
-            options: [
-                { name: 'Red Switches (Linear)', priceAdjustment: 0 },
-                { name: 'Brown Switches (Tactile)', priceAdjustment: 50 },
-                { name: 'Blue Switches (Clicky)', priceAdjustment: 50 },
-            ]
-        },
-        {
-            name: 'Addons',
-            type: 'multi',
-            required: false,
-            options: [
-                { name: 'Custom Keycaps', priceAdjustment: 0, requestQuote: true },
-                { name: 'Braided USB-C Cable', priceAdjustment: 150 },
-            ]
-        }
-    ]
   },
   {
-      id: '3',
-      slug: 'esp32-s3-dev-pro',
-      name: 'ESP32-S3 Dev Board Pro',
-      description: 'A powerful and feature-rich development board based on the ESP32-S3 with integrated battery management.',
-      price: 600,
-      image: 'https://picsum.photos/seed/esp32pro/600/400',
-      categoryIds: ['2'],
-      specs: { 'MCU': 'ESP32-S3', 'Flash': '16MB', 'PSRAM': '8MB', 'Battery': 'JST-PH connector + Charging Circuit' },
-      useCases: ['Portable IoT projects', 'Edge AI with battery backup', 'Complex robotics'],
-      featured: true,
-      productType: 'ready'
-  },
-  {
-      id: '4',
-      slug: 'smart-display-hub-7',
-      name: 'Smart Display Hub 7"',
-      description: 'A 7-inch high-resolution touch display with an ESP32 for building beautiful custom smart home dashboards.',
-      price: 1500,
-      image: 'https://picsum.photos/seed/display7/600/400',
-      categoryIds: ['4'],
-      specs: { 'Display': '7" IPS Touchscreen', 'Resolution': '1024x600', 'MCU': 'ESP32-S3 WROOM' },
-      useCases: ['Home Assistant dashboard', 'Interactive Kiosks', 'Custom user interfaces for projects'],
-      featured: false,
-      productType: 'build_to_order'
-  },
-  {
-    id: '5',
-    slug: 'robot-arm-kit',
-    name: 'Robotic Arm Kit',
-    description: 'A 4-axis robotic arm kit based on Arduino. Perfect for learning robotics and inverse kinematics.',
-    price: 2200,
-    image: 'https://picsum.photos/seed/robotarm/600/400',
-    categoryIds: ['6', '3', '5'],
-    specs: { 'Axes': '4', 'Control': 'Arduino UNO (included)', 'Material': 'Laser-cut Acrylic' },
-    useCases: ['Learning robotics programming', 'Pick and place automation', 'Educational projects'],
-    featured: true,
-    productType: 'ready'
-  },
-  {
-    id: '6',
-    slug: 'ender-3-v3-se',
-    name: 'Creality Ender-3 V3 SE',
-    description: 'The latest iteration of the famous Ender-3 3D printer. Easy to assemble and packed with features like auto-leveling.',
-    price: 10500,
-    image: 'https://picsum.photos/seed/ender3/600/400',
-    categoryIds: ['7'],
-    specs: { 'Build Volume': '220x220x250mm', 'Leveling': 'CR-Touch Auto Leveling', 'Extruder': 'Direct Drive "Sprite"' },
-    useCases: ['Prototyping parts', 'Printing miniatures', 'Functional prints for home'],
-    featured: false,
-    productType: 'ready'
-  },
-  {
-    id: '7',
-    slug: 'soldering-station-pro',
-    name: 'Soldering Station Pro',
-    description: 'A professional-grade soldering station with digital temperature control and a variety of tips.',
-    price: 3500,
-    image: 'https://picsum.photos/seed/soldering/600/400',
-    categoryIds: ['5'],
-    specs: { 'Temperature Range': '100°C - 480°C', 'Power': '75W', 'Display': 'Digital LCD' },
-    useCases: ['PCB assembly', 'Component repair', 'DIY electronics'],
-    featured: false,
-    productType: 'ready'
-  },
-  {
-    id: '8',
-    slug: 'diy-mechanical-keyboard-kit',
-    name: 'DIY Mechanical Keyboard Kit',
-    description: 'Build your own 60% mechanical keyboard from scratch. Includes PCB, case, and stabilizers. Switches and keycaps not included.',
-    price: 1300,
-    image: 'https://picsum.photos/seed/keyboardkit/600/400',
-    categoryIds: ['5'],
-    specs: { 'Layout': '60%', 'Hot-swappable': 'Yes', 'Case Material': 'Acrylic' },
-    useCases: ['Learning keyboard assembly', 'Creating a personalized keyboard', 'Programming projects'],
-    featured: false,
-    productType: 'ready',
-    customizationGroups: [
-        {
-            name: 'Case Color',
-            type: 'single',
-            required: true,
-            options: [
-                { name: 'Frosted White', priceAdjustment: 0 },
-                { name: 'Smoked Black', priceAdjustment: 0 },
-                { name: 'Clear', priceAdjustment: 0 },
-            ]
-        }
-    ]
-  },
-  {
-    id: '9',
-    slug: 'desktop-cnc-3018',
-    name: 'Desktop CNC 3018 Kit',
-    description: 'A small desktop CNC machine for engraving and carving wood, plastic, and soft metals. A perfect introduction to CNC machining.',
+    id: 'prod-2',
+    slug: 'desktop-cnc-3018-pro',
+    name: 'Desktop CNC 3018 Pro Kit',
+    description: 'A powerful and affordable desktop CNC machine for carving wood, plastic, and soft metals. Perfect for hobbyists and small businesses.',
     price: 8500,
-    image: 'https://picsum.photos/seed/cnc3018/600/400',
-    categoryIds: ['5', '6'],
-    specs: { 'Working Area': '300x180x45mm', 'Spindle': '775 Motor', 'Control': 'GRBL' },
-    useCases: ['Custom PCB milling', 'Wood engraving', 'Plastic part fabrication'],
-    featured: false,
-    productType: 'ready'
-  },
-  {
-    id: '10',
-    slug: 'logic-analyzer-pro',
-    name: 'Logic Analyzer Pro (8-Channel)',
-    description: 'An 8-channel, 24MHz logic analyzer that helps you debug digital circuits and communication protocols like I2C, SPI, and UART.',
-    price: 450,
-    image: 'https://picsum.photos/seed/logicanalyzer/600/400',
-    categoryIds: [],
-    specs: { 'Channels': '8', 'Sample Rate': '24MHz', 'Supported Protocols': 'I2C, SPI, UART, and more' },
-    useCases: ['Debugging embedded systems', 'Reverse engineering protocols', 'Signal analysis'],
+    image: 'https://picsum.photos/seed/cnc-machine/600/400',
+    categoryIds: ['cat-1', 'cat-4'],
+    specs: { 'Working Area': '300x180x45mm', 'Spindle': '775 Motor, 10000 RPM', 'Control': 'GRBL' },
+    useCases: ['Custom PCB milling', 'Wood engraving', 'Prototyping mechanical parts'],
     featured: true,
-    productType: 'ready'
+    productType: 'build_to_order',
   },
   {
-    id: '11',
-    slug: 'esp32-c3-mini',
-    name: 'ESP32-C3 SuperMini',
-    description: 'A tiny yet powerful board featuring the ESP32-C3 RISC-V processor with WiFi and Bluetooth LE.',
-    price: 250,
-    image: 'https://picsum.photos/seed/esp32c3/600/400',
-    categoryIds: ['2'],
-    specs: { 'MCU': 'ESP32-C3 (RISC-V)', 'Connectivity': 'Wi-Fi, Bluetooth LE 5.0', 'Form Factor': 'Mini' },
-    useCases: ['Compact IoT devices', 'Wearable electronics', 'Low-power projects'],
-    featured: false,
-    productType: 'ready'
-  },
-  {
-    id: '12',
-    slug: 'iot-sensor-pack',
-    name: 'IoT Sensor Pack (37-in-1)',
+    id: 'prod-3',
+    slug: 'iot-sensor-pack-pro',
+    name: 'IoT Sensor Pack Pro (37-in-1)',
     description: 'A comprehensive kit with 37 different sensors and modules for your Arduino or ESP32 projects. Everything you need to start experimenting.',
     price: 950,
-    image: 'https://picsum.photos/seed/sensorpack/600/400',
-    categoryIds: ['3', '5'],
-    specs: { 'Sensors': '37 modules including temperature, humidity, light, sound, and more', 'Compatibility': 'Arduino, ESP32, Raspberry Pi' },
-    useCases: ['Educational workshops', 'Building weather stations', 'Home automation prototypes'],
+    image: 'https://picsum.photos/seed/sensor-pack/600/400',
+    categoryIds: ['cat-3', 'cat-2', 'cat-6'],
+    specs: { 'Sensors': '37 modules included', 'Compatibility': 'Arduino, ESP32, Raspberry Pi' },
+    useCases: ['Building weather stations', 'Home automation prototypes', 'Environmental monitoring'],
     featured: true,
-    productType: 'ready'
+    productType: 'ready',
+  },
+  {
+    id: 'prod-4',
+    slug: 'esp32-s3-dev-board',
+    name: 'ESP32-S3 Development Board',
+    description: 'A powerful board with WiFi, Bluetooth 5.0, and native USB-C, perfect for advanced IoT and AI on the edge applications.',
+    price: 650,
+    image: 'https://picsum.photos/seed/esp32-s3/600/400',
+    categoryIds: ['cat-6'],
+    specs: { 'MCU': 'ESP32-S3', 'Flash': '16MB', 'PSRAM': '8MB', 'Connectivity': 'Wi-Fi, Bluetooth 5.0' },
+    useCases: ['Portable IoT projects', 'Edge AI applications', 'Complex robotics'],
+    productType: 'ready',
+  },
+  {
+    id: 'prod-5',
+    slug: 'dht22-temperature-humidity-sensor',
+    name: 'DHT22 Temperature & Humidity Sensor',
+    description: 'A reliable and accurate digital sensor for measuring temperature and humidity. A must-have for any climate monitoring project.',
+    price: 150,
+    image: 'https://picsum.photos/seed/dht22/600/400',
+    categoryIds: ['cat-3'],
+    specs: { 'Temperature Range': '-40 to 80°C', 'Humidity Range': '0-100% RH', 'Interface': '1-Wire' },
+    useCases: ['Weather stations', 'Smart thermostats', 'Incubator control'],
+    productType: 'ready',
+  },
+  {
+    id: 'prod-6',
+    slug: '4-dof-robotic-arm-kit',
+    name: '4-DOF Robotic Arm Kit',
+    description: 'Build your own 4-axis robotic arm controlled by an Arduino. This kit is perfect for learning about robotics, kinematics, and automation.',
+    price: 2200,
+    image: 'https://picsum.photos/seed/robot-arm/600/400',
+    categoryIds: ['cat-4', 'cat-1', 'cat-2'],
+    specs: { 'Axes': '4', 'Control': 'Arduino UNO (included)', 'Material': 'Laser-cut Acrylic' },
+    useCases: ['Pick and place automation', 'Educational projects', 'Learning inverse kinematics'],
+    featured: false,
+    productType: 'build_to_order',
+  },
+  {
+    id: 'prod-7',
+    slug: 'creality-ender-3-v3',
+    name: 'Creality Ender-3 V3 3D Printer',
+    description: 'The latest generation of the world\'s most popular 3D printer. Features auto-leveling and a direct-drive extruder for reliable prints.',
+    price: 10500,
+    image: 'https://picsum.photos/seed/ender3-v3/600/400',
+    categoryIds: ['cat-5'],
+    specs: { 'Build Volume': '220x220x250mm', 'Leveling': 'CR-Touch Auto Leveling', 'Extruder': 'Direct Drive "Sprite"' },
+    useCases: ['Prototyping parts', 'Printing miniatures', 'Creating functional prints'],
+    featured: true,
+    isRestricted: true,
+    productType: 'ready',
+  },
+  {
+    id: 'prod-8',
+    slug: 't962a-reflow-oven',
+    name: 'T-962A Reflow Oven',
+    description: 'A compact and efficient reflow oven for surface mount soldering. Perfect for small batch PCB assembly and prototyping.',
+    price: 9000,
+    image: 'https://picsum.photos/seed/reflow-oven/600/400',
+    categoryIds: ['cat-1'],
+    specs: { 'Working Area': '300x320mm', 'Power': '1500W', 'Temperature': 'Up to 280°C' },
+    useCases: ['SMD soldering', 'Small-scale production', 'Professional prototyping'],
+    isRestricted: true,
+    productType: 'ready',
   },
 ];
 
+// 3. Users
 const mockUsers = [
   {
-    id: 'super-admin-user-id',
+    id: 'user-super-admin',
     name: 'Super Admin',
     email: 'super_admin@example.com',
-    phoneNumber: '01234567890',
+    phoneNumber: '01001112223',
     wishlist: [],
     role: 'super_admin',
   },
   {
-    id: 'admin-user-id',
+    id: 'user-admin',
     name: 'Admin User',
     email: 'admin@example.com',
-    phoneNumber: '01000000000',
-    wishlist: ['2'],
+    phoneNumber: '01112223334',
+    wishlist: ['prod-2'],
     role: 'admin',
   },
   {
-    id: 'test-user-1',
-    name: 'Ali Hassan',
-    email: 'ali@example.com',
-    phoneNumber: '01112223334',
-    wishlist: ['1', '5'],
+    id: 'user-regular',
+    name: 'Ahmed Hossam',
+    email: 'ahmed@example.com',
+    phoneNumber: '01223334445',
+    wishlist: ['prod-1', 'prod-6'],
     role: 'user',
   },
-  {
-    id: 'test-user-2',
-    name: 'Fatima Ahmed',
-    email: 'fatima@example.com',
-    phoneNumber: '01556677889',
-    wishlist: ['6'],
-    role: 'user',
-  },
-  {
-    id: 'test-user-3',
-    name: 'Youssef Mohamed',
-    email: 'youssef@example.com',
-    phoneNumber: '01287654321',
-    wishlist: ['3', '4'],
-    role: 'user',
-  }
+];
+const mockAuthenticatedUser = { uid: 'user-super-admin', email: 'super_admin@example.com', displayName: 'Super Admin', profile: mockUsers[0] };
+
+// 4. Payment Methods
+const mockPaymentMethods = [
+    { id: 'pm-1', name: 'Cash on Delivery', type: 'username', value: 'N/A', instructions: 'Pay in cash when your order is delivered.', enabled: true },
+    { id: 'pm-2', name: 'Credit Card', type: 'paymentLink', value: 'https://pay.example.com', instructions: 'You will be redirected to a secure payment gateway.', enabled: false }, // Disabled for now
+    { id: 'pm-3', name: 'Vodafone Cash', type: 'phoneNumber', value: '01012345678', instructions: 'Send the total amount to this number and enter the transaction ID.', enabled: true },
 ];
 
-const mockAuthenticatedUser = {
-    uid: 'super-admin-user-id',
-    email: 'super_admin@example.com',
-    displayName: 'Super Admin',
-    profile: mockUsers[0]
-};
-
+// 5. Orders
 const mockOrders = [
   {
-    id: 'ord_abc12',
-    userId: 'test-user-1',
-    items: [{ id: '1', productId: '1', name: 'Mochi v5 Pro', slug: 'mochi-v5-pro', image: 'https://picsum.photos/seed/mochipro/600/400', quantity: 1, price: 1800, configuration: {} }],
-    totalPrice: 1800, status: 'Completed/Delivered', shippingAddress: { fullName: 'Ali Hassan', phoneNumber: '01112223334', address: '123 Nasr City', city: 'Cairo' }, paymentMethod: { id: 'pm_1', name: 'Instapay' }, transactionId: 'txn_mock_123',
-    createdAt: { seconds: Math.floor(Date.now() / 1000) - (86400 * 5), nanoseconds: 0 },
-    user: { id: 'test-user-1', name: 'Ali Hassan', email: 'ali@example.com', phoneNumber: '01112223334' },
-    requiresLegalApproval: true, legalAgreementApproved: true, legalAgreementUrl: '#'
+    id: 'ord_1',
+    userId: 'user-regular',
+    items: [{ id: 'prod-1', productId: 'prod-1', name: 'Arduino Uno Ultimate Starter Kit', slug:'arduino-uno-ultimate-starter-kit', image: 'https://picsum.photos/seed/arduino-kit/600/400', quantity: 1, price: 1200, configuration: {} }],
+    totalPrice: 1200, status: 'Completed/Delivered', shippingAddress: { fullName: 'Ahmed Hossam', phoneNumber: '01223334445', address: '123 Abc Street', city: 'Cairo' }, paymentMethod: { id: 'pm-3', name: 'Vodafone Cash' }, transactionId: 'VF12345',
+    createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 7, nanoseconds: 0 },
+    user: { id: 'user-regular', name: 'Ahmed Hossam', email: 'ahmed@example.com', phoneNumber: '01223334445' },
   },
   {
-    id: 'ord_def34',
-    userId: 'test-user-2',
-    items: [{ id: '2', productId: '2', name: 'Pico Deck Plus', slug: 'pico-deck-plus', image: 'https://picsum.photos/seed/picodeckplus/600/400', quantity: 1, price: 900, configuration: { 'Switch Type': 'Brown Switches (Tactile)' } }],
-    totalPrice: 900, status: 'In Production', shippingAddress: { fullName: 'Fatima Ahmed', phoneNumber: '01556677889', address: '456 Maadi', city: 'Cairo' }, paymentMethod: { id: 'pm_2', name: 'Vodafone Cash' }, transactionId: 'txn_mock_456',
-    createdAt: { seconds: Math.floor(Date.now() / 1000) - (86400 * 3), nanoseconds: 0 },
-    user: { id: 'test-user-2', name: 'Fatima Ahmed', email: 'fatima@example.com', phoneNumber: '01556677889' }
+    id: 'ord_2',
+    userId: 'user-regular',
+    items: [{ id: 'prod-2', productId: 'prod-2', name: 'Desktop CNC 3018 Pro Kit', slug: 'desktop-cnc-3018-pro', image: 'https://picsum.photos/seed/cnc-machine/600/400', quantity: 1, price: 8500, configuration: {} }],
+    totalPrice: 8500, status: 'In Production', shippingAddress: { fullName: 'Ahmed Hossam', phoneNumber: '01223334445', address: '123 Abc Street', city: 'Cairo' }, paymentMethod: { id: 'pm-3', name: 'Vodafone Cash' }, transactionId: 'VF67890',
+    createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 3, nanoseconds: 0 },
+    user: { id: 'user-regular', name: 'Ahmed Hossam', email: 'ahmed@example.com', phoneNumber: '01223334445' },
   },
   {
-    id: 'ord_ghi56',
-    userId: 'test-user-1',
-    items: [{ id: '6', productId: '6', name: 'Creality Ender-3 V3 SE', slug: 'ender-3-v3-se', image: 'https://picsum.photos/seed/ender3/600/400', quantity: 1, price: 10500, configuration: {} }],
-    totalPrice: 10500, status: 'Pending Verification', shippingAddress: { fullName: 'Ali Hassan', phoneNumber: '01112223334', address: '123 Nasr City', city: 'Cairo' }, paymentMethod: { id: 'pm_1', name: 'Instapay' }, transactionId: 'txn_mock_789',
+    id: 'ord_3',
+    userId: 'user-admin',
+    items: [
+        { id: 'prod-3', productId: 'prod-3', name: 'IoT Sensor Pack Pro (37-in-1)', slug: 'iot-sensor-pack-pro', image: 'https://picsum.photos/seed/sensor-pack/600/400', quantity: 2, price: 950, configuration: {} },
+        { id: 'prod-4', productId: 'prod-4', name: 'ESP32-S3 Development Board', slug: 'esp32-s3-dev-board', image: 'https://picsum.photos/seed/esp32-s3/600/400', quantity: 5, price: 650, configuration: {} }
+    ],
+    totalPrice: (950 * 2) + (650 * 5), status: 'Pending Verification', shippingAddress: { fullName: 'Admin User', phoneNumber: '01112223334', address: '456 Xyz Avenue', city: 'Giza' }, paymentMethod: { id: 'pm-1', name: 'Cash on Delivery' }, transactionId: 'N/A',
     createdAt: { seconds: Math.floor(Date.now() / 1000) - 3600, nanoseconds: 0 },
-    user: { id: 'test-user-1', name: 'Ali Hassan', email: 'ali@example.com', phoneNumber: '01112223334' }
-  },
-   {
-    id: 'ord_jkl78',
-    userId: 'admin-user-id',
-    items: [{ id: '5', productId: '5', name: 'Robotic Arm Kit', slug: 'robot-arm-kit', image: 'https://picsum.photos/seed/robotarm/600/400', quantity: 2, price: 2200, configuration: {} }],
-    totalPrice: 4400, status: 'Cancelled', shippingAddress: { fullName: 'Admin User', phoneNumber: '01000000000', address: '789 Admin St', city: 'Giza' }, paymentMethod: { id: 'pm_1', name: 'Instapay' }, transactionId: 'txn_mock_012',
-    createdAt: { seconds: Math.floor(Date.now() / 1000) - (86400 * 10), nanoseconds: 0 },
-    user: { id: 'admin-user-id', name: 'Admin User', email: 'admin@example.com', phoneNumber: '01000000000' }
+    user: { id: 'user-admin', name: 'Admin User', email: 'admin@example.com', phoneNumber: '01112223334' },
   },
   {
-    id: 'ord_mno90',
-    userId: 'test-user-3',
-    items: [{ id: '7', productId: '7', name: 'Soldering Station Pro', slug: 'soldering-station-pro', image: 'https://picsum.photos/seed/soldering/600/400', quantity: 1, price: 3500, configuration: {} }],
-    totalPrice: 3500, status: 'Ready', shippingAddress: { fullName: 'Youssef Mohamed', phoneNumber: '01287654321', address: '101 Rehab City', city: 'Cairo' }, paymentMethod: { id: 'pm_2', name: 'Vodafone Cash' }, transactionId: 'txn_mock_345',
-    createdAt: { seconds: Math.floor(Date.now() / 1000) - (86400 * 2), nanoseconds: 0 },
-    user: { id: 'test-user-3', name: 'Youssef Mohamed', email: 'youssef@example.com', phoneNumber: '01287654321' }
+    id: 'ord_4',
+    userId: 'user-regular',
+    items: [{ id: 'prod-7', productId: 'prod-7', name: 'Creality Ender-3 V3 3D Printer', slug: 'creality-ender-3-v3', image: 'https://picsum.photos/seed/ender3-v3/600/400', quantity: 1, price: 10500, configuration: {} }],
+    totalPrice: 10500, status: 'Pending Verification', shippingAddress: { fullName: 'Ahmed Hossam', phoneNumber: '01223334445', address: '123 Abc Street', city: 'Cairo' }, paymentMethod: { id: 'pm-3', name: 'Vodafone Cash' }, transactionId: 'VF11223',
+    createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 1, nanoseconds: 0 },
+    user: { id: 'user-regular', name: 'Ahmed Hossam', email: 'ahmed@example.com', phoneNumber: '01223334445' },
+    requiresLegalApproval: true, legalAgreementApproved: false, legalAgreementUrl: '#'
   },
 ];
 
-const mockQuotes = [
-    {
-        id: 'quote_abcde',
-        userId: 'test-user-1',
-        items: [{ id: '2', productId: '2', name: 'Pico Deck Plus', slug: 'pico-deck-plus', image: 'https://picsum.photos/seed/picodeckplus/600/400', quantity: 1, price: 850, configuration: { 'Switch Type': 'Blue Switches (Clicky)', 'Addons': 'Custom Keycaps' } }],
-        status: 'Quoted',
-        quotedPrice: 1250,
-        adminNotes: 'Custom keycaps will be 3D printed with a design of your choice.',
-        createdAt: { seconds: Math.floor(Date.now() / 1000) - (86400 * 2), nanoseconds: 0 },
-        user: { id: 'test-user-1', name: 'Ali Hassan', email: 'ali@example.com', phoneNumber: '01112223334' }
-    },
-    {
-        id: 'quote_fghij',
-        userId: 'test-user-2',
-        items: [{ id: '5', productId: '5', name: 'Robotic Arm Kit', slug: 'robot-arm-kit', image: 'https://picsum.photos/seed/robotarm/600/400', quantity: 1, price: 2200, configuration: {} }],
-        status: 'Accepted',
-        userNotes: 'Can this be made with black acrylic instead of clear?',
-        quotedPrice: 2400,
-        adminNotes: 'Yes, we can use black acrylic for an additional EGP 200.',
-        createdAt: { seconds: Math.floor(Date.now() / 1000) - (86400 * 4), nanoseconds: 0 },
-        user: { id: 'test-user-2', name: 'Fatima Ahmed', email: 'fatima@example.com', phoneNumber: '01556677889' }
-    },
-    {
-        id: 'quote_klmno',
-        userId: 'admin-user-id',
-        items: [{ id: '1', productId: '1', name: 'Mochi v5 Pro', slug: 'mochi-v5-pro', image: 'https://picsum.photos/seed/mochipro/600/400', quantity: 1, price: 1800, configuration: {} }],
-        status: 'Pending Review',
-        userNotes: 'I need a custom firmware with packet monitoring mode enabled by default.',
-        createdAt: { seconds: Math.floor(Date.now() / 1000) - (86400 * 1), nanoseconds: 0 },
-        user: { id: 'admin-user-id', name: 'Admin User', email: 'admin@example.com', phoneNumber: '01000000000' }
-    },
-    {
-        id: 'quote_pqrst',
-        userId: 'test-user-3',
-        items: [{ id: '4', productId: '4', name: 'Smart Display Hub 7"', slug: 'smart-display-hub-7', image: 'https://picsum.photos/seed/display7/600/400', quantity: 5, price: 1500, configuration: {} }],
-        status: 'Rejected',
-        userNotes: 'Need a bulk discount for 5 units.',
-        quotedPrice: 7250,
-        adminNotes: 'We can offer a 5% discount for a total of EGP 7125.',
-        createdAt: { seconds: Math.floor(Date.now() / 1000) - (86400 * 6), nanoseconds: 0 },
-        user: { id: 'test-user-3', name: 'Youssef Mohamed', email: 'youssef@example.com', phoneNumber: '01287654321' }
-    },
-];
-
+// 6. Coupons
 const mockCoupons = [
-    { id: 'coup_1', code: 'MAKER10', type: 'percentage', value: 10, maxUses: 100, usedCount: 23, expiryDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0] },
-    { id: 'coup_2', code: 'RAMADAN50', type: 'fixed', value: 50, maxUses: 200, usedCount: 150, expiryDate: new Date(new Date().setDate(new Date().getDate() + 15)).toISOString().split('T')[0] },
-    { id: 'coup_3', code: 'EXPIRED', type: 'percentage', value: 20, maxUses: 50, usedCount: 49, expiryDate: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().split('T')[0] },
-    { id: 'coup_4', code: 'LIMITOUT', type: 'fixed', value: 100, maxUses: 10, usedCount: 10 },
+    { id: 'coup-1', code: 'MAKERSPACE', type: 'percentage', value: 10, maxUses: 100, usedCount: 23, expiryDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0] },
+    { id: 'coup-2', code: 'EID2024', type: 'fixed', value: 100, maxUses: 50, usedCount: 10, expiryDate: new Date(new Date().setDate(new Date().getDate() + 5)).toISOString().split('T')[0] },
 ];
 
-const mockPaymentMethods = [
-    { id: 'pm_1', name: 'Instapay', type: 'username', value: '@microchub', instructions: 'Send the total amount to our Instapay username and enter the transaction ID.', enabled: true },
-    { id: 'pm_2', name: 'Vodafone Cash', type: 'phoneNumber', value: '01012345678', instructions: 'Send to this number and enter the transaction ID.', enabled: true },
-    { id: 'pm_3', name: 'Telda', type: 'username', value: '@microchub.telda', instructions: 'Pay via Telda and provide the transaction reference.', enabled: false },
-];
-
+// 7. Social Links
 const mockSocialLinks = [
-    { id: 'soc_1', platform: 'Facebook', url: 'https://facebook.com', enabled: true },
-    { id: 'soc_2', platform: 'GitHub', url: 'https://github.com', enabled: true },
-    { id: 'soc_3', platform: 'YouTube', url: 'https://youtube.com', enabled: true },
-    { id: 'soc_4', platform: 'Instagram', url: 'https://instagram.com', enabled: false },
+    { id: 'soc-fb', platform: 'Facebook', url: 'https://facebook.com/microchub', enabled: true },
+    { id: 'soc-gh', platform: 'GitHub', url: 'https://github.com/microchub', enabled: true },
+    { id: 'soc-ig', platform: 'Instagram', url: 'https://instagram.com/microchub', enabled: true },
+];
+
+// 8. Quotes
+const mockQuotes = [
+  {
+    id: 'quote_1',
+    userId: 'user-regular',
+    items: [{ id: 'prod-6', productId: 'prod-6', name: '4-DOF Robotic Arm Kit', slug: '4-dof-robotic-arm-kit', image: 'https://picsum.photos/seed/robot-arm/600/400', quantity: 1, price: 2200, configuration: { "Material": "Black Acrylic instead of Clear" } }],
+    status: 'Quoted',
+    userNotes: 'Is it possible to get this kit with black acrylic parts instead of the standard clear ones?',
+    quotedPrice: 2400,
+    adminNotes: 'Yes, we can cut it from black acrylic. The material cost is slightly higher.',
+    createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 5, nanoseconds: 0 },
+    user: { id: 'user-regular', name: 'Ahmed Hossam', email: 'ahmed@example.com', phoneNumber: '01223334445' }
+  },
+  {
+    id: 'quote_2',
+    userId: 'user-admin',
+    items: [{ id: 'prod-8', productId: 'prod-8', name: 'T-962A Reflow Oven', slug: 't962a-reflow-oven', image: 'https://picsum.photos/seed/reflow-oven/600/400', quantity: 1, price: 9000, configuration: {} }],
+    status: 'Pending Review',
+    userNotes: 'I need a custom firmware for this oven to support lead-free solder profiles. Can you provide a quote?',
+    createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400, nanoseconds: 0 },
+    user: { id: 'user-admin', name: 'Admin User', email: 'admin@example.com', phoneNumber: '01112223334' }
+  },
+  {
+    id: 'quote_3',
+    userId: 'user-regular',
+    items: [{ id: 'prod-2', productId: 'prod-2', name: 'Desktop CNC 3018 Pro Kit', slug: 'desktop-cnc-3018-pro', image: 'https://picsum.photos/seed/cnc-machine/600/400', quantity: 2, price: 8500, configuration: {} }],
+    status: 'Accepted',
+    userNotes: 'Looking for a bulk discount on two units.',
+    quotedPrice: 16500,
+    adminNotes: 'We can offer a discount for a total of EGP 16,500 for two units.',
+    createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 10, nanoseconds: 0 },
+    user: { id: 'user-regular', name: 'Ahmed Hossam', email: 'ahmed@example.com', phoneNumber: '01223334445' }
+  },
+  {
+    id: 'quote_4',
+    userId: 'user-admin',
+    items: [{ id: 'prod-7', productId: 'prod-7', name: 'Creality Ender-3 V3 3D Printer', slug: 'creality-ender-3-v3', image: 'https://picsum.photos/seed/ender3-v3/600/400', quantity: 1, price: 10500, configuration: { 'Nozzle': '0.6mm Hardened Steel' } }],
+    status: 'Rejected',
+    userNotes: 'Can you install a 0.6mm hardened steel nozzle for printing abrasive filaments?',
+    quotedPrice: 11000,
+    adminNotes: 'The upgrade is possible for an additional EGP 500.',
+    createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 12, nanoseconds: 0 },
+    user: { id: 'user-admin', name: 'Admin User', email: 'admin@example.com', phoneNumber: '01112223334' }
+  },
 ];
 
 const mockLegalAgreement = {
@@ -369,6 +260,7 @@ const mockLegalAgreement = {
     fileContent: 'data:application/pdf;base64,....', // a dummy base64 string
     uploadedAt: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString(),
 };
+
 
 // --- API HANDLER ---
 
@@ -379,13 +271,16 @@ function createMockResponse(data: any) {
 async function handler(request: Request) {
   const { pathname, searchParams } = new URL(request.url);
   console.log(`[MOCK API] Received request for: ${request.method} ${pathname}`);
-  
-  if (request.method === 'POST' && pathname.startsWith('/api/auth/')) {
+
+  // Auth routes
+  if (pathname === '/api/auth/login' || pathname === '/api/auth/signup') {
     return createMockResponse(mockAuthenticatedUser);
   }
-
   if (pathname === '/api/auth/me') {
       return createMockResponse(mockAuthenticatedUser);
+  }
+  if (pathname === '/api/auth/logout') {
+      return createMockResponse(null);
   }
 
   // User routes
@@ -404,36 +299,56 @@ async function handler(request: Request) {
       const userId = userOrdersMatch[1];
       return createMockResponse(mockOrders.filter(o => o.userId === userId));
   }
+   if (pathname === '/api/orders/me') {
+    return createMockResponse(mockOrders.filter(o => o.userId === mockAuthenticatedUser.uid));
+  }
   if (pathname === '/api/orders') {
     return createMockResponse(mockOrders);
   }
 
+  // Quote routes
+   if (pathname === '/api/quotes/me') {
+    return createMockResponse(mockQuotes.filter(q => q.userId === mockAuthenticatedUser.uid));
+  }
   if (pathname === '/api/quotes') {
     return createMockResponse(mockQuotes);
   }
 
+  // Coupon routes
   if (pathname === '/api/coupons') {
       return createMockResponse(mockCoupons);
   }
+  if (pathname === '/api/coupons/apply') {
+      const { code } = await request.json();
+      const coupon = mockCoupons.find(c => c.code === code);
+      if (coupon) {
+          return createMockResponse(coupon);
+      }
+      return NextResponse.json({ success: false, data: null, error: { message: 'Invalid coupon code.' }}, { status: 400 });
+  }
 
+  // Payment Methods
   if (pathname === '/api/payment-methods') {
       const onlyEnabled = searchParams.get('enabled') === 'true';
       return createMockResponse(onlyEnabled ? mockPaymentMethods.filter(l => l.enabled) : mockPaymentMethods);
   }
-  
+
+  // Social Links
   if (pathname === '/api/social-links') {
       const onlyEnabled = searchParams.get('enabled') === 'true';
       return createMockResponse(onlyEnabled ? mockSocialLinks.filter(l => l.enabled) : mockSocialLinks);
   }
 
+  // Legal Agreement
   if (pathname === '/api/legal/agreement') {
       return createMockResponse(mockLegalAgreement);
   }
 
+  // Category routes
   if (pathname === '/api/categories') {
     return createMockResponse(mockCategories);
   }
-  
+
   // Product routes
   if (pathname === '/api/products/featured') {
     return createMockResponse(mockProducts.filter(p => p.featured));
@@ -457,10 +372,8 @@ async function handler(request: Request) {
   }
 
   // Fallback for any other route
-  return createMockResponse([]);
+  return NextResponse.json({ success: false, data: null, error: { message: `Mock route not found for ${pathname}` }}, { status: 404 });
 }
 
 
 export { handler as GET, handler as POST, handler as PUT, handler as PATCH, handler as DELETE };
-
-    
