@@ -33,17 +33,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         fetchUser();
     }, [fetchUser]);
 
-    // This renders a loading spinner for the initial user fetch.
-    // This prevents a "flash" of the logged-out state for authenticated users.
-    if (isLoading) {
-        return (
-            <div className="flex h-screen w-full items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-        );
-    }
-
-
+    // By rendering the children immediately, we prevent a full-page loading state
+    // that can cause authentication issues with the preview environment.
+    // The loading state is passed via context for components that need it.
     return (
         <AuthContext.Provider value={{ user, isLoading, refetchUser: fetchUser }}>
             {children}
