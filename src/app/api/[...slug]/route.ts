@@ -11,9 +11,6 @@ import { NextResponse } from 'next/server';
  * a valid, mock JSON response. For key endpoints needed for the app to be
  * minimally functional (like categories and featured products), it returns sample data.
  * For all other endpoints, it returns an empty array to prevent UI errors.
- *
- * This file should be removed and replaced with actual API route handlers
- * once the backend is implemented.
  */
 
 const mockCategories = [
@@ -79,6 +76,20 @@ const mockProducts = [
   }
 ];
 
+const mockAdminUser = {
+    uid: 'super-admin-user-id',
+    email: 'super_admin@example.com',
+    displayName: 'Super Admin',
+    profile: {
+        id: 'super-admin-user-id',
+        name: 'Super Admin',
+        email: 'super_admin@example.com',
+        phoneNumber: '0123456789',
+        wishlist: [],
+        role: 'super_admin',
+    }
+};
+
 // Helper function to create a standardized response
 function createMockResponse(data: any) {
   return NextResponse.json({
@@ -92,6 +103,15 @@ function createMockResponse(data: any) {
 async function handler(request: Request) {
   const { pathname, searchParams } = new URL(request.url);
   console.log(`[MOCK API] Received request for: ${request.method} ${pathname}`);
+  
+  if (request.method === 'POST' && pathname.startsWith('/api/auth/')) {
+    // For any auth POST, just return the mock admin user to simulate a successful login/signup
+    return createMockResponse(mockAdminUser);
+  }
+
+  if (pathname.startsWith('/api/auth/me')) {
+      return createMockResponse(mockAdminUser);
+  }
 
   // Route specific mock data
   if (pathname.startsWith('/api/categories')) {
