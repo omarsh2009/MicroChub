@@ -261,6 +261,8 @@ const mockLegalAgreement = {
     uploadedAt: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString(),
 };
 
+let mockCart: any[] = [];
+
 
 // --- API HANDLER ---
 
@@ -370,6 +372,113 @@ async function handler(request: Request) {
     }
     return createMockResponse(mockProducts);
   }
+
+    // Cart routes
+    if (pathname === '/api/cart') {
+        if (request.method === 'GET') {
+        return createMockResponse(mockCart);
+        }
+        if (request.method === 'DELETE') {
+            mockCart = [];
+            return createMockResponse(null);
+        }
+    }
+
+    const cartItemMatch = pathname.match(/^\/api\/cart\/items\/(.+)$/);
+    if (cartItemMatch) {
+        const itemId = cartItemMatch[1];
+        if (request.method === 'DELETE') {
+            mockCart = mockCart.filter(item => item.id !== itemId);
+            return createMockResponse(mockCart);
+        }
+        if (request.method === 'PATCH') {
+            const { quantity } = await request.json();
+            const itemIndex = mockCart.findIndex(item => item.id === itemId);
+            if (itemIndex > -1) {
+                if (quantity > 0) {
+                    mockCart[itemIndex].quantity = quantity;
+                } else {
+                    mockCart.splice(itemIndex, 1);
+                }
+            }
+            return createMockResponse(mockCart);
+        }
+    }
+
+    if (pathname === '/api/cart/items') {
+        if (request.method === 'POST') {
+            const { productId, quantity, configuration, price } = await request.json();
+            const product = mockProducts.find(p => p.id === productId);
+            if (product) {
+                // A simple hash for configuration to create a unique ID
+                const configHash = Buffer.from(JSON.stringify(configuration || {})).toString('hex').slice(0, 8);
+                const cartItemId = `${productId}-${configHash}`;
+                
+                const existingItemIndex = mockCart.findIndex(item => item.id === cartItemId);
+                if (existingItemIndex > -1) {
+                    mockCart[existingItemIndex].quantity += quantity;
+                } else {
+                    mockCart.push({
+                        id: cartItemId,
+                        productId: product.id,
+                        name: product.name,
+                        slug: product.slug,
+                        image: product.image,
+                        quantity: quantity,
+                        price: price, // Use the price from the request, which is calculated on client
+                        configuration: configuration,
+                    });
+                }
+            }
+            return createMockResponse(mockCart);
+        }
+    }
+
+    // Wishlist routes
+    if (pathname === '/api/wishlist') {
+        const user = mockUsers.find(u => u.id === mockAuthenticatedUser.uid);
+        if (request.method === 'GET') {
+            if (user) {
+                const wishlistItems = user.wishlist.map(productId => ({
+                    id: `${user.id}-${productId}`,
+                    productId: productId,
+                    userId: user.id,
+                    addedAt: Date.now(),
+                }));
+                return createMockResponse(wishlistItems);
+            }
+            return createMockResponse([]);
+        }
+        if (request.method === 'POST') {
+            if (user) {
+                const { productId } = await request.json();
+                if (!user.wishlist.includes(productId)) {
+                    user.wishlist.push(productId);
+                }
+                const newWishlistItem = {
+                  id: `${user.id}-${productId}`,
+                  productId: productId,
+                  userId: user.id,
+                  addedAt: Date.now(),
+                };
+                return createMockResponse(newWishlistItem);
+            }
+            return NextResponse.json({ success: false, data: null, error: { message: "User not found" }}, { status: 404 });
+        }
+    }
+
+    const wishlistMatch = pathname.match(/^\/api\/wishlist\/([a-zA-Z0-9-]+)$/);
+    if (wishlistMatch) {
+        const productId = wishlistMatch[1];
+        const user = mockUsers.find(u => u.id === mockAuthenticatedUser.uid);
+        if (request.method === 'DELETE') {
+            if (user) {
+                user.wishlist = user.wishlist.filter(id => id !== productId);
+                return createMockResponse(null); // 204 No Content
+            }
+            return NextResponse.json({ success: false, data: null, error: { message: "User not found" }}, { status: 404 });
+        }
+    }
 
   // Fallback for any other route
   return NextResponse.json({ success: false, data: null, error: { message: `Mock route not found for ${pathname}` }}, { status: 404 });
