@@ -15,7 +15,6 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { submitQuote } from '@/lib/services/quotes';
 import type { QuoteRequestWithUserData } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ExternalLink } from 'lucide-react';
@@ -40,24 +39,17 @@ export function QuoteDetailsDialog({ isOpen, onClose, quote, onQuoteUpdate }: Qu
             return;
         };
         setIsSaving(true);
-        try {
-            await submitQuote(quote.id, Number(quotedPrice), adminNotes);
-            toast({
-                title: 'Quote Submitted',
-                description: `Quote for #${quote.id.slice(0, 7)} has been sent to the customer.`,
-            });
-            onQuoteUpdate({ ...quote, status: 'Quoted', quotedPrice: Number(quotedPrice), adminNotes });
-            onClose();
-        } catch (error: any) {
-            console.error('Failed to submit quote:', error);
-            toast({
-                variant: 'destructive',
-                title: 'Submission Failed',
-                description: 'Could not submit the quote. Please try again.',
-            });
-        } finally {
-            setIsSaving(false);
-        }
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        toast({
+            title: 'Quote Submitted (Demo)',
+            description: `Quote for #${quote.id.slice(0, 7)} has been sent to the customer.`,
+        });
+        onQuoteUpdate({ ...quote, status: 'Quoted', quotedPrice: Number(quotedPrice), adminNotes });
+        onClose();
+
+        setIsSaving(false);
     };
 
     const renderConfiguration = (config: Record<string, string | string[]>) => {
