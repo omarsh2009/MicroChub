@@ -1,3 +1,4 @@
+
 'use client';
 import Image from 'next/image';
 import {
@@ -57,6 +58,7 @@ export function ProductTable({
           <TableHead>Name</TableHead>
           <TableHead>Category</TableHead>
           <TableHead className="hidden md:table-cell">Price</TableHead>
+          <TableHead className="hidden md:table-cell">Stock</TableHead>
           <TableHead>
             <span className="sr-only">Actions</span>
           </TableHead>
@@ -86,6 +88,13 @@ export function ProductTable({
               </TableCell>
               <TableCell className="hidden md:table-cell">
                 EGP {product.price.toLocaleString()}
+              </TableCell>
+               <TableCell className="hidden md:table-cell">
+                {product.inStock ? (
+                    <Badge>{product.stockQuantity} in stock</Badge>
+                ) : (
+                    <Badge variant="destructive">Out of Stock</Badge>
+                )}
               </TableCell>
               <TableCell>
                 <AlertDialog>

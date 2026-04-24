@@ -1,3 +1,4 @@
+
 'use client';
 
 import {useState} from 'react';
@@ -15,10 +16,12 @@ import {Textarea} from '@/components/ui/textarea';
 import {useToast} from '@/hooks/use-toast';
 import {Badge} from '@/components/ui/badge';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
+import { mockContactInfo } from '@/lib/demo-data';
 
 export default function CustomServicesPage() {
   const {toast} = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const isStoreClosed = mockContactInfo.storeStatus === 'closed';
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -76,8 +79,8 @@ export default function CustomServicesPage() {
                         </p>
                     </div>
 
-                    <Button type="submit" size="lg" disabled={true}>
-                        Request a Quote (Disabled in Demo)
+                    <Button type="submit" size="lg" disabled={isStoreClosed}>
+                        {isStoreClosed ? 'Requests are currently unavailable' : 'Request a Quote'}
                     </Button>
                 </form>
             </CardContent>

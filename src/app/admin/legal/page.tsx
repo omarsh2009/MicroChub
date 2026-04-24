@@ -1,6 +1,7 @@
-import { LegalClientPage } from './client';
-import { mockLegalAgreement } from '@/lib/demo-data';
 
-export default function AdminLegalPage() {
-  return <LegalClientPage agreement={mockLegalAgreement} />;
+import { PolicyClientPage } from './client';
+import { mockPolicies } from '@/lib/demo-data';
+
+export default function AdminPolicyPage() {
+  return <PolicyClientPage policies={mockPolicies} />;
 }

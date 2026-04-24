@@ -11,10 +11,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Copy, Ticket } from 'lucide-react';
+import { mockContactInfo } from '@/lib/demo-data';
 
 export default function CheckoutPage() {
   const { toast } = useToast();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
+  const isStoreClosed = mockContactInfo.storeStatus === 'closed';
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -131,8 +133,8 @@ export default function CheckoutPage() {
                         </div>
                     </CardContent>
                     <CardFooter>
-                        <Button type="submit" className="w-full" size="lg" onClick={handlePlaceOrder}>
-                            Place Order
+                        <Button type="submit" className="w-full" size="lg" onClick={handlePlaceOrder} disabled={isStoreClosed}>
+                             {isStoreClosed ? 'Store is Closed' : 'Place Order'}
                         </Button>
                     </CardFooter>
                 </Card>

@@ -1,12 +1,25 @@
+
 'use client';
 import Link from "next/link";
 import { Logo } from "./logo";
 import { SocialLink } from "@/lib/types";
-import { getIconForPlatform } from "@/app/admin/social-links/components/social-link-form";
 import { mockSocialLinks } from "@/lib/demo-data";
+import { Facebook, Github, Instagram, Linkedin, Twitter, Youtube } from 'lucide-react';
 
 export function Footer() {
   const socialLinks: SocialLink[] = mockSocialLinks.filter(link => link.enabled);
+
+  const getIconForPlatform = (platform: string) => {
+    switch (platform.toLowerCase()) {
+        case 'facebook': return <Facebook className="w-5 h-5" />;
+        case 'github': return <Github className="w-5 h-5" />;
+        case 'instagram': return <Instagram className="w-5 h-5" />;
+        case 'linkedin': return <Linkedin className="w-5 h-5" />;
+        case 'twitter': return <Twitter className="w-5 h-5" />;
+        case 'youtube': return <Youtube className="w-5 h-5" />;
+        default: return null;
+    }
+  };
 
   return (
     <footer className="bg-card text-card-foreground border-t">
@@ -57,8 +70,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/shipping" className="text-sm hover:text-primary transition-colors" prefetch={false}>
-                  Shipping Policy
+                <Link href="/policy" className="text-sm hover:text-primary transition-colors" prefetch={false}>
+                  Our Policy
                 </Link>
               </li>
             </ul>

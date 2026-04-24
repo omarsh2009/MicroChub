@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Table,
@@ -18,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import type { SocialLink } from '@/lib/types';
+import type { PolicySection } from '@/lib/types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,24 +30,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { getIconForPlatform } from './social-link-form';
+} from "@/components/ui/alert-dialog"
 
 
-interface SocialLinksTableProps {
-  links: SocialLink[];
-  onEdit: (link: SocialLink) => void;
-  onDelete: (linkId: string) => void;
+interface PolicyTableProps {
+  policies: PolicySection[];
+  onEdit: (policy: PolicySection) => void;
+  onDelete: (policyId: string) => void;
 }
 
-export function SocialLinksTable({ links, onEdit, onDelete }: SocialLinksTableProps) {
+export function PolicyTable({ policies, onEdit, onDelete }: PolicyTableProps) {
 
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Platform</TableHead>
-          <TableHead>URL</TableHead>
+          <TableHead className="w-[40%]">Title</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>
             <span className="sr-only">Actions</span>
@@ -54,18 +53,12 @@ export function SocialLinksTable({ links, onEdit, onDelete }: SocialLinksTablePr
         </TableRow>
       </TableHeader>
       <TableBody>
-        {links.map((link) => (
-          <TableRow key={link.id}>
-            <TableCell className="font-medium flex items-center gap-2">
-                {getIconForPlatform(link.platform)}
-                {link.platform}
-            </TableCell>
-            <TableCell className="font-mono text-xs text-muted-foreground truncate">
-                <a href={link.url} target="_blank" rel="noopener noreferrer" className="hover:underline">{link.url}</a>
-            </TableCell>
+        {policies.map((policy) => (
+          <TableRow key={policy.id}>
+            <TableCell className="font-medium">{policy.title}</TableCell>
             <TableCell>
-              <Badge variant={link.enabled ? "default" : "outline"}>
-                {link.enabled ? "Visible" : "Hidden"}
+              <Badge variant={policy.isVisible ? "default" : "outline"}>
+                {policy.isVisible ? "Visible" : "Hidden"}
               </Badge>
             </TableCell>
             <TableCell>
@@ -79,7 +72,7 @@ export function SocialLinksTable({ links, onEdit, onDelete }: SocialLinksTablePr
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => onEdit(link)}>
+                    <DropdownMenuItem onClick={() => onEdit(policy)}>
                       Edit
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -94,12 +87,12 @@ export function SocialLinksTable({ links, onEdit, onDelete }: SocialLinksTablePr
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will permanently delete the social link for {link.platform}.
+                            This will permanently delete this policy section.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => onDelete(link.id)} className="bg-destructive hover:bg-destructive/90">
+                        <AlertDialogAction onClick={() => onDelete(policy.id)} className="bg-destructive hover:bg-destructive/90">
                             Yes, delete it
                         </AlertDialogAction>
                     </AlertDialogFooter>

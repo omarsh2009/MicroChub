@@ -1,5 +1,5 @@
 
-import type { Product, Category, UserWithId, PaymentMethod, OrderWithUserData, QuoteRequestWithUserData, Coupon, SocialLink, LegalAgreement, FaqItem, ContactInfo } from './types';
+import type { Product, Category, UserWithId, PaymentMethod, OrderWithUserData, QuoteRequestWithUserData, Coupon, SocialLink, PolicySection, FaqItem, ContactInfo } from './types';
 
 export const mockCategories: Category[] = [
     { id: 'cat-1', name: 'DIY Kits', slug: 'diy-kits' },
@@ -20,7 +20,8 @@ export const mockProducts: Product[] = [
     specs: { 'MCU': 'ATmega328P', 'Components': 'Over 200 included', 'Guide': '25 lessons included' },
     useCases: ['Learning electronics', 'Prototyping IoT ideas', 'Building interactive projects'],
     featured: true,
-    productType: 'ready',
+    inStock: true,
+    stockQuantity: 50,
   },
   {
     id: 'prod-2',
@@ -33,7 +34,8 @@ export const mockProducts: Product[] = [
     specs: { 'Working Area': '300x180x45mm', 'Spindle': '775 Motor, 10000 RPM', 'Control': 'GRBL' },
     useCases: ['Custom PCB milling', 'Wood engraving', 'Prototyping mechanical parts'],
     featured: true,
-    productType: 'build_to_order',
+    inStock: false,
+    stockQuantity: 0,
     isRestricted: true,
     customizationGroups: [
         {
@@ -68,7 +70,8 @@ export const mockProducts: Product[] = [
     specs: { 'Sensors': '37 modules included', 'Compatibility': 'Arduino, ESP32, Raspberry Pi' },
     useCases: ['Building weather stations', 'Home automation prototypes', 'Environmental monitoring'],
     featured: true,
-    productType: 'ready',
+    inStock: true,
+    stockQuantity: 120,
   },
   {
     id: 'prod-4',
@@ -80,7 +83,8 @@ export const mockProducts: Product[] = [
     categoryIds: ['cat-6'],
     specs: { 'MCU': 'ESP32-S3', 'Flash': '16MB', 'PSRAM': '8MB', 'Connectivity': 'Wi-Fi, Bluetooth 5.0' },
     useCases: ['Portable IoT projects', 'Edge AI applications', 'Complex robotics'],
-    productType: 'ready',
+    inStock: true,
+    stockQuantity: 200,
     featured: true,
     customizationGroups: [
         {
@@ -106,7 +110,8 @@ export const mockProducts: Product[] = [
     specs: { 'SoC': 'Broadcom BCM2711', 'RAM': '8GB LPDDR4', 'Ports': '2x USB 3.0, 2x USB 2.0, 2x micro-HDMI' },
     useCases: ['Desktop computer replacement', 'Home media server (Plex)', 'Network-wide ad-blocker (Pi-hole)'],
     featured: false,
-    productType: 'ready',
+    inStock: true,
+    stockQuantity: 30,
   },
   {
     id: 'prod-6',
@@ -119,7 +124,8 @@ export const mockProducts: Product[] = [
     specs: { 'Range': '2cm - 400cm', 'Voltage': '5V DC', 'Interface': '4-pin (VCC, Trig, Echo, GND)' },
     useCases: ['Robot obstacle avoidance', 'Parking sensor systems', 'Liquid level measurement'],
     featured: false,
-    productType: 'ready',
+    inStock: true,
+    stockQuantity: 500,
   },
   {
     id: 'prod-7',
@@ -131,7 +137,8 @@ export const mockProducts: Product[] = [
     categoryIds: ['cat-1', 'cat-6'],
     specs: { 'Display': '1.28" Round LCD', 'MCU': 'ESP32-WROOM-32', 'Battery': '150mAh LiPo' },
     useCases: ['Learning about wearables', 'Customizing your own watch faces', 'IoT notifications on your wrist'],
-    productType: 'build_to_order',
+    inStock: false,
+    stockQuantity: 0,
     customizationGroups: [
         {
             name: 'Case Color',
@@ -174,7 +181,8 @@ export const mockProducts: Product[] = [
     specs: { 'Interface': 'I2C/SPI', 'Temperature Range': '-40 to 85°C', 'Pressure Range': '300 to 1100 hPa' },
     useCases: ['Mini weather station', 'Home automation', 'Altitude tracking'],
     featured: false,
-    productType: 'ready',
+    inStock: true,
+    stockQuantity: 80,
   },
 ];
 
@@ -279,11 +287,27 @@ export const mockQuotes: QuoteRequestWithUserData[] = mockRawQuotes.map(quote =>
     };
 });
 
-export const mockLegalAgreement: LegalAgreement = {
-    fileName: 'MicroChub-Restricted-Item-Agreement-v1.pdf',
-    fileContent: 'data:application/pdf;base64,....', // a dummy base64 string
-    uploadedAt: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString(),
-};
+export const mockPolicies: PolicySection[] = [
+    {
+        id: 'policy-1',
+        title: 'Shipping Policy',
+        content: 'We ship to all governorates in Egypt. Shipping inside Cairo & Giza takes 2-3 business days. Shipping to other governorates takes 3-5 business days. Shipping fees are calculated at checkout.',
+        isVisible: true,
+    },
+    {
+        id: 'policy-2',
+        title: 'Return Policy',
+        content: 'You can return any product within 14 days of purchase, provided it is in its original condition and packaging. Custom-made items and build-to-order kits are non-refundable once production has started.',
+        isVisible: true,
+    },
+    {
+        id: 'policy-3',
+        title: 'Restricted Items Agreement',
+        content: 'For certain items, such as CNC machines or high-powered lasers, you will be required to download, sign, and upload a legal agreement during checkout. This is to ensure that these items are used responsibly and safely. We reserve the right to cancel any order that does not comply with this policy.',
+        isVisible: false,
+    }
+];
+
 
 export const mockFaqs: FaqItem[] = [
     {
@@ -307,10 +331,14 @@ export const mockFaqs: FaqItem[] = [
 ];
 
 export const mockContactInfo: ContactInfo = {
-    location: '123 Maker Street, Downtown',
+    location: '123 Maker Street, Downtown, Cairo',
     email: 'hello@microchub.com',
     phone: '+20 123 456 7890',
     workingHours: '9am - 5pm',
     workingDays: 'Sunday - Thursday',
     googleMapsLink: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3453.882823384268!2d31.23340007555198!3d30.04015097492751!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x145840c663335807%3A0x255b0cf83afb4a65!2sTahrir%20Square!5e0!3m2!1sen!2seg!4v1717075253896!5m2!1sen!2seg',
+    storeStatus: 'open',
+    storeMode: 'online',
+    pickupInstructions: 'Pickup is available from our partner location in Nasr City. We will contact you with the full address and arrange a time after you place your order.',
 };
+

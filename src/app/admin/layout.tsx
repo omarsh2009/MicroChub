@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -29,7 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { Logo } from "@/components/logo";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -43,8 +44,8 @@ const navLinks = [
     { href: "/admin/payment-methods", label: "Payment Methods", icon: Wallet },
     { href: "/admin/social-links", label: "Social Links", icon: Link2 },
     { href: "/admin/faq", label: "FAQ", icon: HelpCircle },
-    { href: "/admin/contact", label: "Contact Info", icon: Contact },
-    { href: "/admin/legal", label: "Legal Agreement", icon: FileText },
+    { href: "/admin/contact", label: "Contact & Store", icon: Contact },
+    { href: "/admin/legal", label: "Our Policy", icon: FileText },
 ];
 
 export default function AdminLayout({
@@ -63,10 +64,6 @@ export default function AdminLayout({
   };
   
   const isSuperAdmin = true;
-
-  const handleMobileLinkClick = () => {
-    setIsMobileMenuOpen(false);
-  };
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
@@ -127,7 +124,7 @@ export default function AdminLayout({
                 <SheetTitle>
                   <Link
                     href="/admin"
-                    onClick={handleMobileLinkClick}
+                    onClick={() => setIsMobileMenuOpen(false)}
                     className="flex items-center gap-2 text-lg font-semibold"
                   >
                     <Logo />
@@ -137,25 +134,26 @@ export default function AdminLayout({
               </SheetHeader>
               <nav className="grid gap-2 text-lg font-medium mt-4 flex-1 overflow-y-auto">
                 {navLinks.map(link => (
-                    <Link
-                        key={link.href}
-                        href={link.href}
-                        onClick={handleMobileLinkClick}
-                        className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
-                    >
-                        <link.icon className="h-5 w-5" />
-                        {link.label}
-                    </Link>
+                    <SheetClose asChild key={link.href}>
+                        <Link
+                            href={link.href}
+                            className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
+                        >
+                            <link.icon className="h-5 w-5" />
+                            {link.label}
+                        </Link>
+                    </SheetClose>
                 ))}
                 {isSuperAdmin && (
-                  <Link
-                    href="/admin/users"
-                    onClick={handleMobileLinkClick}
-                    className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
-                  >
-                    <Users className="h-5 w-5" />
-                    Users
-                  </Link>
+                  <SheetClose asChild>
+                      <Link
+                        href="/admin/users"
+                        className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
+                      >
+                        <Users className="h-5 w-5" />
+                        Users
+                      </Link>
+                  </SheetClose>
                 )}
               </nav>
             </SheetContent>

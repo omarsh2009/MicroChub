@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,56 +15,40 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import type { SocialLink } from '@/lib/types';
+import type { PolicySection } from '@/lib/types';
 import { useState } from 'react';
-import { Loader2, Facebook, Twitter, Instagram, Github, Youtube, Linkedin, Link2 } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-const SUPPORTED_PLATFORMS = ['Facebook', 'Twitter', 'Instagram', 'GitHub', 'YouTube', 'LinkedIn'];
-
-export const getIconForPlatform = (platform: string) => {
-    const props = { className: "h-5 w-5" };
-    switch (platform) {
-        case 'Facebook': return <Facebook {...props} />;
-        case 'Twitter': return <Twitter {...props} />;
-        case 'Instagram': return <Instagram {...props} />;
-        case 'GitHub': return <Github {...props} />;
-        case 'YouTube': return <Youtube {...props} />;
-        case 'LinkedIn': return <Linkedin {...props} />;
-        default: return <Link2 {...props} />;
-    }
-};
-
+import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
-  platform: z.string().min(2, { message: 'Platform is required.' }),
-  url: z.string().url({ message: 'Please enter a valid URL.' }),
-  enabled: z.boolean().default(true),
+  title: z.string().min(3, { message: 'Title is required.' }),
+  content: z.string().min(10, { message: 'Content must be at least 10 characters.' }),
+  isVisible: z.boolean().default(true),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface SocialLinkFormProps {
-  link?: SocialLink;
+interface PolicyFormProps {
+  policy?: PolicySection;
   onSubmit: (values: FormValues, id?: string) => Promise<void>;
   onFinished: () => void;
 }
 
-export function SocialLinkForm({ link, onSubmit, onFinished }: SocialLinkFormProps) {
+export function PolicyForm({ policy, onSubmit, onFinished }: PolicyFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      platform: link?.platform || '',
-      url: link?.url || '',
-      enabled: link?.enabled ?? true,
+      title: policy?.title || '',
+      content: policy?.content || '',
+      isVisible: policy?.isVisible ?? true,
     },
   });
 
   const handleSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
-    await onSubmit(values, link?.id);
+    await onSubmit(values, policy?.id);
     setIsSubmitting(false);
   };
 
@@ -71,40 +56,13 @@ export function SocialLinkForm({ link, onSubmit, onFinished }: SocialLinkFormPro
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-6 py-4">
         <FormField
-            control={form.control}
-            name="platform"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Platform</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a platform" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {SUPPORTED_PLATFORMS.map(platform => (
-                        <SelectItem key={platform} value={platform}>
-                            <div className="flex items-center gap-2">
-                                {getIconForPlatform(platform)}
-                                <span>{platform}</span>
-                            </div>
-                        </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        <FormField
           control={form.control}
-          name="url"
+          name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>URL</FormLabel>
+              <FormLabel>Section Title</FormLabel>
               <FormControl>
-                <Input placeholder="https://..." {...field} />
+                <Input placeholder="e.g. Shipping Policy" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -112,13 +70,26 @@ export function SocialLinkForm({ link, onSubmit, onFinished }: SocialLinkFormPro
         />
         <FormField
           control={form.control}
-          name="enabled"
+          name="content"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Content</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Explain the policy details here..." {...field} rows={8} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="isVisible"
           render={({ field }) => (
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
-                <FormLabel>Enabled</FormLabel>
+                <FormLabel>Visible</FormLabel>
                 <FormDescription>
-                  If disabled, this link will not be shown on the site.
+                  If enabled, this section will be visible on the public policy page.
                 </FormDescription>
               </div>
               <FormControl>
@@ -131,7 +102,7 @@ export function SocialLinkForm({ link, onSubmit, onFinished }: SocialLinkFormPro
             <Button type="button" variant="outline" onClick={onFinished}>Cancel</Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {link ? 'Save Changes' : 'Create Link'}
+              {policy ? 'Save Changes' : 'Create Section'}
             </Button>
         </div>
       </form>

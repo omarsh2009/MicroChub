@@ -25,9 +25,11 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { ProductCard } from "@/components/product-card";
 import { Separator } from "@/components/ui/separator";
+import { mockContactInfo } from "@/lib/demo-data";
 
 export function ProductClientPage({ product, allProducts, categories }: { product: Product, allProducts: Product[], categories: Category[] }) {
   const { toast } = useToast();
+  const isStoreClosed = mockContactInfo.storeStatus === 'closed';
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string | string[]>>({});
   const [inWishlist, setInWishlist] = useState(false);
@@ -160,6 +162,9 @@ export function ProductClientPage({ product, allProducts, categories }: { produc
       .slice(0, 4);
   }, [product, allProducts]);
 
+  const canOrder = product.inStock && !isStoreClosed;
+  const cannotOrderReason = isStoreClosed ? "Store is closed" : !product.inStock ? "Out of stock" : "";
+
 
   return (
     <div className="py-12 md:py-20">
@@ -183,24 +188,24 @@ export function ProductClientPage({ product, allProducts, categories }: { produc
               <Link href="/products" className="text-sm text-muted-foreground hover:text-primary">
                 &larr; Back to Products
               </Link>
-              <div className="flex items-center gap-2 mt-4">
+              <div className="flex items-center gap-2 mt-4 flex-wrap">
                 {product.categoryIds.map(catId => <Badge key={catId} variant="outline">{categoryMap.get(catId) || catId}</Badge>)}
-                {product.productType === 'build_to_order' ? (
-                  <Badge variant="secondary">Made to Order</Badge>
+                {product.inStock ? (
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">{product.stockQuantity} in stock</Badge>
                 ) : (
-                  <Badge variant="default" className="bg-green-600 hover:bg-green-700">In Stock</Badge>
+                    <Badge variant="destructive">Out of Stock</Badge>
                 )}
               </div>
               <h1 className="font-headline text-4xl lg:text-5xl font-bold mt-2">{product.name}</h1>
               <p className="text-muted-foreground text-lg mt-4">{product.description}</p>
             </div>
             
-            {product.productType === 'build_to_order' && (
+            {!product.inStock && (
               <Alert variant="default" className="bg-primary/5 border-primary/20">
                   <Clock className="h-4 w-4 text-primary" />
-                  <AlertTitle className="text-primary">Heads Up!</AlertTitle>
+                  <AlertTitle className="text-primary">Build-to-Order Item</AlertTitle>
                   <AlertDescription>
-                      This is a made-to-order item. Estimated production time is 7-14 business days.
+                      This item is currently out of stock but can be built on demand. Estimated production time is 7-14 business days.
                   </AlertDescription>
               </Alert>
             )}
@@ -229,7 +234,7 @@ export function ProductClientPage({ product, allProducts, categories }: { produc
               )}
             </div>
             
-            {product.customizationGroups && product.customizationGroups.length > 0 && (
+            {!product.inStock && product.customizationGroups && product.customizationGroups.length > 0 && (
               <div className="space-y-6">
                 <h2 className="font-headline text-2xl font-bold flex items-center gap-2">
                   <Wrench className="w-6 h-6 text-primary"/>
@@ -290,15 +295,15 @@ export function ProductClientPage({ product, allProducts, categories }: { produc
 
 
             <div className="flex flex-col sm:flex-row gap-4">
-               {needsQuote ? (
-                  <Button size="lg" className="flex-1" onClick={handleRequestQuote}>
+               {needsQuote || !product.inStock ? (
+                  <Button size="lg" className="flex-1" onClick={handleRequestQuote} disabled={isStoreClosed}>
                      <FileQuestion className="mr-2" />
-                     Request a Quote
+                     {isStoreClosed ? "Requests unavailable" : "Request a Quote"}
                   </Button>
                ) : (
-                  <Button size="lg" className="flex-1" onClick={handleAddToCart}>
+                  <Button size="lg" className="flex-1" onClick={handleAddToCart} disabled={!canOrder}>
                      <ShoppingCart className="mr-2" />
-                     Add to Cart
+                     {canOrder ? "Add to Cart" : cannotOrderReason}
                   </Button>
                )}
                <Button size="lg" variant="outline" onClick={handleWishlistToggle} className="w-full sm:w-auto">
@@ -331,9 +336,9 @@ export function ProductClientPage({ product, allProducts, categories }: { produc
                     </div>
                 </CardContent>
                 <CardFooter>
-                    <Button onClick={handleRequestQuote} className="w-full">
+                    <Button onClick={handleRequestQuote} className="w-full" disabled={isStoreClosed}>
                         <FileQuestion className="mr-2" />
-                        Request Quote for Customization
+                         {isStoreClosed ? "Requests unavailable" : "Request Quote for Customization"}
                     </Button>
                 </CardFooter>
             </Card>

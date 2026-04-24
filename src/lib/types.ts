@@ -44,12 +44,13 @@ export type Product = {
   customizationGroups?: CustomizationGroup[];
   discountValue?: number;
   discountType?: 'fixed' | 'percentage' | 'none';
-  productType?: 'ready' | 'build_to_order';
+  inStock: boolean;
+  stockQuantity: number;
 };
 
 export type UserProfile = {
   id: string;
-  name: string;
+  name:string;
   email: string;
   phoneNumber: string;
   wishlist: string[];
@@ -159,10 +160,11 @@ export type Coupon = {
   expiryDate?: string;
 };
 
-export type LegalAgreement = {
-  fileName: string;
-  fileContent: string; // base64 or data URL
-  uploadedAt: string;
+export type PolicySection = {
+  id: string;
+  title: string;
+  content: string;
+  isVisible: boolean;
 };
 
 export type SocialLink = {
@@ -193,4 +195,8 @@ export type ContactInfo = {
     workingHours: string;
     workingDays: string;
     googleMapsLink?: string;
+    storeStatus: 'open' | 'closed';
+    storeMode: 'online' | 'physical';
+    pickupInstructions: string;
 };
+

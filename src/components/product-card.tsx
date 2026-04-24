@@ -1,3 +1,4 @@
+
 import Image from "next/image";
 import Link from "next/link";
 
@@ -34,7 +35,7 @@ export function ProductCard({ product, categories }: ProductCardProps) {
 
   return (
     <Card className="flex flex-col overflow-hidden group transition-all duration-300 hover:shadow-primary/20 hover:shadow-lg hover:-translate-y-1">
-      <CardHeader className="p-0">
+      <CardHeader className="p-0 relative">
         <Link href={`/products/${product.slug}`} aria-label={product.name}>
           <div className="aspect-video overflow-hidden">
             {primaryImage ? (
@@ -54,6 +55,9 @@ export function ProductCard({ product, categories }: ProductCardProps) {
             )}
           </div>
         </Link>
+        {!product.inStock && (
+            <Badge variant="destructive" className="absolute top-2 right-2">Out of Stock</Badge>
+        )}
       </CardHeader>
       <CardContent className="p-4 flex-grow">
         <CardTitle className="text-lg font-headline">

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -49,7 +50,8 @@ const formSchema = z.object({
   description: z.string().optional(),
   isRestricted: z.boolean().optional(),
   customizationGroups: z.array(customizationGroupSchema).optional(),
-  productType: z.enum(['ready', 'build_to_order']).default('build_to_order'),
+  inStock: z.boolean().default(true),
+  stockQuantity: z.coerce.number().min(0).default(0),
   image: z.string().optional(),
   discountType: z.enum(['fixed', 'percentage', 'none']).optional(),
   discountValue: z.coerce.number().optional(),
@@ -76,7 +78,8 @@ export function ProductForm({
       description: product?.description || '',
       isRestricted: product?.isRestricted || false,
       customizationGroups: product?.customizationGroups || [],
-      productType: product?.productType || 'build_to_order',
+      inStock: product?.inStock ?? true,
+      stockQuantity: product?.stockQuantity || 0,
       image: product?.image || '',
       discountType: product?.discountType || 'none',
       discountValue: product?.discountValue || 0,
@@ -87,6 +90,8 @@ export function ProductForm({
     control: form.control,
     name: "customizationGroups"
   });
+
+  const watchInStock = form.watch('inStock');
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -136,26 +141,40 @@ export function ProductForm({
                 </FormItem>
               )}
             />
-             <FormField
+            <div className="space-y-2">
+                <FormField
                 control={form.control}
-                name="productType"
+                name="inStock"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Product Type</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || 'build_to_order'}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Select a type" /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="build_to_order">Build-to-Order</SelectItem>
-                        <SelectItem value="ready">Ready (In Stock)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 h-10">
+                    <FormLabel>In Stock</FormLabel>
+                    <FormControl>
+                        <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        />
+                    </FormControl>
+                    </FormItem>
                 )}
-              />
+                />
+            </div>
         </div>
+        { watchInStock && (
+             <FormField
+              control={form.control}
+              name="stockQuantity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Stock Quantity</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} value={field.value ?? 0} onChange={e => field.onChange(Number(e.target.value))} />
+                  </FormControl>
+                  <FormDescription>Number of items available for immediate shipping.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+        )}
          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
                 control={form.control}
@@ -324,6 +343,7 @@ export function ProductForm({
         <Card>
             <CardHeader>
                 <CardTitle>Product Customizations</CardTitle>
+                <FormDescription>For build-to-order products. Not applicable for in-stock items.</FormDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 {fields.map((group, groupIndex) => (
