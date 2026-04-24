@@ -18,8 +18,8 @@ import {
 } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
 import type { PolicySection } from '@/lib/types';
-import { PolicyTable } from '../social-links/components/social-links-table';
-import { PolicyForm } from '../social-links/components/social-link-form';
+import { PolicyTable } from './components/policy-table';
+import { PolicyForm } from './components/policy-form';
 
 
 export function PolicyClientPage({ policies: initialPolicies }: { policies: PolicySection[]}) {
