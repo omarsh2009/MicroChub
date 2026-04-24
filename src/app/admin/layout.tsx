@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import {
   Package,
   ShoppingCart,
@@ -50,6 +51,7 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     toast({ title: "Logged Out (Demo)" });
@@ -57,6 +59,10 @@ export default function AdminLayout({
   };
   
   const isSuperAdmin = true;
+
+  const handleMobileLinkClick = () => {
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
@@ -101,7 +107,7 @@ export default function AdminLayout({
       </div>
       <div className="flex flex-col">
         <header className="flex h-16 items-center gap-4 border-b bg-background px-4 lg:px-6">
-          <Sheet>
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button
                 variant="outline"
@@ -117,6 +123,7 @@ export default function AdminLayout({
                 <SheetTitle>
                   <Link
                     href="/admin"
+                    onClick={handleMobileLinkClick}
                     className="flex items-center gap-2 text-lg font-semibold"
                   >
                     <Logo />
@@ -129,6 +136,7 @@ export default function AdminLayout({
                     <Link
                         key={link.href}
                         href={link.href}
+                        onClick={handleMobileLinkClick}
                         className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
                     >
                         <link.icon className="h-5 w-5" />
@@ -138,6 +146,7 @@ export default function AdminLayout({
                 {isSuperAdmin && (
                   <Link
                     href="/admin/users"
+                    onClick={handleMobileLinkClick}
                     className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
                   >
                     <Users className="h-5 w-5" />
