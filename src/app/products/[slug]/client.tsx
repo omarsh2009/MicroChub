@@ -1,7 +1,6 @@
 
 'use client';
 
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { type Product, type Category } from "@/lib/types";
@@ -15,39 +14,25 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle, ShoppingCart, Wrench, AlertTriangle, Clock, FileQuestion, Loader2, Heart } from "lucide-react";
+import { CheckCircle, ShoppingCart, Wrench, AlertTriangle, Clock, FileQuestion, Heart } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useMemo } from "react";
-import { useCart } from '@/hooks/use-cart';
-import { useUser } from "@/auth";
-import { createQuoteRequest } from "@/lib/services/quotes";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { useWishlist } from "@/hooks/use-wishlist";
 import { cn } from "@/lib/utils";
 import { ProductCard } from "@/components/product-card";
 import { Separator } from "@/components/ui/separator";
 
 export function ProductClientPage({ product, allProducts, categories }: { product: Product, allProducts: Product[], categories: Category[] }) {
-  const router = useRouter();
   const { toast } = useToast();
-  const { addToCart } = useCart();
-  const user = useUser();
-  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string | string[]>>({});
-  const [quantity, setQuantity] = useState(1);
-  const [isRequestingQuote, setIsRequestingQuote] = useState(false);
+  const [inWishlist, setInWishlist] = useState(false);
   
-  const [customNotes, setCustomNotes] = useState('');
-  const [customFile, setCustomFile] = useState<File | null>(null);
-  const [isRequestingCustomQuote, setIsRequestingCustomQuote] = useState(false);
-
   const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
-  const inWishlist = isInWishlist(product.id);
 
   const calculatedPrice = useMemo(() => {
     let price = product.price;
@@ -97,7 +82,6 @@ export function ProductClientPage({ product, allProducts, categories }: { produc
     });
   }, [selectedOptions, product.customizationGroups]);
 
-
   const handleSingleSelectChange = (groupName: string, optionName: string) => {
     setSelectedOptions(prev => ({
         ...prev,
@@ -125,87 +109,25 @@ export function ProductClientPage({ product, allProducts, categories }: { produc
   };
   
   const handleAddToCart = () => {
-    addToCart(product, quantity, selectedOptions, discountedPrice);
+    toast({
+      title: 'Added to Cart (Demo)',
+      description: `${product.name} has been added to your cart.`,
+    });
   };
   
   const handleRequestQuote = async () => {
-      if (!user) {
-          toast({ variant: 'destructive', title: 'Please log in', description: 'You need to be logged in to request a quote.'});
-          router.push(`/login?redirect=/products/${product.slug}`);
-          return;
-      }
-
-      setIsRequestingQuote(true);
-      const { error } = await createQuoteRequest({
-          product,
-          quantity,
-          configuration: selectedOptions,
-          basePrice: product.price,
-      });
-
-      if (error) {
-          console.error("Failed to create quote request:", error.message);
-          toast({ variant: 'destructive', title: 'Request Failed', description: error.message || 'Could not send your quote request.' });
-      } else {
-        toast({
-            title: 'Quote Request Sent!',
-            description: "We've received your request and will get back to you with a quote shortly.",
-        });
-        router.push('/quotes');
-      }
-
-      setIsRequestingQuote(false);
-  };
-
-  const handleCustomQuoteRequest = async () => {
-    if (!user) {
-      toast({ variant: 'destructive', title: 'Please log in', description: 'You need to be logged in to request a quote.' });
-      router.push(`/products/${product.slug}`);
-      return;
-    }
-    if (!customNotes) {
-      toast({ variant: 'destructive', title: 'Description needed', description: 'Please describe your custom modification.' });
-      return;
-    }
-
-    setIsRequestingCustomQuote(true);
-
-    const { error } = await createQuoteRequest({
-        product,
-        quantity: 1, // Default to 1 for custom requests
-        configuration: { Customization: 'See Notes' },
-        basePrice: product.price,
-        userNotes: customNotes,
-        file: customFile || undefined,
-      });
-
-    if (error) {
-      console.error("Failed to create custom quote request:", error.message);
-      toast({ variant: 'destructive', title: 'Request Failed', description: error.message || 'Could not send your quote request.' });
-    } else {
       toast({
-        title: 'Custom Quote Request Sent!',
-        description: "We've received your request and will get back to you with a quote shortly.",
-      });
-      router.push('/quotes');
-    }
-
-    setIsRequestingCustomQuote(false);
+        title: 'Quote Requested (Demo)',
+        description: "In a real app, this would send your request to our team.",
+    });
   };
-
+  
   const handleWishlistToggle = () => {
-    if (!user) {
-      toast({ variant: 'destructive', title: 'Please log in', description: 'You need to be logged in to manage your wishlist.' });
-      router.push(`/login?redirect=/products/${product.slug}`);
-      return;
-    }
-    if (inWishlist) {
-      removeFromWishlist(product.id);
-    } else {
-      addToWishlist(product.id);
-    }
+    setInWishlist(!inWishlist);
+    toast({
+      title: inWishlist ? 'Removed from Wishlist (Demo)' : 'Added to Wishlist (Demo)',
+    });
   };
-
 
   const priceSuffix = needsQuote ? '+' : '';
 
@@ -232,10 +154,10 @@ export function ProductClientPage({ product, allProducts, categories }: { produc
 
     return allProducts
       .filter(p => 
-        p.id !== product.id && // Exclude the current product
-        p.categoryIds.some(catId => product.categoryIds.includes(catId)) // Find products with at least one shared category
+        p.id !== product.id &&
+        p.categoryIds.some(catId => product.categoryIds.includes(catId))
       )
-      .slice(0, 4); // Limit to 4 related products
+      .slice(0, 4);
   }, [product, allProducts]);
 
 
@@ -369,8 +291,8 @@ export function ProductClientPage({ product, allProducts, categories }: { produc
 
             <div className="flex flex-col sm:flex-row gap-4">
                {needsQuote ? (
-                  <Button size="lg" className="flex-1" onClick={handleRequestQuote} disabled={isRequestingQuote}>
-                     {isRequestingQuote ? <Loader2 className="mr-2 animate-spin" /> : <FileQuestion className="mr-2" />}
+                  <Button size="lg" className="flex-1" onClick={handleRequestQuote}>
+                     <FileQuestion className="mr-2" />
                      Request a Quote
                   </Button>
                ) : (
@@ -401,19 +323,16 @@ export function ProductClientPage({ product, allProducts, categories }: { produc
                         <Textarea
                             id="custom-notes"
                             placeholder="e.g., 'I need this with a different MCU', or 'Can you add a GPS module?'"
-                            value={customNotes}
-                            onChange={(e) => setCustomNotes(e.target.value)}
                         />
                     </div>
                     <div className="grid w-full max-w-sm items-center gap-1.5">
                         <Label htmlFor="custom-file">Reference File (Optional)</Label>
-                        <Input id="custom-file" type="file" accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf" onChange={(e) => setCustomFile(e.target.files ? e.target.files[0] : null)} />
-                         <p className="text-xs text-muted-foreground">File uploads are simulated in this prototype.</p>
+                        <Input id="custom-file" type="file" />
                     </div>
                 </CardContent>
                 <CardFooter>
-                    <Button onClick={handleCustomQuoteRequest} disabled={isRequestingCustomQuote} className="w-full">
-                        {isRequestingCustomQuote ? <Loader2 className="mr-2 animate-spin" /> : <FileQuestion className="mr-2" />}
+                    <Button onClick={handleRequestQuote} className="w-full">
+                        <FileQuestion className="mr-2" />
                         Request Quote for Customization
                     </Button>
                 </CardFooter>

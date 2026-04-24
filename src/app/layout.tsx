@@ -3,9 +3,6 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
 import { MainLayout } from "@/components/main-layout";
-import { AuthProvider } from "@/auth/provider";
-import { CartProvider } from "@/context/cart-provider";
-import { WishlistProvider } from "@/context/wishlist-provider";
 
 export const metadata: Metadata = {
   title: "MicroChub - Electronics for Makers",
@@ -41,13 +38,7 @@ export default function RootLayout({
           "font-body antialiased",
         )}
       >
-        <AuthProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <MainLayout>{children}</MainLayout>
-            </WishlistProvider>
-          </CartProvider>
-        </AuthProvider>
+        <MainLayout>{children}</MainLayout>
         <Toaster />
       </body>
     </html>

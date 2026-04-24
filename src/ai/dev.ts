@@ -1,5 +1,2 @@
-import { config } from 'dotenv';
-config();
-
-import '@/ai/flows/admin-product-description-generator.ts';
-import '@/ai/flows/admin-project-summary-tool.ts';
+// This file is no longer needed as all backend logic has been removed for the static UI/UX demo.
+// It can be safely deleted.

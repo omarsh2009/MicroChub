@@ -2,66 +2,24 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
-import { signInWithEmail } from "@/lib/services/auth";
-import { Loader2 } from "lucide-react";
-import { useState } from "react";
-
-
-const formSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email." }),
-  password: z.string().min(1, { message: "Password is required." }),
-});
-
-type LoginFormValues = z.infer<typeof formSchema>;
 
 export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
-  async function onSubmit(values: LoginFormValues) {
-    setIsLoading(true);
-    const result = await signInWithEmail(values);
-    
-    if (result.error) {
-       toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: result.error,
-      });
-    } else {
-      toast({
-        title: "Logged In Successfully!",
-        description: "Welcome back. (This is a mock login)",
-      });
-      router.push("/");
-    }
-
-    setIsLoading(false);
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    toast({
+      title: "Logged In Successfully! (Demo)",
+      description: "Welcome back.",
+    });
+    router.push("/");
   }
 
   return (
@@ -75,43 +33,22 @@ export default function LoginPage() {
           <CardDescription>Enter your credentials to access your account</CardDescription>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="you@example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex justify-between items-baseline">
-                      <FormLabel>Password</FormLabel>
-                      <Link href="#" className="text-sm text-primary hover:underline">Forgot Password?</Link>
-                    </div>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <form onSubmit={onSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" placeholder="you@example.com" defaultValue="demo@example.com" />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-baseline">
+                  <Label htmlFor="password">Password</Label>
+                  <Link href="#" className="text-sm text-primary hover:underline">Forgot Password?</Link>
+                </div>
+                <Input id="password" type="password" placeholder="••••••••" defaultValue="password" />
+              </div>
+              <Button type="submit" className="w-full">
                 Login
               </Button>
             </form>
-          </Form>
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{" "}
             <Link href="/signup" className="underline text-primary">

@@ -1,18 +1,14 @@
-import { getProducts } from "@/lib/services/products";
-import { getCategories } from "@/lib/services/categories";
 import { ProductCard } from "@/components/product-card";
 import { Badge } from "@/components/ui/badge";
+import { mockProducts, mockCategories } from "@/lib/demo-data";
 
-export default async function ProductsPage({
+export default function ProductsPage({
   searchParams,
 }: {
   searchParams?: { category?: string };
 }) {
-  const { data: productsData } = await getProducts();
-  const { data: categoriesData } = await getCategories();
-
-  const products = productsData || [];
-  const categories = categoriesData || [];
+  const products = mockProducts;
+  const categories = mockCategories;
 
   const selectedCategorySlug = searchParams?.category;
   const selectedCategory = categories.find(

@@ -1,26 +1,19 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { getLegalAgreement, saveLegalAgreement } from '@/lib/services/legal';
 import type { LegalAgreement } from '@/lib/types';
-import { Loader2, UploadCloud, FileText } from 'lucide-react';
+import { FileText } from 'lucide-react';
 
 const ACCEPTED_FILE_TYPES = ["application/pdf"];
 
-export function LegalClientPage() {
+export function LegalClientPage({ agreement: initialAgreement }: { agreement: LegalAgreement | null}) {
   const { toast } = useToast();
-  const [agreement, setAgreement] = useState<LegalAgreement | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [agreement, setAgreement] = useState<LegalAgreement | null>(initialAgreement);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-
-  useEffect(() => {
-    getLegalAgreement().then(setAgreement).finally(() => setLoading(false));
-  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -39,30 +32,14 @@ export function LegalClientPage() {
       toast({ variant: 'destructive', title: 'No file selected' });
       return;
     }
-    
-    setIsSaving(true);
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(selectedFile);
-      reader.onloadend = async () => {
-        const base64Content = reader.result as string;
-        const newAgreement: LegalAgreement = {
-          fileName: selectedFile.name,
-          fileContent: base64Content,
-          uploadedAt: new Date().toISOString(),
-        };
-        await saveLegalAgreement(newAgreement);
-        setAgreement(newAgreement);
-        toast({ title: 'Legal Agreement Updated' });
-        setSelectedFile(null);
-        setPreview(null);
-      };
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Failed to save agreement' });
-      console.error(error);
-    } finally {
-      setIsSaving(false);
-    }
+    toast({ title: 'Saved (Demo)', description: 'Legal agreement would be updated in a real application.' });
+    setAgreement({
+        fileName: selectedFile.name,
+        fileContent: 'demo-content',
+        uploadedAt: new Date().toISOString(),
+    });
+    setSelectedFile(null);
+    setPreview(null);
   };
 
 
@@ -85,9 +62,7 @@ export function LegalClientPage() {
                     <CardTitle className="text-base">Current Agreement</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {loading ? (
-                        <Loader2 className="w-6 h-6 animate-spin" />
-                    ) : agreement ? (
+                    {agreement ? (
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <FileText className="w-5 h-5 text-muted-foreground" />
@@ -118,8 +93,7 @@ export function LegalClientPage() {
                            <p className="text-xs text-muted-foreground">This will replace the current agreement.</p>
                         </div>
                     )}
-                    <Button onClick={handleSave} disabled={isSaving || !selectedFile}>
-                        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Button onClick={handleSave} disabled={!selectedFile}>
                         Save and Publish New Agreement
                     </Button>
                 </CardContent>

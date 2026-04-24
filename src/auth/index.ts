@@ -1,2 +1,2 @@
-export * from './provider';
-export * from './use-user';
+// This file is no longer needed as all backend logic has been removed for the static UI/UX demo.
+// It can be safely deleted.

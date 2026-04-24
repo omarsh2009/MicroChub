@@ -1,7 +1,7 @@
 import { OrdersClientPage } from './client';
-import { getAllOrders } from '@/lib/services/orders';
+import { mockOrders } from '@/lib/demo-data';
 
-export default async function AdminOrdersPage() {
-  const { data } = await getAllOrders();
-  return <OrdersClientPage initialOrders={data || []} />;
+export default function AdminOrdersPage() {
+  const orders = mockOrders;
+  return <OrdersClientPage initialOrders={orders || []} />;
 }

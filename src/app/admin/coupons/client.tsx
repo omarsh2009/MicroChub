@@ -1,6 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { PlusCircle, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,31 +17,14 @@ import {
 } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
 import type { Coupon } from '@/lib/types';
-import { getCoupons, addCoupon, updateCoupon, deleteCoupon } from '@/lib/services/coupons';
 import { CouponsTable } from './components/coupons-table';
 import { CouponForm } from './components/coupon-form';
 
-export function CouponsClientPage() {
+export function CouponsClientPage({ coupons: initialCoupons }: { coupons: Coupon[]}) {
   const { toast } = useToast();
-  const [coupons, setCoupons] = useState<Coupon[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [coupons, setCoupons] = useState<Coupon[]>(initialCoupons);
   const [open, setOpen] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | undefined>(undefined);
-
-  useEffect(() => {
-    const fetchCoupons = async () => {
-        setLoading(true);
-        const { data, error } = await getCoupons();
-        if (error) {
-            toast({ variant: 'destructive', title: 'Error fetching coupons', description: error.message });
-            setCoupons([]);
-        } else {
-            setCoupons(data || []);
-        }
-        setLoading(false);
-    }
-    fetchCoupons();
-  }, [toast]);
 
   const handleAdd = () => {
     setSelectedCoupon(undefined);
@@ -54,30 +37,12 @@ export function CouponsClientPage() {
   };
   
   const handleDelete = async (couponId: string) => {
-    const { success, error } = await deleteCoupon(couponId);
-    if (success) {
-        setCoupons(prev => prev.filter(c => c.id !== couponId));
-        toast({ title: 'Coupon Deleted' });
-    } else {
-        toast({ variant: 'destructive', title: 'Failed to delete coupon', description: error?.message });
-    }
+    toast({ variant: 'destructive', title: 'Delete Action (Demo)', description: 'This action is disabled in the static UI demo.' });
   }
 
   const onFormSubmit = async (values: Omit<Coupon, 'id' | 'usedCount'>, id?: string) => {
-    const response = id ? await updateCoupon(id, values) : await addCoupon(values);
-
-    if (response.success && response.data) {
-        if (id) {
-            setCoupons(prev => prev.map(c => c.id === id ? response.data! : c));
-            toast({ title: 'Coupon Updated' });
-        } else {
-            setCoupons(prev => [...prev, response.data!]);
-            toast({ title: 'Coupon Added' });
-        }
-        setOpen(false);
-    } else {
-        toast({ variant: 'destructive', title: 'Save failed', description: response.error?.message });
-    }
+    toast({ title: 'Saved (Demo)', description: 'Coupon changes would be saved in a real application.' });
+    setOpen(false);
   };
 
   return (
@@ -98,13 +63,7 @@ export function CouponsClientPage() {
           <CardDescription>Create and manage discount coupons for your store.</CardDescription>
         </CardHeader>
         <CardContent>
-            {loading ? (
-                <div className="flex justify-center items-center py-10">
-                    <Loader2 className="w-8 h-8 animate-spin" />
-                </div>
-            ) : (
-                <CouponsTable coupons={coupons} onEdit={handleEdit} onDelete={handleDelete} />
-            )}
+            <CouponsTable coupons={coupons} onEdit={handleEdit} onDelete={handleDelete} />
         </CardContent>
       </Card>
 

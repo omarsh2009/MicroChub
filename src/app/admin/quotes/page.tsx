@@ -1,7 +1,7 @@
 import { QuotesClientPage } from './client';
-import { getAllQuoteRequests } from '@/lib/services/quotes';
+import { mockQuotes } from '@/lib/demo-data';
 
-export default async function AdminQuotesPage() {
-  const { data } = await getAllQuoteRequests();
-  return <QuotesClientPage initialQuotes={data || []} />;
+export default function AdminQuotesPage() {
+  const quotes = mockQuotes;
+  return <QuotesClientPage initialQuotes={quotes || []} />;
 }

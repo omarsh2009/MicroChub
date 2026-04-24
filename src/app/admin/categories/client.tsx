@@ -1,7 +1,7 @@
 
 'use client';
-import { useState, useEffect } from 'react';
-import { PlusCircle, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -18,32 +18,14 @@ import {
 } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
 import type { Category } from '@/lib/types';
-import { getCategories, addCategory, updateCategory, deleteCategory } from '@/lib/services/categories';
 import { CategoriesTable } from './components/categories-table';
 import { CategoryForm } from './components/category-form';
 
-export function CategoriesClientPage() {
+export function CategoriesClientPage({ categories: initialCategories }: { categories: Category[]}) {
   const { toast } = useToast();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [open, setOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | undefined>(undefined);
-
-  const fetchCategories = async () => {
-    setLoading(true);
-    const response = await getCategories();
-    if (!response.success) {
-        toast({ variant: 'destructive', title: 'Error fetching categories', description: response.error?.message });
-        setCategories([]);
-    } else {
-        setCategories(response.data || []);
-    }
-    setLoading(false);
-  }
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
 
   const handleAdd = () => {
     setSelectedCategory(undefined);
@@ -55,36 +37,20 @@ export function CategoriesClientPage() {
     setOpen(true);
   };
   
-  const handleDelete = async (categoryId: string) => {
-    const response = await deleteCategory(categoryId);
-    if (!response.success) {
-        toast({ variant: 'destructive', title: 'Failed to delete category', description: response.error?.message });
-    } else {
-        setCategories(prev => prev.filter(c => c.id !== categoryId));
-        toast({ title: 'Category Deleted' });
-    }
+  const handleDelete = (categoryId: string) => {
+    toast({
+        variant: 'destructive',
+        title: 'Delete Action (Demo)',
+        description: 'This action is disabled in the static UI demo.',
+    });
   }
 
   const onFormSubmit = async (values: Omit<Category, 'id' | 'slug'>, id?: string) => {
-    if (id) {
-      const response = await updateCategory(id, values);
-      if (!response.success) {
-        toast({ variant: 'destructive', title: 'Update failed', description: response.error?.message });
-      } else {
-        await fetchCategories(); // Refetch to get updated data
-        toast({ title: 'Category Updated' });
-        setOpen(false);
-      }
-    } else {
-      const response = await addCategory(values);
-      if (!response.success) {
-        toast({ variant: 'destructive', title: 'Save failed', description: response.error?.message });
-      } else {
-        await fetchCategories(); // Refetch to get new data
-        toast({ title: 'Category Added' });
-        setOpen(false);
-      }
-    }
+    toast({
+        title: 'Saved (Demo)',
+        description: 'Category changes would be saved in a real application.',
+    });
+    setOpen(false);
   };
 
   return (
@@ -105,13 +71,7 @@ export function CategoriesClientPage() {
           <CardDescription>Organize your products by creating and managing categories.</CardDescription>
         </CardHeader>
         <CardContent>
-            {loading ? (
-                <div className="flex justify-center items-center py-10">
-                    <Loader2 className="w-8 h-8 animate-spin" />
-                </div>
-            ) : (
-                <CategoriesTable categories={categories} onEdit={handleEdit} onDelete={handleDelete} />
-            )}
+            <CategoriesTable categories={categories} onEdit={handleEdit} onDelete={handleDelete} />
         </CardContent>
       </Card>
 

@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PlusCircle, Loader2 } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Product, Category } from '@/lib/types';
 import {
@@ -20,14 +20,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { deleteProduct } from '@/lib/services/products';
 import { useToast } from '@/hooks/use-toast';
 
 export function ProductClientPage({ products, categories }: { products: Product[], categories: Category[] }) {
   const [open, setOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | undefined>(undefined);
-  const [isDeleting, setIsDeleting] = useState<string | null>(null);
-  const router = useRouter();
   const { toast } = useToast();
 
   const handleAdd = () => {
@@ -40,28 +37,20 @@ export function ProductClientPage({ products, categories }: { products: Product[
     setOpen(true);
   };
 
-  const handleDelete = async (productId: string) => {
-    setIsDeleting(productId);
-    const { error } = await deleteProduct(productId);
-    if (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error Deleting Product',
-        description: error,
-      });
-    } else {
-      toast({
-        title: 'Product Deleted',
-        description: 'The product has been successfully removed.',
-      });
-      router.refresh();
-    }
-    setIsDeleting(null);
+  const handleDelete = (productId: string) => {
+    toast({
+      variant: 'destructive',
+      title: 'Delete Action (Demo)',
+      description: 'This action is disabled in the static UI demo.',
+    });
   }
   
   const handleFormFinished = () => {
       setOpen(false);
-      router.refresh();
+      toast({
+        title: 'Saved (Demo)',
+        description: 'Product changes would be saved in a real application.',
+      });
   }
 
   return (
@@ -87,7 +76,7 @@ export function ProductClientPage({ products, categories }: { products: Product[
               categories={categories} 
               onEdit={handleEdit}
               onDelete={handleDelete}
-              isDeleting={isDeleting}
+              isDeleting={null}
             />
         </CardContent>
          <CardFooter>

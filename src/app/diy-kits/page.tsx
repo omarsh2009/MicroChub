@@ -1,14 +1,10 @@
-import { getProducts } from "@/lib/services/products";
-import { getCategories } from "@/lib/services/categories";
 import { ProductCard } from "@/components/product-card";
 import { Badge } from "@/components/ui/badge";
+import { mockProducts, mockCategories } from "@/lib/demo-data";
 
-export default async function DiyKitsPage() {
-  const { data: allProductsData } = await getProducts();
-  const { data: categoriesData } = await getCategories();
-
-  const allProducts = allProductsData || [];
-  const categories = categoriesData || [];
+export default function DiyKitsPage() {
+  const allProducts = mockProducts;
+  const categories = mockCategories;
 
   const diyCategory = categories.find(c => c.slug === 'diy-kits');
   const diyKits = diyCategory

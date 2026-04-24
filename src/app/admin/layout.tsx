@@ -28,10 +28,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/logo";
-import { useUser, useAuthContext } from "@/auth";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { signOut } from "@/lib/services/auth";
 
 const navLinks = [
     { href: "/admin/products", label: "Products", icon: Package },
@@ -49,34 +47,16 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = useUser();
-  const { refetchUser } = useAuthContext();
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
 
   const handleLogout = async () => {
-    await signOut();
-    refetchUser();
-    toast({ title: "Logged Out" });
+    toast({ title: "Logged Out (Demo)" });
     router.push("/");
   };
-
-  if (!user || !user.profile?.role || !['admin', 'super_admin'].includes(user.profile.role)) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <div className="text-center">
-            <h1 className="text-2xl font-bold">Access Denied</h1>
-            <p className="text-muted-foreground">You do not have permission to view this page.</p>
-            <Button asChild className="mt-4">
-                <Link href="/">Return to Home</Link>
-            </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const isSuperAdmin = user.profile.role === 'super_admin';
+  
+  const isSuperAdmin = true;
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">

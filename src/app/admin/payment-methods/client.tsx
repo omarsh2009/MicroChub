@@ -1,6 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { PlusCircle, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,31 +17,14 @@ import {
 } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
 import type { PaymentMethod } from '@/lib/types';
-import { getPaymentMethods, addPaymentMethod, updatePaymentMethod, deletePaymentMethod } from '@/lib/services/payment-methods';
 import { PaymentMethodsTable } from './components/payment-methods-table';
 import { PaymentMethodForm } from './components/payment-method-form';
 
-export function PaymentMethodsClientPage() {
+export function PaymentMethodsClientPage({ methods: initialMethods }: { methods: PaymentMethod[] }) {
   const { toast } = useToast();
-  const [methods, setMethods] = useState<PaymentMethod[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [methods, setMethods] = useState<PaymentMethod[]>(initialMethods);
   const [open, setOpen] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | undefined>(undefined);
-
-  useEffect(() => {
-    const fetchMethods = async () => {
-        setLoading(true);
-        const { data, error } = await getPaymentMethods();
-        if (error) {
-            toast({ variant: 'destructive', title: 'Error fetching payment methods', description: error.message });
-            setMethods([]);
-        } else {
-            setMethods(data || []);
-        }
-        setLoading(false);
-    }
-    fetchMethods();
-  }, [toast]);
 
   const handleAdd = () => {
     setSelectedMethod(undefined);
@@ -54,29 +37,12 @@ export function PaymentMethodsClientPage() {
   };
   
   const handleDelete = async (methodId: string) => {
-    const { success, error } = await deletePaymentMethod(methodId);
-    if (success) {
-        setMethods(prev => prev.filter(m => m.id !== methodId));
-        toast({ title: 'Payment Method Deleted' });
-    } else {
-        toast({ variant: 'destructive', title: 'Failed to delete method', description: error?.message });
-    }
+    toast({ variant: 'destructive', title: 'Delete Action (Demo)', description: 'This action is disabled in the static UI demo.' });
   }
 
   const onFormSubmit = async (values: Omit<PaymentMethod, 'id'>, id?: string) => {
-    const response = id ? await updatePaymentMethod(id, values) : await addPaymentMethod(values);
-    if (response.success && response.data) {
-        if (id) {
-            setMethods(prev => prev.map(m => m.id === id ? response.data! : m));
-            toast({ title: 'Payment Method Updated' });
-        } else {
-            setMethods(prev => [...prev, response.data!]);
-            toast({ title: 'Payment Method Added' });
-        }
-        setOpen(false);
-    } else {
-        toast({ variant: 'destructive', title: 'Save failed', description: response.error?.message });
-    }
+    toast({ title: 'Saved (Demo)', description: 'Payment method changes would be saved in a real application.' });
+    setOpen(false);
   };
 
   return (
@@ -97,13 +63,7 @@ export function PaymentMethodsClientPage() {
           <CardDescription>Configure the payment options available to customers at checkout.</CardDescription>
         </CardHeader>
         <CardContent>
-            {loading ? (
-                <div className="flex justify-center items-center py-10">
-                    <Loader2 className="w-8 h-8 animate-spin" />
-                </div>
-            ) : (
-                <PaymentMethodsTable methods={methods} onEdit={handleEdit} onDelete={handleDelete} />
-            )}
+            <PaymentMethodsTable methods={methods} onEdit={handleEdit} onDelete={handleDelete} />
         </CardContent>
       </Card>
 

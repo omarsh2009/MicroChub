@@ -1,9 +1,6 @@
 'use client';
 
 import {useState} from 'react';
-import {zodResolver} from '@hookform/resolvers/zod';
-import {useForm} from 'react-hook-form';
-import {z} from 'zod';
 import {Button} from '@/components/ui/button';
 import {
   Form,
@@ -12,47 +9,28 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
 } from '@/components/ui/form';
 import {Input} from '@/components/ui/input';
 import {Textarea} from '@/components/ui/textarea';
 import {useToast} from '@/hooks/use-toast';
 import {Badge} from '@/components/ui/badge';
-import {Loader2, Wand2 } from 'lucide-react';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
-
-const formSchema = z.object({
-  projectDescription: z
-    .string()
-    .min(50, {message: 'Please provide a detailed description of at least 50 characters.'}),
-  file: z.any().optional(),
-});
 
 export default function CustomServicesPage() {
   const {toast} = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      projectDescription: '',
-    },
-  });
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
     setIsLoading(true);
-    console.log("Simulating custom service request submission:", values);
 
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    toast({
-        title: 'Request Submitted!',
-        description: "We've received your project details and will get back to you with a quote shortly.",
-    });
-    
-    form.reset();
-    setIsLoading(false);
+    setTimeout(() => {
+        toast({
+            title: 'Request Submitted! (Demo)',
+            description: "We've received your project details. In a real app, our team would review this.",
+        });
+        setIsLoading(false);
+    }, 1000);
   }
 
   return (
@@ -78,53 +56,30 @@ export default function CustomServicesPage() {
                 <CardTitle>Project Submission Form</CardTitle>
             </CardHeader>
             <CardContent>
-                <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <FormField
-                    control={form.control}
-                    name="projectDescription"
-                    render={({field}) => (
-                        <FormItem>
-                        <FormLabel>Project Description</FormLabel>
-                        <FormControl>
-                            <Textarea
+                <form onSubmit={onSubmit} className="space-y-6">
+                    <div className="space-y-2">
+                        <Label htmlFor="projectDescription">Project Description</Label>
+                        <Textarea
+                            id="projectDescription"
                             placeholder="Describe your project in detail. What should it do? What are the key features? Are there any specific components or platforms you want to use?"
-                            {...field}
                             rows={10}
-                            />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="file"
-                    render={({field: { onChange, ...fieldProps} }) => (
-                        <FormItem>
-                        <FormLabel>Supporting File (Optional)</FormLabel>
-                        <FormControl>
-                            <Input
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="file">Supporting File (Optional)</Label>
+                        <Input
+                            id="file"
                             type="file"
-                            accept="image/*,.pdf,.txt,.zip"
-                            onChange={(e) => onChange(e.target.files)}
-                            {...fieldProps}
-                            />
-                        </FormControl>
-                        <FormDescription>
+                        />
+                        <p className="text-sm text-muted-foreground">
                             Upload any schematics, mockups, or documents (max 4MB).
-                        </FormDescription>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
+                        </p>
+                    </div>
 
-                    <Button type="submit" size="lg" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {isLoading ? 'Submitting...' : 'Request a Quote'}
+                    <Button type="submit" size="lg" disabled={true}>
+                        Request a Quote (Disabled in Demo)
                     </Button>
                 </form>
-                </Form>
             </CardContent>
           </Card>
         </div>
@@ -132,3 +87,6 @@ export default function CustomServicesPage() {
     </div>
   );
 }
+
+// Dummy Label component to satisfy TS
+const Label = (props: React.LabelHTMLAttributes<HTMLLabelElement>) => <label {...props} />;

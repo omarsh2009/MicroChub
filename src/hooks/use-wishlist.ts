@@ -1,11 +1,2 @@
-'use client';
-import { useContext } from 'react';
-import { WishlistContext } from '@/context/wishlist-provider';
-
-export const useWishlist = () => {
-  const context = useContext(WishlistContext);
-  if (!context) {
-    throw new Error('useWishlist must be used within a WishlistProvider');
-  }
-  return context;
-};
+// This file is no longer needed as all backend logic has been removed for the static UI/UX demo.
+// It can be safely deleted.

@@ -1,17 +1,12 @@
 'use client';
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { Logo } from "./logo";
-import { getSocialLinks } from "@/lib/services/social-links";
 import { SocialLink } from "@/lib/types";
 import { getIconForPlatform } from "@/app/admin/social-links/components/social-link-form";
+import { mockSocialLinks } from "@/lib/demo-data";
 
 export function Footer() {
-  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
-
-  useEffect(() => {
-    getSocialLinks(true).then(({ data }) => setSocialLinks(data || []));
-  }, []);
+  const socialLinks: SocialLink[] = mockSocialLinks.filter(link => link.enabled);
 
   return (
     <footer className="bg-card text-card-foreground border-t">

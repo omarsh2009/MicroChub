@@ -1,49 +1,17 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { OrdersTable } from '@/app/admin/orders/components/orders-table';
 import { OrderDetailsDialog } from '@/app/admin/orders/components/order-details-dialog';
-import { getUserById } from '@/lib/services/users';
-import { getOrdersByUserId } from '@/lib/services/orders';
 import type { UserWithId, OrderWithUserData } from '@/lib/types';
-import { Loader2, ArrowLeft } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { ArrowLeft } from 'lucide-react';
 
-export function UserDetailsClientPage({ userId }: { userId: string }) {
-  const { toast } = useToast();
-  const [user, setUser] = useState<UserWithId | null>(null);
-  const [orders, setOrders] = useState<OrderWithUserData[]>([]);
-  const [loading, setLoading] = useState(true);
+export function UserDetailsClientPage({ user, orders: initialOrders }: { user: UserWithId; orders: OrderWithUserData[] }) {
+  const [orders, setOrders] = useState<OrderWithUserData[]>(initialOrders);
   const [selectedOrder, setSelectedOrder] = useState<OrderWithUserData | null>(null);
 
-  useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      try {
-        const [userResponse, ordersResponse] = await Promise.all([
-          getUserById(userId),
-          getOrdersByUserId(userId),
-        ]);
-        
-        if (!userResponse.success || !userResponse.data) {
-          toast({ variant: 'destructive', title: 'User not found' });
-          return;
-        }
-
-        setUser(userResponse.data);
-        setOrders(ordersResponse.data || []);
-      } catch (error) {
-        toast({ variant: 'destructive', title: 'Failed to fetch user data' });
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, [userId, toast]);
-  
   const handleViewDetails = (order: OrderWithUserData) => {
     setSelectedOrder(order);
   };
@@ -55,15 +23,7 @@ export function UserDetailsClientPage({ userId }: { userId: string }) {
   const handleOrderUpdate = (updatedOrder: OrderWithUserData) => {
     setOrders(prevOrders => prevOrders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
   };
-
-  if (loading) {
-    return <div className="flex justify-center items-center h-full"><Loader2 className="w-8 h-8 animate-spin" /></div>;
-  }
   
-  if (!user) {
-    return <div className="text-center">User not found.</div>;
-  }
-
   return (
     <>
       <div className="mb-4">

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray, useFormContext } from 'react-hook-form';
 import { z } from 'zod';
@@ -19,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Product, Category } from '@/lib/types';
-import { Loader2, PlusCircle, Trash2, Check, ChevronsUpDown } from 'lucide-react';
+import { PlusCircle, Trash2, Check, ChevronsUpDown } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -28,7 +27,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { addProduct, updateProduct } from '@/lib/services/products';
 
 const customizationOptionSchema = z.object({
   name: z.string().min(1, 'Option name is required.'),
@@ -66,9 +64,6 @@ export function ProductForm({
   categories: Category[];
   onFinished: () => void;
 }) {
-  const { toast } = useToast();
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(product?.image || null);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -106,44 +101,9 @@ export function ProductForm({
     }
   };
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true);
-    
-    const specsObject = values.technicalSpecs.split('\n').reduce((acc, line) => {
-      const [key, ...valueParts] = line.split(':');
-      if (key && valueParts.length > 0) {
-        acc[key.trim()] = valueParts.join(':').trim();
-      }
-      return acc;
-    }, {} as Record<string, string>);
-
-    const productData = {
-        ...values,
-        specs: specsObject,
-        image: values.image || '',
-        useCases: product?.useCases || [], // Preserve existing use cases
-        featured: product?.featured || false,
-    };
-    
-    const { error } = product
-      ? await updateProduct(product.id, productData)
-      : await addProduct(productData);
-
-    if (error) {
-        toast({
-            variant: 'destructive',
-            title: `Failed to ${product ? 'update' : 'create'} product`,
-            description: error,
-        });
-    } else {
-        toast({
-            title: `Product ${product ? 'Updated' : 'Created'}`,
-            description: `${values.name} has been saved successfully.`,
-        });
-        onFinished();
-    }
-    
-    setIsSubmitting(false);
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log("Form Submitted (Demo):", values);
+    onFinished();
   }
 
   return (
@@ -435,8 +395,7 @@ export function ProductForm({
         
         <div className="flex justify-end gap-2 pt-4">
              <Button type="button" variant="outline" onClick={onFinished}>Cancel</Button>
-            <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit">
                 {product ? 'Save Changes' : 'Create Product'}
             </Button>
         </div>

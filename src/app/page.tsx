@@ -12,10 +12,9 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
-import { getFeaturedProducts } from "@/lib/services/products";
-import { getCategories } from "@/lib/services/categories";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { mockProducts, mockCategories } from "@/lib/demo-data";
 
 const categoryIcons: Record<string, React.ReactNode> = {
   mochi: <Fingerprint className="h-8 w-8" />,
@@ -24,12 +23,9 @@ const categoryIcons: Record<string, React.ReactNode> = {
   "smart-displays": <HardDrive className="h-8 w-8" />,
 };
 
-export default async function Home() {
-  const { data: featuredProductsData } = await getFeaturedProducts();
-  const { data: categoriesData } = await getCategories();
-
-  const featuredProducts = featuredProductsData || [];
-  const categories = categoriesData || [];
+export default function Home() {
+  const featuredProducts = mockProducts.filter(p => p.featured);
+  const categories = mockCategories;
 
   return (
     <div className="flex flex-col min-h-[100dvh] bg-background text-foreground">

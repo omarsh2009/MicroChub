@@ -31,37 +31,38 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Logo } from "./logo";
-import { useUser, useAuthContext } from "@/auth";
 import { useToast } from "@/hooks/use-toast";
-import { useCart } from "@/hooks/use-cart";
 import { Badge } from "@/components/ui/badge";
-import { useEffect, useState } from "react";
-import { getCategories } from "@/lib/services/categories";
-import type { Category } from "@/lib/types";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { signOut } from "@/lib/services/auth";
+import { mockCategories } from "@/lib/demo-data";
+import type { UserProfile, Category } from "@/lib/types";
+
+// Mock user for demo purposes
+const user: { displayName: string; profile: UserProfile } = {
+  displayName: "Demo User",
+  profile: {
+    id: "user-super-admin",
+    name: "Super Admin",
+    email: "super_admin@example.com",
+    phoneNumber: "01000000001",
+    role: 'super_admin',
+    wishlist: [],
+  }
+};
+
 
 export function Header() {
-  const user = useUser();
-  const { refetchUser } = useAuthContext();
   const router = useRouter();
   const { toast } = useToast();
-  const { itemCount } = useCart();
-  const [categories, setCategories] = useState<Category[]>([]);
+  const categories: Category[] = mockCategories;
 
-  useEffect(() => {
-    getCategories().then(({ data }) => setCategories(data || []));
-  }, []);
-
-  const handleLogout = async () => {
-    await signOut();
-    refetchUser();
-    toast({ title: "Logged Out", description: "You have been successfully logged out." });
+  const handleLogout = () => {
+    toast({ title: "Logged Out (Demo)", description: "You have been successfully logged out." });
     router.push("/");
   };
 
@@ -129,11 +130,6 @@ export function Header() {
           <Button asChild variant="ghost" size="icon" aria-label="Cart" className="relative">
             <Link href="/cart">
               <ShoppingCart className="h-5 w-5" />
-              {itemCount > 0 && (
-                <Badge variant="default" className="absolute -right-2 -top-2 h-5 w-5 justify-center rounded-full p-0 text-xs">
-                  {itemCount}
-                </Badge>
-              )}
             </Link>
           </Button>
           <DropdownMenu>

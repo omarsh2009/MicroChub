@@ -1,11 +1,2 @@
-'use client';
-import { useContext } from 'react';
-import { CartContext } from '@/context/cart-provider';
-
-export const useCart = () => {
-  const context = useContext(CartContext);
-  if (!context) {
-    throw new Error('useCart must be used within a CartProvider');
-  }
-  return context;
-};
+// This file is no longer needed as all backend logic has been removed for the static UI/UX demo.
+// It can be safely deleted.

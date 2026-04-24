@@ -1,6 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { PlusCircle, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,31 +17,14 @@ import {
 } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
 import type { SocialLink } from '@/lib/types';
-import { getSocialLinks, addSocialLink, updateSocialLink, deleteSocialLink } from '@/lib/services/social-links';
 import { SocialLinksTable } from './components/social-links-table';
 import { SocialLinkForm } from './components/social-link-form';
 
-export function SocialLinksClientPage() {
+export function SocialLinksClientPage({ links: initialLinks }: { links: SocialLink[] }) {
   const { toast } = useToast();
-  const [links, setLinks] = useState<SocialLink[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [links, setLinks] = useState<SocialLink[]>(initialLinks);
   const [open, setOpen] = useState(false);
   const [selectedLink, setSelectedLink] = useState<SocialLink | undefined>(undefined);
-
-  useEffect(() => {
-    const fetchLinks = async () => {
-        setLoading(true);
-        const { data, error } = await getSocialLinks();
-        if (error) {
-            toast({ variant: 'destructive', title: 'Error fetching social links', description: error.message });
-            setLinks([]);
-        } else {
-            setLinks(data || []);
-        }
-        setLoading(false);
-    }
-    fetchLinks();
-  }, [toast]);
 
   const handleAdd = () => {
     setSelectedLink(undefined);
@@ -54,29 +37,12 @@ export function SocialLinksClientPage() {
   };
   
   const handleDelete = async (linkId: string) => {
-    const { success, error } = await deleteSocialLink(linkId);
-    if (success) {
-        setLinks(prev => prev.filter(l => l.id !== linkId));
-        toast({ title: 'Social Link Deleted' });
-    } else {
-        toast({ variant: 'destructive', title: 'Failed to delete link', description: error?.message });
-    }
+    toast({ variant: 'destructive', title: 'Delete Action (Demo)', description: 'This action is disabled in the static UI demo.' });
   }
 
   const onFormSubmit = async (values: Omit<SocialLink, 'id'>, id?: string) => {
-    const response = id ? await updateSocialLink(id, values) : await addSocialLink(values);
-    if (response.success && response.data) {
-        if (id) {
-            setLinks(prev => prev.map(l => l.id === id ? response.data! : l));
-            toast({ title: 'Social Link Updated' });
-        } else {
-            setLinks(prev => [...prev, response.data!]);
-            toast({ title: 'Social Link Added' });
-        }
-        setOpen(false);
-    } else {
-        toast({ variant: 'destructive', title: 'Save failed', description: response.error?.message });
-    }
+    toast({ title: 'Saved (Demo)', description: 'Social link changes would be saved in a real application.' });
+    setOpen(false);
   };
 
   return (
@@ -97,13 +63,7 @@ export function SocialLinksClientPage() {
           <CardDescription>Add, edit, and control the visibility of social links in your site's footer.</CardDescription>
         </CardHeader>
         <CardContent>
-            {loading ? (
-                <div className="flex justify-center items-center py-10">
-                    <Loader2 className="w-8 h-8 animate-spin" />
-                </div>
-            ) : (
-                <SocialLinksTable links={links} onEdit={handleEdit} onDelete={handleDelete} />
-            )}
+            <SocialLinksTable links={links} onEdit={handleEdit} onDelete={handleDelete} />
         </CardContent>
       </Card>
 
