@@ -12,7 +12,6 @@ import {
   Shield,
   LogOut,
   ChevronDown,
-  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -74,7 +73,7 @@ export function Header() {
     <>
       {storeStatus === 'closed' && (
           <div className="bg-destructive text-destructive-foreground text-center py-2 px-4 text-sm font-medium flex items-center justify-center gap-2">
-              <AlertTriangle className="h-4 w-4" />
+              <span>🚩</span>
               The store is temporarily closed. Ordering is currently unavailable.
           </div>
       )}

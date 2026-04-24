@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle, ShoppingCart, Wrench, AlertTriangle, Clock, FileQuestion, Heart } from "lucide-react";
+import { CheckCircle, ShoppingCart, Wrench, AlertTriangle, Clock, FileQuestion, Heart, Minus, Plus } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -33,8 +33,32 @@ export function ProductClientPage({ product }: { product: Product }) {
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string | string[]>>({});
   const [inWishlist, setInWishlist] = useState(false);
+  const [quantity, setQuantity] = useState(1);
   
   const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
+  
+  const maxQuantity = useMemo(() => {
+    return product.inStock ? product.stockQuantity : 99; // Arbitrary high number for made-to-order
+  }, [product]);
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      let value = parseInt(e.target.value, 10);
+      if (isNaN(value) || value < 1) {
+          value = 1;
+      }
+      if (value > maxQuantity) {
+          value = maxQuantity;
+      }
+      setQuantity(value);
+  };
+
+  const incrementQuantity = () => {
+      setQuantity(prev => Math.min(maxQuantity, prev + 1));
+  };
+
+  const decrementQuantity = () => {
+      setQuantity(prev => Math.max(1, prev - 1));
+  };
 
   const calculatedPrice = useMemo(() => {
     let price = product.price;
@@ -113,7 +137,7 @@ export function ProductClientPage({ product }: { product: Product }) {
   const handleAddToCart = () => {
     toast({
       title: 'Added to Cart (Demo)',
-      description: `${product.name} has been added to your cart.`,
+      description: `${quantity} x ${product.name} has been added to your cart.`,
     });
   };
   
@@ -293,6 +317,30 @@ export function ProductClientPage({ product }: { product: Product }) {
                   </Card>
                 ))}
               </div>
+            )}
+            
+            {!needsQuote && (
+                 <div className="space-y-2">
+                    <Label htmlFor="quantity">Quantity</Label>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="icon" onClick={decrementQuantity} disabled={quantity <= 1 || !canOrder}>
+                            <Minus className="h-4 w-4" />
+                        </Button>
+                        <Input
+                            id="quantity"
+                            type="number"
+                            className="w-20 text-center"
+                            value={quantity}
+                            onChange={handleQuantityChange}
+                            min="1"
+                            max={maxQuantity}
+                            disabled={!canOrder}
+                        />
+                        <Button variant="outline" size="icon" onClick={incrementQuantity} disabled={quantity >= maxQuantity || !canOrder}>
+                            <Plus className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
             )}
 
 
