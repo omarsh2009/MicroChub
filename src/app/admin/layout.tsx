@@ -124,7 +124,7 @@ export default function AdminLayout({
                   </Link>
                 </SheetTitle>
               </SheetHeader>
-              <nav className="grid gap-2 text-lg font-medium mt-4">
+              <nav className="grid gap-2 text-lg font-medium mt-4 flex-1 overflow-y-auto">
                 {navLinks.map(link => (
                     <Link
                         key={link.href}
