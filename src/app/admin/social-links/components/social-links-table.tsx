@@ -60,7 +60,7 @@ export function SocialLinksTable({ links, onEdit, onDelete }: SocialLinksTablePr
                 {getIconForPlatform(link.platform)}
                 {link.platform}
             </TableCell>
-            <TableCell className="font-mono text-xs text-muted-foreground truncate max-w-xs">
+            <TableCell className="font-mono text-xs text-muted-foreground truncate">
                 <a href={link.url} target="_blank" rel="noopener noreferrer" className="hover:underline">{link.url}</a>
             </TableCell>
             <TableCell>

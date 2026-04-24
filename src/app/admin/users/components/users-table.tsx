@@ -47,7 +47,7 @@ export function UsersTable({
             <TableCell>{user.phoneNumber}</TableCell>
             <TableCell>
               <Select value={user.role} onValueChange={(newRole) => onRoleChange(user.id, newRole as UserProfile['role'])}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-full max-w-[180px]">
                       <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                   <SelectContent>
