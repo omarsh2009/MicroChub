@@ -9,7 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { Mail, Phone, MapPin } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock } from 'lucide-react';
+import { mockContactInfo } from '@/lib/demo-data';
+
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -19,6 +21,8 @@ const formSchema = z.object({
 
 export default function ContactPage() {
   const { toast } = useToast();
+  const contactInfo = mockContactInfo;
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -29,7 +33,7 @@ export default function ContactPage() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+    console.log("New message (Demo): ", values);
     toast({
       title: 'Message Sent!',
       description: "Thanks for reaching out. We'll get back to you shortly.",
@@ -108,8 +112,8 @@ export default function ContactPage() {
               <div>
                 <h3 className="text-xl font-bold">Email</h3>
                 <p className="text-muted-foreground">General Inquiries & Support</p>
-                <a href="mailto:hello@microchub.com" className="font-medium text-primary hover:underline">
-                  hello@microchub.com
+                <a href={`mailto:${contactInfo.email}`} className="font-medium text-primary hover:underline">
+                  {contactInfo.email}
                 </a>
               </div>
             </div>
@@ -119,9 +123,9 @@ export default function ContactPage() {
               </div>
               <div>
                 <h3 className="text-xl font-bold">Phone</h3>
-                <p className="text-muted-foreground">Mon-Fri, 9am - 5pm EET</p>
-                <a href="tel:+201234567890" className="font-medium text-primary hover:underline">
-                  +20 123 456 7890
+                <p className="text-muted-foreground">{contactInfo.workingDays}, {contactInfo.workingHours}</p>
+                <a href={`tel:${contactInfo.phone}`} className="font-medium text-primary hover:underline">
+                  {contactInfo.phone}
                 </a>
               </div>
             </div>
@@ -131,10 +135,27 @@ export default function ContactPage() {
               </div>
               <div>
                 <h3 className="text-xl font-bold">Location</h3>
-                <p className="text-muted-foreground">123 Maker Street, Downtown</p>
-                <p className="font-medium">Cairo, Egypt</p>
+                <p className="font-medium text-muted-foreground">{contactInfo.location}</p>
+                {contactInfo.googleMapsLink && (
+                  <a href={contactInfo.googleMapsLink.replace('/embed?','/view?')} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
+                    View on Google Maps
+                  </a>
+                )}
               </div>
             </div>
+             {contactInfo.googleMapsLink && (
+                <div className="w-full aspect-video rounded-lg overflow-hidden border">
+                    <iframe
+                        src={contactInfo.googleMapsLink}
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0 }}
+                        allowFullScreen={false}
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                    ></iframe>
+                </div>
+            )}
           </div>
         </div>
       </section>

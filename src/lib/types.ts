@@ -178,3 +178,19 @@ export interface WishlistItem {
     userId: string;
     addedAt: number;
 }
+
+export type FaqItem = {
+    id: string;
+    question: string;
+    answer: string;
+    isPublished: boolean;
+};
+
+export type ContactInfo = {
+    location: string;
+    email: string;
+    phone: string;
+    workingHours: string;
+    workingDays: string;
+    googleMapsLink?: string;
+};

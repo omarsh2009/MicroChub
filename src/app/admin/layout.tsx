@@ -17,6 +17,8 @@ import {
   Ticket,
   Link2,
   LayoutGrid,
+  HelpCircle,
+  Contact,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,10 +39,12 @@ const navLinks = [
     { href: "/admin/categories", label: "Categories", icon: LayoutGrid },
     { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
     { href: "/admin/quotes", label: "Quote Requests", icon: FileQuestion },
-    { href: "/admin/payment-methods", label: "Payment Methods", icon: Wallet },
     { href: "/admin/coupons", label: "Coupons", icon: Ticket },
-    { href: "/admin/legal", label: "Legal Agreement", icon: FileText },
+    { href: "/admin/payment-methods", label: "Payment Methods", icon: Wallet },
     { href: "/admin/social-links", label: "Social Links", icon: Link2 },
+    { href: "/admin/faq", label: "FAQ", icon: HelpCircle },
+    { href: "/admin/contact", label: "Contact Info", icon: Contact },
+    { href: "/admin/legal", label: "Legal Agreement", icon: FileText },
 ];
 
 export default function AdminLayout({
@@ -74,7 +78,7 @@ export default function AdminLayout({
               <span className="">MicroChub Admin</span>
             </Link>
           </div>
-          <div className="flex-1">
+          <div className="flex-1 overflow-y-auto">
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
               {navLinks.map(link => (
                   <Link

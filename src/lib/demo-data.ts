@@ -1,5 +1,5 @@
 
-import type { Product, Category, UserWithId, PaymentMethod, OrderWithUserData, QuoteRequestWithUserData, Coupon, SocialLink, LegalAgreement } from './types';
+import type { Product, Category, UserWithId, PaymentMethod, OrderWithUserData, QuoteRequestWithUserData, Coupon, SocialLink, LegalAgreement, FaqItem, ContactInfo } from './types';
 
 export const mockCategories: Category[] = [
     { id: 'cat-1', name: 'DIY Kits', slug: 'diy-kits' },
@@ -283,4 +283,34 @@ export const mockLegalAgreement: LegalAgreement = {
     fileName: 'MicroChub-Restricted-Item-Agreement-v1.pdf',
     fileContent: 'data:application/pdf;base64,....', // a dummy base64 string
     uploadedAt: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString(),
+};
+
+export const mockFaqs: FaqItem[] = [
+    {
+        id: 'faq-1',
+        question: 'What payment methods do you accept?',
+        answer: 'We currently accept Cash on Delivery and payments via Vodafone Cash. For custom orders, we may arrange for a bank transfer.',
+        isPublished: true,
+    },
+    {
+        id: 'faq-2',
+        question: 'What is the estimated production time for build-to-order items?',
+        answer: 'Production time for build-to-order items is typically between 7 to 14 business days, depending on the complexity of the item and current order volume. You can see the status of your order on the "My Orders" page.',
+        isPublished: true,
+    },
+    {
+        id: 'faq-3',
+        question: 'Do you ship outside of Cairo?',
+        answer: 'Yes, we ship to all governorates in Egypt. Shipping costs and times will vary depending on your location.',
+        isPublished: false,
+    }
+];
+
+export const mockContactInfo: ContactInfo = {
+    location: '123 Maker Street, Downtown',
+    email: 'hello@microchub.com',
+    phone: '+20 123 456 7890',
+    workingHours: '9am - 5pm',
+    workingDays: 'Sunday - Thursday',
+    googleMapsLink: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3453.882823384268!2d31.23340007555198!3d30.04015097492751!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x145840c663335807%3A0x255b0cf83afb4a65!2sTahrir%20Square!5e0!3m2!1sen!2seg!4v1717075253896!5m2!1sen!2seg',
 };
