@@ -122,7 +122,7 @@ export function ProductForm({
             </FormItem>
           )}
         />
-         <div className="grid grid-cols-2 gap-4">
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="price"
@@ -156,7 +156,7 @@ export function ProductForm({
                 )}
               />
         </div>
-         <div className="grid grid-cols-2 gap-4">
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
                 control={form.control}
                 name="discountType"
@@ -341,7 +341,7 @@ export function ProductForm({
                                     </FormItem>
                                 )}
                                 />
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <FormField
                                     control={form.control}
                                     name={`customizationGroups.${groupIndex}.type`}
@@ -419,12 +419,12 @@ function OptionFieldArray({ groupIndex }: { groupIndex: number }) {
       {fields.map((option, optionIndex) => {
         const isQuoteRequested = requestQuoteValues?.[optionIndex]?.requestQuote;
         return (
-            <div key={option.id} className="flex items-end gap-2">
+            <div key={option.id} className="flex flex-wrap items-end gap-2">
             <FormField
                 control={control}
                 name={`customizationGroups.${groupIndex}.options.${optionIndex}.name`}
                 render={({ field }) => (
-                <FormItem className="flex-grow">
+                <FormItem className="flex-grow min-w-[150px]">
                     <FormControl><Input {...field} placeholder="Option Name" /></FormControl>
                     <FormMessage />
                 </FormItem>
@@ -434,7 +434,7 @@ function OptionFieldArray({ groupIndex }: { groupIndex: number }) {
                 control={control}
                 name={`customizationGroups.${groupIndex}.options.${optionIndex}.priceAdjustment`}
                 render={({ field }) => (
-                <FormItem>
+                <FormItem className="w-[120px]">
                     <FormControl><Input type="number" {...field} placeholder="Price Adj." disabled={isQuoteRequested} value={field.value ?? 0} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
                     <FormMessage />
                 </FormItem>
