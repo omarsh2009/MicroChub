@@ -13,7 +13,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { updateOrderStatus, approveLegalAgreement } from '@/lib/services/orders';
 import type { OrderWithUserData, Order } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ExternalLink, ShieldCheck, ShieldAlert } from 'lucide-react';
@@ -41,45 +40,27 @@ export function OrderDetailsDialog({ isOpen, onClose, order, onOrderUpdate }: Or
     const handleSaveChanges = async () => {
         if (newStatus === order.status) return;
         setIsSaving(true);
-        try {
-            await updateOrderStatus(order.id, newStatus);
-            toast({
-                title: 'Order Updated',
-                description: `Order #${order.id.slice(0, 7)} status changed to ${newStatus}.`,
-            });
-            onOrderUpdate({ ...order, status: newStatus });
-            onClose();
-        } catch (error: any) {
-            console.error('Failed to update order status:', error);
-            toast({
-                variant: 'destructive',
-                title: 'Update Failed',
-                description: 'Could not update order status. Please try again.',
-            });
-        } finally {
-            setIsSaving(false);
-        }
+        // Simulate API call for demo
+        await new Promise(resolve => setTimeout(resolve, 500));
+        toast({
+            title: 'Order Updated (Demo)',
+            description: `Order #${order.id.slice(0, 7)} status changed to ${newStatus}.`,
+        });
+        onOrderUpdate({ ...order, status: newStatus });
+        setIsSaving(false);
+        onClose();
     };
 
      const handleApproveLegal = async () => {
         setIsApprovingLegal(true);
-        try {
-            await approveLegalAgreement(order.id);
-            toast({
-                title: 'Legal Agreement Approved',
-                description: `Agreement for order #${order.id.slice(0, 7)} has been approved.`,
-            });
-            onOrderUpdate({ ...order, legalAgreementApproved: true });
-        } catch (error: any) {
-            console.error('Failed to approve legal agreement:', error);
-            toast({
-                variant: 'destructive',
-                title: 'Approval Failed',
-                description: 'Could not approve legal agreement. Please try again.',
-            });
-        } finally {
-            setIsApprovingLegal(false);
-        }
+        // Simulate API call for demo
+        await new Promise(resolve => setTimeout(resolve, 500));
+        toast({
+            title: 'Legal Agreement Approved (Demo)',
+            description: `Agreement for order #${order.id.slice(0, 7)} has been approved.`,
+        });
+        onOrderUpdate({ ...order, legalAgreementApproved: true });
+        setIsApprovingLegal(false);
     };
     
     const renderConfiguration = (config: Record<string, string | string[]>) => {
