@@ -31,43 +31,27 @@ import {
 } from "@/components/ui/sheet";
 import { Logo } from "./logo";
 import { useToast } from "@/hooks/use-toast";
-import { Badge } from "@/components/ui/badge";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import type { UserProfile, Category } from "@/lib/types";
 import { useAppContext } from "@/context/app-provider";
-
-// Mock user for demo purposes
-const user: { displayName: string; profile: UserProfile } = {
-  displayName: "Demo User",
-  profile: {
-    id: "user-super-admin",
-    name: "Super Admin",
-    email: "super_admin@example.com",
-    phoneNumber: "01000000001",
-    role: 'super_admin',
-    wishlist: [],
-  }
-};
-
 
 export function Header() {
   const router = useRouter();
   const { toast } = useToast();
-  const { categories, contactInfo } = useAppContext();
+  const { categories, contactInfo, currentUser, logout } = useAppContext();
   const storeStatus = contactInfo.storeStatus;
 
   const handleLogout = () => {
+    logout();
     toast({ title: "Logged Out (Demo)", description: "You have been successfully logged out." });
     router.push("/");
   };
 
-  const isAdmin = user?.profile?.role === 'admin' || user?.profile?.role === 'super_admin';
-
+  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'super_admin';
 
   return (
     <>
@@ -146,9 +130,9 @@ export function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {user ? (
+                {currentUser ? (
                   <>
-                    <DropdownMenuLabel>Hi, {user.displayName}</DropdownMenuLabel>
+                    <DropdownMenuLabel>Hi, {currentUser.name}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link href="/orders">

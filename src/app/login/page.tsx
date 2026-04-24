@@ -8,18 +8,35 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
+import { useAppContext } from "@/context/app-provider";
+import { mockUsers } from "@/lib/demo-data";
+import { UserWithId } from "@/lib/types";
 
 export default function LoginPage() {
+  const { login } = useAppContext();
   const { toast } = useToast();
   const router = useRouter();
 
-  function onSubmit(e: React.FormEvent) {
+  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    toast({
-      title: "Logged In Successfully! (Demo)",
-      description: "Welcome back.",
-    });
-    router.push("/");
+    const email = (e.currentTarget.elements.namedItem("email") as HTMLInputElement).value;
+    
+    const userToLogin = mockUsers.find(u => u.email === email);
+
+    if (userToLogin) {
+        login(userToLogin as UserWithId);
+        toast({
+          title: "Logged In Successfully! (Demo)",
+          description: "Welcome back.",
+        });
+        router.push("/");
+    } else {
+        toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: "User not found.",
+        });
+    }
   }
 
   return (
@@ -36,12 +53,12 @@ export default function LoginPage() {
             <form onSubmit={onSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="you@example.com" defaultValue="demo@example.com" />
+                <Input id="email" name="email" type="email" placeholder="you@example.com" defaultValue="super_admin@example.com" />
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between items-baseline">
                   <Label htmlFor="password">Password</Label>
-                  <Link href="#" className="text-sm text-primary hover:underline">Forgot Password?</Link>
+                  <Link href="/forgot-password" className="text-sm text-primary hover:underline">Forgot Password?</Link>
                 </div>
                 <Input id="password" type="password" placeholder="••••••••" defaultValue="password" />
               </div>

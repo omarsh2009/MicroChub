@@ -8,13 +8,34 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
+import { useAppContext } from "@/context/app-provider";
+import { UserWithId } from "@/lib/types";
 
 export default function SignupPage() {
+  const { login } = useAppContext();
   const { toast } = useToast();
   const router = useRouter();
 
-  function onSubmit(e: React.FormEvent) {
+  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const form = e.currentTarget;
+    const name = (form.elements.namedItem("name") as HTMLInputElement).value;
+    const email = (form.elements.namedItem("email") as HTMLInputElement).value;
+    const phoneNumber = (form.elements.namedItem("phoneNumber") as HTMLInputElement).value;
+
+    const newUser: UserWithId = {
+      id: `user-${Date.now()}`,
+      name,
+      email,
+      phoneNumber,
+      role: 'user',
+      wishlist: []
+    };
+    
+    // In a real app, you would save the user to the database.
+    // For this demo, we'll just log them in with the new details.
+    login(newUser);
+
     toast({
       title: "Account Created! (Demo)",
       description: "Welcome to the MicroChub community.",
@@ -36,19 +57,19 @@ export default function SignupPage() {
             <form onSubmit={onSubmit} className="space-y-4">
                <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
-                <Input id="name" placeholder="John Doe" />
+                <Input id="name" name="name" placeholder="John Doe" required/>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="you@example.com" />
+                <Input id="email" name="email" type="email" placeholder="you@example.com" required/>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phoneNumber">Phone Number</Label>
-                <Input id="phoneNumber" placeholder="e.g. 01234567890" />
+                <Input id="phoneNumber" name="phoneNumber" placeholder="e.g. 01234567890" required/>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" placeholder="••••••••" />
+                <Input id="password" type="password" placeholder="••••••••" required/>
               </div>
               <Button type="submit" className="w-full">
                 Create Account

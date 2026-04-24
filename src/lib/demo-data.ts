@@ -225,6 +225,21 @@ const mockRawOrders: Omit<OrderWithUserData, 'user'>[] = [
     totalPrice: 1450, status: 'Completed/Delivered', shippingAddress: { fullName: 'Ahmed Hossam', phoneNumber: '01000000003', address: '123 Abc Street', city: 'Cairo' }, paymentMethod: { id: 'pm-3', name: 'Vodafone Cash' }, transactionId: 'VF99887',
     createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 10, nanoseconds: 0 },
   },
+  {
+    id: 'ord_5', userId: 'user-super-admin', items: [{ id: 'prod-5-cart', productId: 'prod-5', name: 'Raspberry Pi 4 Model B (8GB)', slug:'raspberry-pi-4-model-b-8gb', image: 'https://images.unsplash.com/photo-1588630634289-53a5510f44e7?q=80&w=600&auto=format&fit=crop', quantity: 2, price: 2500, configuration: {} }],
+    totalPrice: 5000, status: 'Pending Verification', shippingAddress: { fullName: 'Super Admin', phoneNumber: '01000000001', address: '1 Admin Tower', city: 'Cairo' }, paymentMethod: { id: 'pm-1', name: 'Cash on Delivery' }, transactionId: 'N/A',
+    createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400, nanoseconds: 0 },
+  },
+  {
+    id: 'ord_6', userId: 'user-super-admin', items: [{ id: 'prod-7-cart-admin', productId: 'prod-7', name: 'DIY Smart Watch Kit', slug:'diy-smart-watch-kit', image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=600&auto=format&fit=crop', quantity: 1, price: 1950, configuration: { 'Case Color': 'Black', 'Strap Material': 'Leather Strap' } }],
+    totalPrice: 1950, status: 'Completed/Delivered', shippingAddress: { fullName: 'Super Admin', phoneNumber: '01000000001', address: '1 Admin Tower', city: 'Cairo' }, paymentMethod: { id: 'pm-3', name: 'Vodafone Cash' }, transactionId: 'VF54321',
+    createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 20, nanoseconds: 0 },
+  },
+  {
+    id: 'ord_7', userId: 'user-super-admin', items: [{ id: 'prod-3-cart-admin', productId: 'prod-3', name: 'IoT Sensor Pack Pro (37-in-1)', slug:'iot-sensor-pack-pro', image: 'https://images.unsplash.com/photo-1544890225-2f3faec4cd60?q=80&w=600&auto=format&fit=crop', quantity: 1, price: 950, configuration: {} }],
+    totalPrice: 950, status: 'Cancelled', shippingAddress: { fullName: 'Super Admin', phoneNumber: '01000000001', address: '1 Admin Tower', city: 'Cairo' }, paymentMethod: { id: 'pm-1', name: 'Cash on Delivery' }, transactionId: 'N/A',
+    createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 15, nanoseconds: 0 },
+  }
 ];
 
 export const mockOrders: OrderWithUserData[] = mockRawOrders.map(order => {
@@ -270,6 +285,18 @@ const mockRawQuotes: Omit<QuoteRequestWithUserData, 'user'>[] = [
   {
     id: 'quote_4', userId: 'user-regular', items: [{ id: 'prod-1-cart-quote', productId: 'prod-1', name: 'Arduino Uno Ultimate Starter Kit', slug: 'arduino-uno-ultimate-starter-kit', image: 'https://images.unsplash.com/photo-1559386484-97dfc0e150a9?q=80&w=600&auto=format&fit=crop', quantity: 1, price: 1250, configuration: { "Board": "Arduino Nano instead of Uno" } }],
     status: 'accepted', userNotes: 'Can I get a Nano instead of an Uno in this kit?', quotedPrice: 1250, adminNotes: 'Sure, we can swap that for you at no extra cost.', createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 15, nanoseconds: 0 },
+  },
+  {
+    id: 'quote_5', userId: 'user-super-admin', items: [{ id: 'prod-2-cart-admin', productId: 'prod-2', name: 'Desktop CNC 3018 Pro Kit', slug: 'desktop-cnc-3018-pro', image: 'https://images.unsplash.com/photo-1620352538982-255a2a9b3f36?q=80&w=600&auto=format&fit=crop', quantity: 1, price: 8500, configuration: { "Laser Module": "15W Laser Engraver" } }],
+    status: 'pending', userNotes: 'I need a quote for the 15W laser module upgrade for a project.', createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400, nanoseconds: 0 },
+  },
+  {
+    id: 'quote_6', userId: 'user-super-admin', items: [{ id: 'prod-7-cart-admin-quote', productId: 'prod-7', name: 'DIY Smart Watch Kit', slug: 'diy-smart-watch-kit', image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=600&auto=format&fit=crop', quantity: 1, price: 1800, configuration: { "Case Color": "Custom Metallic Blue" } }],
+    status: 'offered', userNotes: 'Can I get a metallic blue case for the watch?', quotedPrice: 2100, adminNotes: 'We can do a custom metallic blue finish. The additional cost covers the special paint and finishing process.', createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 3, nanoseconds: 0 },
+  },
+  {
+    id: 'quote_7', userId: 'user-super-admin', items: [{ id: 'prod-4-cart-admin-quote', productId: 'prod-4', name: 'ESP32-S3 Development Board', slug: 'esp32-s3-dev-board', image: 'https://images.unsplash.com/photo-1629051871926-9d3023d6bdf1?q=80&w=600&auto=format&fit=crop', quantity: 20, price: 650, configuration: { "Custom Firmware": "Pre-loaded with MicroPython" } }],
+    status: 'accepted', userNotes: 'Requesting a quote for 20 units with MicroPython pre-flashed.', quotedPrice: 13500, adminNotes: 'Volume discount applied. Total price for 20 units with firmware is 13,500 EGP.', createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 8, nanoseconds: 0 },
   },
 ];
 

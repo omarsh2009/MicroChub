@@ -34,6 +34,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose 
 import { Logo } from "@/components/logo";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useAppContext } from "@/context/app-provider";
 
 const navLinks = [
     { href: "/admin/products", label: "Products", icon: Package },
@@ -53,17 +54,33 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { currentUser, logout } = useAppContext();
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
+    logout();
     toast({ title: "Logged Out (Demo)" });
     router.push("/");
   };
   
-  const isSuperAdmin = true;
+  if (!currentUser || !['admin', 'super_admin'].includes(currentUser.role)) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="text-center">
+            <h1 className="text-2xl font-bold">Access Denied</h1>
+            <p className="text-muted-foreground">You do not have permission to view this page.</p>
+            <Button asChild className="mt-4">
+                <Link href="/login">Go to Login</Link>
+            </Button>
+        </div>
+      </div>
+    );
+  }
+  
+  const isSuperAdmin = currentUser.role === 'super_admin';
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">

@@ -39,6 +39,9 @@ interface AppContextType {
     contactInfo: ContactInfo;
     setContactInfo: (info: ContactInfo) => void;
     allProducts: Product[];
+    currentUser: UserWithId | null;
+    login: (user: UserWithId) => void;
+    logout: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -55,6 +58,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [policies, setPolicies] = useState<PolicySection[]>(mockPolicies);
     const [faqs, setFaqs] = useState<FaqItem[]>(mockFaqs);
     const [contactInfo, setContactInfo] = useState<ContactInfo>(mockContactInfo);
+    const [currentUser, setCurrentUser] = useState<UserWithId | null>(mockUsers.find(u => u.id === 'user-super-admin') || null);
+
+    const login = (user: UserWithId) => {
+        setCurrentUser(user);
+    };
+
+    const logout = () => {
+        setCurrentUser(null);
+    };
 
     const value = {
         products,
@@ -80,6 +92,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         contactInfo,
         setContactInfo,
         allProducts: products,
+        currentUser,
+        login,
+        logout,
     };
 
     return (
