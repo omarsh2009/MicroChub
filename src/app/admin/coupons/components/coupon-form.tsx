@@ -30,7 +30,25 @@ const formSchema = z.object({
   maxUses: z.coerce.number().optional(),
   expiryDate: z.date().optional(),
   maxDiscountAmount: z.coerce.number().optional(),
+  maxDiscountPercentage: z.coerce.number().optional(),
+}).refine(data => {
+    if (data.type === 'percentage' && data.maxDiscountPercentage) {
+        return false;
+    }
+    return true;
+}, {
+    message: "Max discount percentage is only applicable for fixed discounts.",
+    path: ['maxDiscountPercentage'],
+}).refine(data => {
+    if (data.type === 'fixed' && data.maxDiscountAmount) {
+        return false;
+    }
+    return true;
+}, {
+    message: "Max discount amount is only applicable for percentage discounts.",
+    path: ['maxDiscountAmount'],
 });
+
 
 type FormValues = Omit<z.infer<typeof formSchema>, 'expiryDate'> & { expiryDate?: string };
 
@@ -51,6 +69,7 @@ export function CouponForm({ coupon, onSubmit, onFinished }: CouponFormProps) {
       maxUses: coupon?.maxUses || undefined,
       expiryDate: coupon?.expiryDate ? new Date(coupon.expiryDate) : undefined,
       maxDiscountAmount: coupon?.maxDiscountAmount || undefined,
+      maxDiscountPercentage: coupon?.maxDiscountPercentage || undefined,
     },
   });
   
@@ -128,7 +147,23 @@ export function CouponForm({ coupon, onSubmit, onFinished }: CouponFormProps) {
                     <FormControl>
                         <Input type="number" placeholder="e.g. 50" {...field} value={field.value ?? ''} />
                     </FormControl>
-                    <FormDescription>The maximum discount that can be applied (e.g., 10% up to 50 EGP).</FormDescription>
+                    <FormDescription>e.g., 10% off, up to a maximum of 50 EGP.</FormDescription>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+        )}
+         {watchType === 'fixed' && (
+             <FormField
+                control={form.control}
+                name="maxDiscountPercentage"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Max Discount Percentage (%) (Optional)</FormLabel>
+                    <FormControl>
+                        <Input type="number" placeholder="e.g. 25" {...field} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormDescription>e.g., 100 EGP off, but not more than 25% of the total.</FormDescription>
                     <FormMessage />
                 </FormItem>
                 )}
@@ -201,5 +236,3 @@ export function CouponForm({ coupon, onSubmit, onFinished }: CouponFormProps) {
     </Form>
   );
 }
-
-    

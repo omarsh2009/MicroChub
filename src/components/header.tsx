@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from "next/link";
@@ -40,8 +39,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { mockCategories, mockContactInfo } from "@/lib/demo-data";
 import type { UserProfile, Category } from "@/lib/types";
+import { useAppContext } from "@/context/app-provider";
 
 // Mock user for demo purposes
 const user: { displayName: string; profile: UserProfile } = {
@@ -60,8 +59,8 @@ const user: { displayName: string; profile: UserProfile } = {
 export function Header() {
   const router = useRouter();
   const { toast } = useToast();
-  const categories: Category[] = mockCategories;
-  const storeStatus = mockContactInfo.storeStatus;
+  const { categories, contactInfo } = useAppContext();
+  const storeStatus = contactInfo.storeStatus;
 
   const handleLogout = () => {
     toast({ title: "Logged Out (Demo)", description: "You have been successfully logged out." });
@@ -268,5 +267,3 @@ export function Header() {
     </>
   );
 }
-
-    

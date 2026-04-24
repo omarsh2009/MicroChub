@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState }from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,34 +10,34 @@ import { Loader2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
+import { useAppContext } from '@/context/app-provider';
 
-export function ContactInfoClientPage({ contactInfo: initialContactInfo }: { contactInfo: ContactInfo }) {
+export function ContactInfoClientPage() {
   const { toast } = useToast();
-  const [contactInfo, setContactInfo] = useState<ContactInfo>(initialContactInfo);
+  const { contactInfo, setContactInfo } = useAppContext();
+  const [localContactInfo, setLocalContactInfo] = useState<ContactInfo>(contactInfo);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
-    setContactInfo(prev => ({ ...prev, [id]: value }));
+    setLocalContactInfo(prev => ({ ...prev, [id]: value }));
   };
   
   const handleSwitchChange = (id: keyof ContactInfo) => (checked: boolean) => {
     const value = id === 'storeStatus' ? (checked ? 'open' : 'closed') : checked;
-    setContactInfo(prev => ({ ...prev, [id]: value as any }));
+    setLocalContactInfo(prev => ({ ...prev, [id]: value as any }));
   };
   
   const handleRadioChange = (id: keyof ContactInfo) => (value: string) => {
-      setContactInfo(prev => ({...prev, [id]: value as any }));
+      setLocalContactInfo(prev => ({...prev, [id]: value as any }));
   };
 
   const handleSave = () => {
     setIsSaving(true);
     // Simulate saving
     setTimeout(() => {
-        // In a real app, this would update the backend.
-        // Here we just show a toast.
-        console.log("Updated Contact Info (Demo):", contactInfo);
-        toast({ title: 'Saved (Demo)', description: 'Contact information would be updated in a real application.' });
+        setContactInfo(localContactInfo);
+        toast({ title: 'Saved!', description: 'Contact information has been updated.' });
         setIsSaving(false);
     }, 500);
   };
@@ -75,7 +75,7 @@ export function ContactInfoClientPage({ contactInfo: initialContactInfo }: { con
                                 </div>
                                 <FormControl>
                                     <Switch
-                                        checked={contactInfo.storeStatus === 'open'}
+                                        checked={localContactInfo.storeStatus === 'open'}
                                         onCheckedChange={handleSwitchChange('storeStatus')}
                                         aria-label="Toggle Store Status"
                                     />
@@ -92,7 +92,7 @@ export function ContactInfoClientPage({ contactInfo: initialContactInfo }: { con
                               <FormControl>
                                 <RadioGroup
                                   onValueChange={handleRadioChange('storeMode')}
-                                  defaultValue={contactInfo.storeMode}
+                                  defaultValue={localContactInfo.storeMode}
                                   className="grid grid-cols-1 md:grid-cols-2 gap-4"
                                 >
                                   <FormItem className="flex items-center space-x-3 space-y-0">
@@ -125,39 +125,45 @@ export function ContactInfoClientPage({ contactInfo: initialContactInfo }: { con
                     <CardTitle className="text-xl">Contact Information</CardTitle>
                 </CardHeader>
                 <CardContent className="p-2 space-y-6">
-                    {contactInfo.storeMode === 'online' ? (
-                        <div className="space-y-2">
-                            <Label htmlFor="pickupInstructions">Pickup Instructions</Label>
-                            <Textarea id="pickupInstructions" value={contactInfo.pickupInstructions} onChange={handleChange} placeholder="e.g. Pickup from our partner location in Nasr City..." />
+                    {localContactInfo.storeMode === 'online' ? (
+                       <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="pickupInstructions">Pickup Instructions</Label>
+                                <Textarea id="pickupInstructions" value={localContactInfo.pickupInstructions} onChange={handleChange} placeholder="e.g. Pickup from our partner location in Nasr City..." />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="shippingCompany">Shipping Company</Label>
+                                <Input id="shippingCompany" value={localContactInfo.shippingCompany || ''} onChange={handleChange} placeholder="e.g. Aramex, Bosta, etc." />
+                            </div>
                         </div>
                     ) : (
                         <div className="space-y-2">
                             <Label htmlFor="location">Store Location</Label>
-                            <Input id="location" value={contactInfo.location} onChange={handleChange} />
+                            <Input id="location" value={localContactInfo.location} onChange={handleChange} />
                         </div>
                     )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" value={contactInfo.email} onChange={handleChange} />
+                            <Input id="email" type="email" value={localContactInfo.email} onChange={handleChange} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="phone">Phone</Label>
-                            <Input id="phone" value={contactInfo.phone} onChange={handleChange} />
+                            <Input id="phone" value={localContactInfo.phone} onChange={handleChange} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="workingDays">Working Days</Label>
-                            <Input id="workingDays" value={contactInfo.workingDays} onChange={handleChange} />
+                            <Input id="workingDays" value={localContactInfo.workingDays} onChange={handleChange} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="workingHours">Working Hours</Label>
-                            <Input id="workingHours" value={contactInfo.workingHours} onChange={handleChange} />
+                            <Input id="workingHours" value={localContactInfo.workingHours} onChange={handleChange} />
                         </div>
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="googleMapsLink">Google Maps Embed Link (Optional)</Label>
-                        <Input id="googleMapsLink" value={contactInfo.googleMapsLink || ''} onChange={handleChange} />
+                        <Input id="googleMapsLink" value={localContactInfo.googleMapsLink || ''} onChange={handleChange} />
                     </div>
                 </CardContent>
             </Card>
@@ -179,5 +185,3 @@ const FormLabel = (props: React.ComponentProps<typeof Label>) => <Label {...prop
 const FormControl = ({ children }: { children: React.ReactNode }) => <>{children}</>;
 const FormDescription = ({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => <p className={`text-sm text-muted-foreground ${className}`} {...props} />;
 const FormMessage = () => null;
-
-    

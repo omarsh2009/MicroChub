@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Mail, Phone, MapPin, Package, Building } from 'lucide-react';
-import { mockContactInfo } from '@/lib/demo-data';
+import { useAppContext } from '@/context/app-provider';
 
 
 const formSchema = z.object({
@@ -22,9 +22,8 @@ const formSchema = z.object({
 
 export default function ContactPage() {
   const { toast } = useToast();
-  const contactInfo = mockContactInfo;
-  const [viewMode, setViewMode] = useState<'online' | 'physical'>(contactInfo.storeMode);
-
+  const { contactInfo } = useAppContext();
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -155,6 +154,7 @@ export default function ContactPage() {
                     <div>
                         <h3 className="text-xl font-bold">Online Orders</h3>
                         <p className="font-medium text-muted-foreground">{contactInfo.pickupInstructions}</p>
+                        {contactInfo.shippingCompany && <p className="text-sm text-muted-foreground">We ship with {contactInfo.shippingCompany}.</p>}
                     </div>
                 </div>
             )}
@@ -177,5 +177,3 @@ export default function ContactPage() {
     </div>
   );
 }
-
-    

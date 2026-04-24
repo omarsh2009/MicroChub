@@ -1,4 +1,3 @@
-
 import type { Product, Category, UserWithId, PaymentMethod, OrderWithUserData, QuoteRequestWithUserData, Coupon, SocialLink, PolicySection, FaqItem, ContactInfo } from './types';
 
 export const mockCategories: Category[] = [
@@ -246,6 +245,7 @@ export const mockCoupons: Coupon[] = [
     { id: 'coup-1', code: 'MAKERSPACE', type: 'percentage', value: 10, maxDiscountAmount: 50, maxUses: 100, usedCount: 23, expiryDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0] },
     { id: 'coup-2', code: 'WELCOME100', type: 'fixed', value: 100, maxUses: 500, usedCount: 150 },
     { id: 'coup-3', code: 'EXPIRED', type: 'fixed', value: 50, maxUses: 100, usedCount: 10, expiryDate: '2022-01-01' },
+    { id: 'coup-4', code: 'BIGSAVE', type: 'fixed', value: 200, maxDiscountPercentage: 25, maxUses: 20, usedCount: 5 },
 ];
 
 export const mockSocialLinks: SocialLink[] = [
@@ -340,6 +340,5 @@ export const mockContactInfo: ContactInfo = {
     storeStatus: 'open',
     storeMode: 'online',
     pickupInstructions: 'Pickup is available from our partner location in Nasr City. We will contact you with the full address and arrange a time after you place your order.',
+    shippingCompany: 'Aramex (Demo)',
 };
-
-    

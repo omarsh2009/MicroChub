@@ -1,4 +1,3 @@
-
 'use client';
 
 import Image from "next/image";
@@ -25,11 +24,12 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { ProductCard } from "@/components/product-card";
 import { Separator } from "@/components/ui/separator";
-import { mockContactInfo } from "@/lib/demo-data";
+import { useAppContext } from "@/context/app-provider";
 
-export function ProductClientPage({ product, allProducts, categories }: { product: Product, allProducts: Product[], categories: Category[] }) {
+export function ProductClientPage({ product }: { product: Product }) {
   const { toast } = useToast();
-  const isStoreClosed = mockContactInfo.storeStatus === 'closed';
+  const { allProducts, categories, contactInfo } = useAppContext();
+  const isStoreClosed = contactInfo.storeStatus === 'closed';
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string | string[]>>({});
   const [inWishlist, setInWishlist] = useState(false);
@@ -162,9 +162,15 @@ export function ProductClientPage({ product, allProducts, categories }: { produc
       .slice(0, 4);
   }, [product, allProducts]);
 
-  const canOrder = product.inStock && !isStoreClosed;
-  const cannotOrderReason = isStoreClosed ? "Store is closed" : !product.inStock ? "Out of stock" : "";
-
+  const stockStatus = !product.inStock 
+    ? { text: "Made on Order", variant: "secondary" as const } 
+    : product.stockQuantity > 0 
+    ? { text: `${product.stockQuantity} in stock`, variant: "default" as const } 
+    : { text: "Out of Stock", variant: "destructive" as const };
+    
+  const isOutOfStock = product.inStock && product.stockQuantity === 0;
+  const canOrder = !isStoreClosed && !isOutOfStock;
+  const cannotOrderReason = isStoreClosed ? "Store is temporarily closed" : isOutOfStock ? "Out of Stock" : "Add to Cart";
 
   return (
     <div className="py-12 md:py-20">
@@ -190,11 +196,7 @@ export function ProductClientPage({ product, allProducts, categories }: { produc
               </Link>
               <div className="flex items-center gap-2 mt-4 flex-wrap">
                 {product.categoryIds.map(catId => <Badge key={catId} variant="outline">{categoryMap.get(catId) || catId}</Badge>)}
-                {product.inStock ? (
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">{product.stockQuantity} in stock</Badge>
-                ) : (
-                    <Badge variant="destructive">Out of Stock</Badge>
-                )}
+                <Badge variant={stockStatus.variant} className={cn(stockStatus.variant === 'default' && 'bg-green-100 text-green-800')}>{stockStatus.text}</Badge>
               </div>
               <h1 className="font-headline text-4xl lg:text-5xl font-bold mt-2">{product.name}</h1>
               <p className="text-muted-foreground text-lg mt-4">{product.description}</p>
@@ -234,7 +236,7 @@ export function ProductClientPage({ product, allProducts, categories }: { produc
               )}
             </div>
             
-            {!product.inStock && product.customizationGroups && product.customizationGroups.length > 0 && (
+            {product.customizationGroups && product.customizationGroups.length > 0 && (
               <div className="space-y-6">
                 <h2 className="font-headline text-2xl font-bold flex items-center gap-2">
                   <Wrench className="w-6 h-6 text-primary"/>
@@ -298,7 +300,7 @@ export function ProductClientPage({ product, allProducts, categories }: { produc
                {needsQuote || !product.inStock ? (
                   <Button size="lg" className="flex-1" onClick={handleRequestQuote} disabled={isStoreClosed}>
                      <FileQuestion className="mr-2" />
-                     {isStoreClosed ? "Requests unavailable" : "Request a Quote"}
+                     {isStoreClosed ? "Store is temporarily closed" : "Request a Quote"}
                   </Button>
                ) : (
                   <Button size="lg" className="flex-1" onClick={handleAddToCart} disabled={!canOrder}>
@@ -338,7 +340,7 @@ export function ProductClientPage({ product, allProducts, categories }: { produc
                 <CardFooter>
                     <Button onClick={handleRequestQuote} className="w-full" disabled={isStoreClosed}>
                         <FileQuestion className="mr-2" />
-                         {isStoreClosed ? "Requests unavailable" : "Request Quote for Customization"}
+                         {isStoreClosed ? "Store is temporarily closed" : "Request Quote for Customization"}
                     </Button>
                 </CardFooter>
             </Card>

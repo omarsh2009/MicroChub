@@ -1,28 +1,20 @@
-
 'use client';
 
 import {useState} from 'react';
 import {Button} from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-} from '@/components/ui/form';
 import {Input} from '@/components/ui/input';
 import {Textarea} from '@/components/ui/textarea';
 import {useToast} from '@/hooks/use-toast';
 import {Badge} from '@/components/ui/badge';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
-import { mockContactInfo } from '@/lib/demo-data';
 import { Loader2 } from 'lucide-react';
+import { useAppContext } from '@/context/app-provider';
 
 export default function CustomServicesPage() {
   const {toast} = useToast();
+  const { contactInfo } = useAppContext();
   const [isLoading, setIsLoading] = useState(false);
-  const isStoreClosed = mockContactInfo.storeStatus === 'closed';
+  const isStoreClosed = contactInfo.storeStatus === 'closed';
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -82,7 +74,7 @@ export default function CustomServicesPage() {
 
                     <Button type="submit" size="lg" disabled={isStoreClosed || isLoading}>
                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {isStoreClosed ? 'Requests are currently unavailable' : 'Request a Quote'}
+                        {isStoreClosed ? 'Store is temporarily closed' : 'Request a Quote'}
                     </Button>
                 </form>
             </CardContent>
@@ -95,5 +87,3 @@ export default function CustomServicesPage() {
 
 // Dummy Label component to satisfy TS
 const Label = (props: React.LabelHTMLAttributes<HTMLLabelElement>) => <label {...props} />;
-
-    

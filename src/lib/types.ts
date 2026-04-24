@@ -1,4 +1,3 @@
-
 export type ApiError = {
   message: string;
   code?: string;
@@ -158,7 +157,8 @@ export type Coupon = {
   maxUses?: number;
   usedCount: number;
   expiryDate?: string;
-  maxDiscountAmount?: number;
+  maxDiscountAmount?: number; // for percentage type
+  maxDiscountPercentage?: number; // for fixed type
 };
 
 export type PolicySection = {
@@ -199,6 +199,5 @@ export type ContactInfo = {
     storeStatus: 'open' | 'closed';
     storeMode: 'online' | 'physical';
     pickupInstructions: string;
+    shippingCompany?: string;
 };
-
-    

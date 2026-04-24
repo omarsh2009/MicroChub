@@ -3,6 +3,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
 import { MainLayout } from "@/components/main-layout";
+import { AppProvider } from "@/context/app-provider";
 
 export const metadata: Metadata = {
   title: "MicroChub - Electronics for Makers",
@@ -39,7 +40,9 @@ export default function RootLayout({
           "font-body antialiased",
         )}
       >
-        <MainLayout>{children}</MainLayout>
+        <AppProvider>
+          <MainLayout>{children}</MainLayout>
+        </AppProvider>
         <Toaster />
       </body>
     </html>
