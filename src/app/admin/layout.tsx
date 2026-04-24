@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from "next/link";
@@ -27,7 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/logo";
 import { useUser, useAuthContext } from "@/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -134,14 +133,18 @@ export default function AdminLayout({
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col">
-              <nav className="grid gap-2 text-lg font-medium">
-                <Link
-                  href="/admin"
-                  className="flex items-center gap-2 text-lg font-semibold mb-4"
-                >
-                  <Logo />
-                  <span>MicroChub Admin</span>
-                </Link>
+              <SheetHeader>
+                <SheetTitle>
+                  <Link
+                    href="/admin"
+                    className="flex items-center gap-2 text-lg font-semibold"
+                  >
+                    <Logo />
+                    <span>MicroChub Admin</span>
+                  </Link>
+                </SheetTitle>
+              </SheetHeader>
+              <nav className="grid gap-2 text-lg font-medium mt-4">
                 {navLinks.map(link => (
                     <Link
                         key={link.href}
