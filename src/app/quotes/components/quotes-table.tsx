@@ -39,8 +39,7 @@ export function QuotesTable({
       <TableHeader>
         <TableRow>
           <TableHead>Request ID</TableHead>
-          <TableHead>Customer</TableHead>
-          <TableHead>Product</TableHead>
+          <TableHead className="hidden md:table-cell">Product</TableHead>
           <TableHead className="hidden md:table-cell">Date</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Actions</TableHead>
@@ -50,13 +49,7 @@ export function QuotesTable({
         {quotes.map((quote) => (
           <TableRow key={quote.id}>
             <TableCell className="font-medium">#{quote.id.slice(0, 7)}</TableCell>
-            <TableCell>
-              <div className="font-medium">{quote.user.name}</div>
-              <div className="hidden text-sm text-muted-foreground md:inline">
-                {quote.user.email}
-              </div>
-            </TableCell>
-            <TableCell>{quote.items[0]?.name || 'N/A'}</TableCell>
+            <TableCell className="hidden md:table-cell">{quote.items[0]?.name || 'N/A'}</TableCell>
             <TableCell className="hidden md:table-cell">
               {quote.createdAt ? format(new Date(quote.createdAt.seconds * 1000), 'PP') : 'N/A'}
             </TableCell>

@@ -15,7 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import type { QuoteRequestWithUserData } from '@/lib/types';
+import type { QuoteRequestWithUserData, QuoteRequest } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
@@ -33,8 +33,8 @@ export function QuoteDetailsDialog({ isOpen, onClose, quote, onQuoteUpdate }: Qu
     const [adminNotes, setAdminNotes] = useState(quote.adminNotes || '');
     const [isSaving, setIsSaving] = useState(false);
 
-    const handleSaveChanges = async () => {
-        if (!quotedPrice) {
+    const handleAction = async (action: 'submit' | 'reject') => {
+        if (action === 'submit' && !quotedPrice) {
             toast({ variant: 'destructive', title: 'Missing Price', description: 'Please enter a quoted price.'});
             return;
         };
@@ -42,13 +42,21 @@ export function QuoteDetailsDialog({ isOpen, onClose, quote, onQuoteUpdate }: Qu
         // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        toast({
-            title: 'Quote Submitted (Demo)',
-            description: `Quote for #${quote.id.slice(0, 7)} has been sent to the customer.`,
-        });
-        onQuoteUpdate({ ...quote, status: 'Quoted', quotedPrice: Number(quotedPrice), adminNotes });
-        onClose();
+        const newStatus: QuoteRequest['status'] = action === 'submit' ? 'offered' : 'rejected';
 
+        toast({
+            title: `Quote ${newStatus === 'offered' ? 'Submitted' : 'Rejected'} (Demo)`,
+            description: `Quote for #${quote.id.slice(0, 7)} has been updated.`,
+        });
+        
+        onQuoteUpdate({ 
+            ...quote, 
+            status: newStatus, 
+            quotedPrice: newStatus === 'offered' ? Number(quotedPrice) : undefined,
+            adminNotes: newStatus === 'offered' ? adminNotes : 'This request has been rejected by the admin.'
+        });
+        
+        onClose();
         setIsSaving(false);
     };
 
@@ -96,11 +104,11 @@ export function QuoteDetailsDialog({ isOpen, onClose, quote, onQuoteUpdate }: Qu
                                <CardContent><p className="text-sm text-muted-foreground">{quote.userNotes}</p></CardContent>
                            </Card>
                        )}
-                       {quote.status !== 'Pending Review' && (
+                       {quote.status !== 'pending' && (
                            <Card>
                                <CardHeader><CardTitle>Submitted Quote</CardTitle></CardHeader>
                                <CardContent className="space-y-2">
-                                  <p><span className="font-semibold">Quoted Price:</span> EGP {quote.quotedPrice?.toLocaleString()}</p>
+                                  <p><span className="font-semibold">Quoted Price:</span> {quote.quotedPrice ? `EGP ${quote.quotedPrice.toLocaleString()}` : 'N/A'}</p>
                                   {quote.adminNotes && <p><span className="font-semibold">Notes:</span> {quote.adminNotes}</p>}
                                </CardContent>
                            </Card>
@@ -130,10 +138,10 @@ export function QuoteDetailsDialog({ isOpen, onClose, quote, onQuoteUpdate }: Qu
                              <CardHeader>
                                 <CardTitle className="flex justify-between items-center">
                                     <span>Status</span>
-                                    <Badge variant={quote.status === 'Quoted' ? 'default' : 'outline'}>{quote.status}</Badge>
+                                    <Badge variant={quote.status === 'offered' ? 'default' : 'outline'}>{quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}</Badge>
                                 </CardTitle>
                              </CardHeader>
-                             {quote.status === 'Pending Review' && (
+                             {quote.status === 'pending' && (
                                  <CardContent className="space-y-4">
                                      <div>
                                          <Label htmlFor="quotedPrice">Quoted Price (EGP)</Label>
@@ -152,14 +160,22 @@ export function QuoteDetailsDialog({ isOpen, onClose, quote, onQuoteUpdate }: Qu
                     <DialogClose asChild>
                         <Button variant="outline">Cancel</Button>
                     </DialogClose>
-                    {quote.status === 'Pending Review' && (
-                        <Button onClick={handleSaveChanges} disabled={isSaving || !quotedPrice}>
-                            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Submit Quote
-                        </Button>
+                    {quote.status === 'pending' && (
+                        <div className="flex gap-2">
+                            <Button variant="destructive" onClick={() => handleAction('reject')} disabled={isSaving}>
+                                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Reject
+                            </Button>
+                            <Button onClick={() => handleAction('submit')} disabled={isSaving || !quotedPrice}>
+                                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Submit Quote
+                            </Button>
+                        </div>
                     )}
                 </DialogFooter>
             </DialogContent>
         </Dialog>
     );
 }
+
+    

@@ -48,6 +48,16 @@ export function ProductTable({
 }) {
   const categoryMap = new Map(categories.map(c => [c.id, c.name]));
 
+  const getStockStatus = (product: Product): { text: string; variant: "default" | "secondary" | "destructive" | "outline" } => {
+    if (!product.inStock) {
+        return { text: "Made on Order", variant: "secondary" };
+    }
+    if (product.stockQuantity > 0) {
+        return { text: `${product.stockQuantity} in stock`, variant: "default" };
+    }
+    return { text: "Out of Stock", variant: "destructive" };
+  }
+
   return (
     <Table>
       <TableHeader>
@@ -67,6 +77,7 @@ export function ProductTable({
       <TableBody>
         {products.map((product) => {
           const categoryName = categoryMap.get(product.categoryIds[0]) || 'Uncategorized';
+          const stockStatus = getStockStatus(product);
           return (
             <TableRow key={product.id}>
               <TableCell className="hidden sm:table-cell">
@@ -90,11 +101,7 @@ export function ProductTable({
                 EGP {product.price.toLocaleString()}
               </TableCell>
                <TableCell className="hidden md:table-cell">
-                {product.inStock ? (
-                    <Badge>{product.stockQuantity} in stock</Badge>
-                ) : (
-                    <Badge variant="destructive">Out of Stock</Badge>
-                )}
+                 <Badge variant={stockStatus.variant}>{stockStatus.text}</Badge>
               </TableCell>
               <TableCell>
                 <AlertDialog>
@@ -150,3 +157,5 @@ export function ProductTable({
     </Table>
   );
 }
+
+    

@@ -29,6 +29,7 @@ const formSchema = z.object({
   value: z.coerce.number().positive({ message: 'Value must be a positive number.' }),
   maxUses: z.coerce.number().optional(),
   expiryDate: z.date().optional(),
+  maxDiscountAmount: z.coerce.number().optional(),
 });
 
 type FormValues = Omit<z.infer<typeof formSchema>, 'expiryDate'> & { expiryDate?: string };
@@ -49,8 +50,11 @@ export function CouponForm({ coupon, onSubmit, onFinished }: CouponFormProps) {
       value: coupon?.value || 0,
       maxUses: coupon?.maxUses || undefined,
       expiryDate: coupon?.expiryDate ? new Date(coupon.expiryDate) : undefined,
+      maxDiscountAmount: coupon?.maxDiscountAmount || undefined,
     },
   });
+  
+  const watchType = form.watch('type');
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
@@ -114,6 +118,22 @@ export function CouponForm({ coupon, onSubmit, onFinished }: CouponFormProps) {
             )}
           />
         </div>
+        {watchType === 'percentage' && (
+             <FormField
+                control={form.control}
+                name="maxDiscountAmount"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Max Discount Amount (EGP) (Optional)</FormLabel>
+                    <FormControl>
+                        <Input type="number" placeholder="e.g. 50" {...field} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormDescription>The maximum discount that can be applied (e.g., 10% up to 50 EGP).</FormDescription>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -181,3 +201,5 @@ export function CouponForm({ coupon, onSubmit, onFinished }: CouponFormProps) {
     </Form>
   );
 }
+
+    

@@ -127,7 +127,7 @@ export type QuoteRequest = {
   items: CartItem[]; // Using CartItem to represent the product and configuration
   userNotes?: string;
   fileUrl?: string; // Single file for simplicity
-  status: 'Pending Review' | 'Quoted' | 'Accepted' | 'Rejected' | 'Ordered';
+  status: 'pending' | 'offered' | 'accepted' | 'rejected' | 'negotiating';
   quotedPrice?: number;
   adminNotes?: string;
   createdAt: {
@@ -158,6 +158,7 @@ export type Coupon = {
   maxUses?: number;
   usedCount: number;
   expiryDate?: string;
+  maxDiscountAmount?: number;
 };
 
 export type PolicySection = {
@@ -200,3 +201,4 @@ export type ContactInfo = {
     pickupInstructions: string;
 };
 
+    

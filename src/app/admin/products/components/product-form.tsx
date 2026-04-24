@@ -141,23 +141,26 @@ export function ProductForm({
                 </FormItem>
               )}
             />
-            <div className="space-y-2">
-                <FormField
+             <FormField
                 control={form.control}
                 name="inStock"
                 render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 h-10">
-                    <FormLabel>In Stock</FormLabel>
-                    <FormControl>
-                        <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        />
-                    </FormControl>
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                        <div className="space-y-0.5">
+                            <FormLabel>Item is In Stock</FormLabel>
+                             <FormDescription>
+                                If unchecked, item is made on demand.
+                            </FormDescription>
+                        </div>
+                        <FormControl>
+                            <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            />
+                        </FormControl>
                     </FormItem>
                 )}
                 />
-            </div>
         </div>
         { watchInStock && (
              <FormField
@@ -492,3 +495,5 @@ function OptionFieldArray({ groupIndex }: { groupIndex: number }) {
     </div>
   )
 }
+
+    

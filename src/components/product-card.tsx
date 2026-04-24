@@ -33,6 +33,18 @@ export function ProductCard({ product, categories }: ProductCardProps) {
     }
   }
 
+  const getStockStatus = (product: Product): { text: string; variant: "default" | "secondary" | "destructive" } => {
+    if (!product.inStock) {
+        return { text: "Made on Order", variant: "secondary" };
+    }
+    if (product.stockQuantity > 0) {
+        return { text: "In Stock", variant: "default" };
+    }
+    return { text: "Out of Stock", variant: "destructive" };
+  }
+  
+  const stockStatus = getStockStatus(product);
+
   return (
     <Card className="flex flex-col overflow-hidden group transition-all duration-300 hover:shadow-primary/20 hover:shadow-lg hover:-translate-y-1">
       <CardHeader className="p-0 relative">
@@ -55,9 +67,7 @@ export function ProductCard({ product, categories }: ProductCardProps) {
             )}
           </div>
         </Link>
-        {!product.inStock && (
-            <Badge variant="destructive" className="absolute top-2 right-2">Out of Stock</Badge>
-        )}
+         <Badge variant={stockStatus.variant} className="absolute top-2 right-2">{stockStatus.text}</Badge>
       </CardHeader>
       <CardContent className="p-4 flex-grow">
         <CardTitle className="text-lg font-headline">
@@ -100,3 +110,5 @@ export function ProductCard({ product, categories }: ProductCardProps) {
     </Card>
   );
 }
+
+    

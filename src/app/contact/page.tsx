@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -9,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { Mail, Phone, MapPin, Clock } from 'lucide-react';
+import { Mail, Phone, MapPin, Package, Building } from 'lucide-react';
 import { mockContactInfo } from '@/lib/demo-data';
 
 
@@ -22,6 +23,7 @@ const formSchema = z.object({
 export default function ContactPage() {
   const { toast } = useToast();
   const contactInfo = mockContactInfo;
+  const [viewMode, setViewMode] = useState<'online' | 'physical'>(contactInfo.storeMode);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -129,21 +131,34 @@ export default function ContactPage() {
                 </a>
               </div>
             </div>
-            <div className="flex items-start gap-4">
-              <div className="bg-primary/10 p-3 rounded-full">
-                <MapPin className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold">Location</h3>
-                <p className="font-medium text-muted-foreground">{contactInfo.location}</p>
-                {contactInfo.googleMapsLink && (
-                  <a href={contactInfo.googleMapsLink.replace('/embed?','/view?')} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
-                    View on Google Maps
-                  </a>
-                )}
-              </div>
-            </div>
-             {contactInfo.googleMapsLink && (
+            
+            {contactInfo.storeMode === 'physical' ? (
+                <div className="flex items-start gap-4">
+                    <div className="bg-primary/10 p-3 rounded-full">
+                        <MapPin className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold">Location</h3>
+                        <p className="font-medium text-muted-foreground">{contactInfo.location}</p>
+                        {contactInfo.googleMapsLink && (
+                        <a href={contactInfo.googleMapsLink.replace('/embed?','/view?')} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
+                            View on Google Maps
+                        </a>
+                        )}
+                    </div>
+                </div>
+            ) : (
+                 <div className="flex items-start gap-4">
+                    <div className="bg-primary/10 p-3 rounded-full">
+                        <Package className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold">Online Orders</h3>
+                        <p className="font-medium text-muted-foreground">{contactInfo.pickupInstructions}</p>
+                    </div>
+                </div>
+            )}
+             {contactInfo.googleMapsLink && contactInfo.storeMode === 'physical' && (
                 <div className="w-full aspect-video rounded-lg overflow-hidden border">
                     <iframe
                         src={contactInfo.googleMapsLink}
@@ -162,3 +177,5 @@ export default function ContactPage() {
     </div>
   );
 }
+
+    

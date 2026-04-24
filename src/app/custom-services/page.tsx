@@ -17,6 +17,7 @@ import {useToast} from '@/hooks/use-toast';
 import {Badge} from '@/components/ui/badge';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import { mockContactInfo } from '@/lib/demo-data';
+import { Loader2 } from 'lucide-react';
 
 export default function CustomServicesPage() {
   const {toast} = useToast();
@@ -79,7 +80,8 @@ export default function CustomServicesPage() {
                         </p>
                     </div>
 
-                    <Button type="submit" size="lg" disabled={isStoreClosed}>
+                    <Button type="submit" size="lg" disabled={isStoreClosed || isLoading}>
+                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {isStoreClosed ? 'Requests are currently unavailable' : 'Request a Quote'}
                     </Button>
                 </form>
@@ -93,3 +95,5 @@ export default function CustomServicesPage() {
 
 // Dummy Label component to satisfy TS
 const Label = (props: React.LabelHTMLAttributes<HTMLLabelElement>) => <label {...props} />;
+
+    

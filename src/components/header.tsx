@@ -116,11 +116,11 @@ export function Header() {
             >
               Custom Services
             </Link>
-            <Link
-              href="/diy-kits"
+             <Link
+              href="/policy"
               className="text-muted-foreground transition-colors hover:text-foreground"
             >
-              DIY Kits
+              Our Policy
             </Link>
             <Link
               href="/about"
@@ -248,10 +248,10 @@ export function Header() {
                     Custom Services
                   </Link>
                   <Link
-                    href="/diy-kits"
+                    href="/policy"
                     className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
                   >
-                    DIY Kits
+                    Our Policy
                   </Link>
                   <Link
                     href="/about"
@@ -268,3 +268,5 @@ export function Header() {
     </>
   );
 }
+
+    

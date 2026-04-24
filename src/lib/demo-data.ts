@@ -84,7 +84,7 @@ export const mockProducts: Product[] = [
     specs: { 'MCU': 'ESP32-S3', 'Flash': '16MB', 'PSRAM': '8MB', 'Connectivity': 'Wi-Fi, Bluetooth 5.0' },
     useCases: ['Portable IoT projects', 'Edge AI applications', 'Complex robotics'],
     inStock: true,
-    stockQuantity: 200,
+    stockQuantity: 0,
     featured: true,
     customizationGroups: [
         {
@@ -243,7 +243,7 @@ export const mockOrders: OrderWithUserData[] = mockRawOrders.map(order => {
 });
 
 export const mockCoupons: Coupon[] = [
-    { id: 'coup-1', code: 'MAKERSPACE', type: 'percentage', value: 10, maxUses: 100, usedCount: 23, expiryDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0] },
+    { id: 'coup-1', code: 'MAKERSPACE', type: 'percentage', value: 10, maxDiscountAmount: 50, maxUses: 100, usedCount: 23, expiryDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0] },
     { id: 'coup-2', code: 'WELCOME100', type: 'fixed', value: 100, maxUses: 500, usedCount: 150 },
     { id: 'coup-3', code: 'EXPIRED', type: 'fixed', value: 50, maxUses: 100, usedCount: 10, expiryDate: '2022-01-01' },
 ];
@@ -257,19 +257,19 @@ export const mockSocialLinks: SocialLink[] = [
 const mockRawQuotes: Omit<QuoteRequestWithUserData, 'user'>[] = [
   {
     id: 'quote_1', userId: 'user-regular', items: [{ id: 'prod-2-cart', productId: 'prod-2', name: 'Desktop CNC 3018 Pro Kit', slug: 'desktop-cnc-3018-pro', image: 'https://images.unsplash.com/photo-1620352538982-255a2a9b3f36?q=80&w=600&auto=format&fit=crop', quantity: 1, price: 8500, configuration: { "Material": "Black Acrylic instead of Clear" } }],
-    status: 'Quoted', userNotes: 'Is it possible to get this kit with black acrylic parts instead of the standard clear ones?', quotedPrice: 9000, adminNotes: 'Yes, we can cut it from black acrylic. The material cost is slightly higher.', createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 5, nanoseconds: 0 },
+    status: 'offered', userNotes: 'Is it possible to get this kit with black acrylic parts instead of the standard clear ones?', quotedPrice: 9000, adminNotes: 'Yes, we can cut it from black acrylic. The material cost is slightly higher.', createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 5, nanoseconds: 0 },
   },
   {
     id: 'quote_2', userId: 'user-admin', items: [{ id: 'prod-7-cart', productId: 'prod-7', name: 'DIY Smart Watch Kit', slug: 'diy-smart-watch-kit', image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=600&auto=format&fit=crop', quantity: 10, price: 1800, configuration: { "Case Color": "Red" } }],
-    status: 'Pending Review', userNotes: 'Need a bulk order of 10 red smart watch kits for a workshop.', createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 2, nanoseconds: 0 },
+    status: 'pending', userNotes: 'Need a bulk order of 10 red smart watch kits for a workshop.', createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 2, nanoseconds: 0 },
   },
   {
     id: 'quote_3', userId: 'user-regular', items: [{ id: 'prod-7-cart-2', productId: 'prod-7', name: 'DIY Smart Watch Kit', slug: 'diy-smart-watch-kit', image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=600&auto=format&fit=crop', quantity: 1, price: 1800, configuration: { "MCU": "ESP32-S3" } }],
-    status: 'Rejected', userNotes: 'Can you swap the ESP32 for an ESP32-S3? Need it for the AI features.', quotedPrice: 2200, adminNotes: 'We can do this, but it requires a custom PCB layout. The new price reflects this change.', createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 12, nanoseconds: 0 },
+    status: 'rejected', userNotes: 'Can you swap the ESP32 for an ESP32-S3? Need it for the AI features.', quotedPrice: 2200, adminNotes: 'We can do this, but it requires a custom PCB layout. The new price reflects this change.', createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 12, nanoseconds: 0 },
   },
   {
     id: 'quote_4', userId: 'user-regular', items: [{ id: 'prod-1-cart-quote', productId: 'prod-1', name: 'Arduino Uno Ultimate Starter Kit', slug: 'arduino-uno-ultimate-starter-kit', image: 'https://images.unsplash.com/photo-1559386484-97dfc0e150a9?q=80&w=600&auto=format&fit=crop', quantity: 1, price: 1250, configuration: { "Board": "Arduino Nano instead of Uno" } }],
-    status: 'Accepted', userNotes: 'Can I get a Nano instead of an Uno in this kit?', quotedPrice: 1250, adminNotes: 'Sure, we can swap that for you at no extra cost.', createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 15, nanoseconds: 0 },
+    status: 'accepted', userNotes: 'Can I get a Nano instead of an Uno in this kit?', quotedPrice: 1250, adminNotes: 'Sure, we can swap that for you at no extra cost.', createdAt: { seconds: Math.floor(Date.now() / 1000) - 86400 * 15, nanoseconds: 0 },
   },
 ];
 
@@ -342,3 +342,4 @@ export const mockContactInfo: ContactInfo = {
     pickupInstructions: 'Pickup is available from our partner location in Nasr City. We will contact you with the full address and arrange a time after you place your order.',
 };
 
+    
