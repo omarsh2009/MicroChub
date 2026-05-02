@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, Ticket, AlertCircle, MapPin, Truck, Store, Clock } from 'lucide-react';
+import { Copy, Ticket, AlertCircle, MapPin, Truck, Store, Clock, Loader2 } from 'lucide-react';
 import { useAppContext } from '@/context/app-provider';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -20,6 +20,7 @@ export default function CheckoutPage() {
   
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
   const [deliveryOption, setDeliveryOption] = useState<string>('pickup_meeting');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -62,47 +63,70 @@ export default function CheckoutPage() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
+    // 1. Basic User Info
     if (!formData.fullName.trim()) newErrors.fullName = "Full name is required";
     if (!formData.phoneNumber.trim()) newErrors.phoneNumber = "Phone number is required";
 
+    // 2. Shipping Data (Conditional)
     if (isShippingSelected) {
       if (!formData.city.trim()) newErrors.city = "City is required for shipping";
-      if (!formData.address.trim()) newErrors.address = "Address is required for shipping";
+      if (!formData.address.trim()) newErrors.address = "Detailed address is required for shipping";
     }
 
-    if (selectedPaymentMethod === 'pm-vodafone') {
-      if (!formData.transactionId.trim()) newErrors.transactionId = "Payment reference is required";
-    }
-
+    // 3. Payment Method Selection
     if (!selectedPaymentMethod) {
-      toast({ variant: 'destructive', title: 'Payment Method Required', description: 'Please select a payment method.' });
-      return false;
+      toast({ 
+        variant: 'destructive', 
+        title: 'Payment Method Required', 
+        description: 'Please select a payment method to proceed.' 
+      });
+      newErrors.paymentMethod = "Selection required";
+    }
+
+    // 4. Payment Specific Data
+    if (selectedPaymentMethod === 'pm-vodafone') {
+      if (!formData.transactionId.trim()) {
+        newErrors.transactionId = "Transaction ID / Reference Number is required for Vodafone Cash";
+      }
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handlePlaceOrder = () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      
       if (cart.length === 0) {
           toast({ variant: 'destructive', title: 'Cart is empty', description: 'Please add items to your cart before checking out.' });
           return;
       }
 
-      if (!validateForm()) {
-        toast({ variant: 'destructive', title: 'Validation Error', description: 'Please check the required fields.' });
-        return;
-      }
-
-      if (isShippingSelected && !contactInfo.shippingCompany) {
-          toast({ variant: 'destructive', title: 'Shipping Error', description: 'Shipping is currently unavailable. Please choose another option.' });
+      if (isStoreClosed) {
+          toast({ variant: 'destructive', title: 'Store Closed', description: 'The store is temporarily closed and cannot accept new orders.' });
           return;
       }
 
+      if (!validateForm()) {
+        toast({ 
+            variant: 'destructive', 
+            title: 'Incomplete Information', 
+            description: 'Please fill in all required fields marked in red.' 
+        });
+        return;
+      }
+
+      setIsSubmitting(true);
+
+      // Simulate order processing delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
       toast({
-          title: 'Order Placed (Demo)',
-          description: "This is a static demo. No order was actually placed."
+          title: 'Order Received! (Demo)',
+          description: "This is a static UI preview. In a production environment, your order would now be verified by our team."
       });
+      
+      setIsSubmitting(false);
   };
 
   if (cart.length === 0) {
@@ -119,7 +143,7 @@ export default function CheckoutPage() {
   return (
     <div className="container py-12 px-4 md:px-6">
       <h1 className="font-headline text-4xl font-bold tracking-tighter mb-8">Checkout</h1>
-        <form onSubmit={(e) => e.preventDefault()} className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2 space-y-8">
                 <Card>
                     <CardHeader>
@@ -255,10 +279,14 @@ export default function CheckoutPage() {
                     </CardContent>
                 </Card>
 
-                 <Card>
-                    <CardHeader><CardTitle>2. Payment Method</CardTitle></CardHeader>
+                 <Card className={cn(errors.paymentMethod && "border-destructive")}>
+                    <CardHeader>
+                        <CardTitle className={cn("flex items-center gap-2", errors.paymentMethod && "text-destructive")}>
+                            2. Payment Method *
+                        </CardTitle>
+                    </CardHeader>
                     <CardContent className="space-y-6">
-                        <RadioGroup onValueChange={setSelectedPaymentMethod} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <RadioGroup onValueChange={(val) => { setSelectedPaymentMethod(val); setErrors(prev => ({...prev, paymentMethod: ''})) }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Label htmlFor="pm-vodafone" className={cn("flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 cursor-pointer hover:bg-accent hover:text-accent-foreground", selectedPaymentMethod === 'pm-vodafone' && "border-primary bg-accent")}>
                                 <RadioGroupItem value="pm-vodafone" id="pm-vodafone" className="sr-only" />
                                 Vodafone Cash
@@ -297,6 +325,7 @@ export default function CheckoutPage() {
                             </CardContent>
                           </Card>
                         )}
+                        {errors.paymentMethod && <p className="text-sm text-destructive text-center">Please select a payment method before proceeding.</p>}
                     </CardContent>
                 </Card>
             </div>
@@ -345,8 +374,18 @@ export default function CheckoutPage() {
                         </div>
                     </CardContent>
                     <CardFooter>
-                        <Button type="submit" className="w-full" size="lg" onClick={handlePlaceOrder} disabled={isStoreClosed}>
-                             {isStoreClosed ? 'Store is temporarily closed' : 'Place Order'}
+                        <Button 
+                            type="submit" 
+                            className="w-full" 
+                            size="lg" 
+                            disabled={isStoreClosed || isSubmitting}
+                        >
+                             {isSubmitting ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Processing...
+                                </>
+                             ) : isStoreClosed ? 'Store is temporarily closed' : 'Place Order'}
                         </Button>
                     </CardFooter>
                 </Card>
