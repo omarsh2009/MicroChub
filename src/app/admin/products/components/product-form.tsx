@@ -16,15 +16,12 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
 import { Product, Category } from '@/lib/types';
-import { PlusCircle, Trash2, Check, ChevronsUpDown } from 'lucide-react';
+import { PlusCircle, Trash2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
@@ -67,7 +64,6 @@ export function ProductForm({
   onFinished: (values: any) => void;
 }) {
   const [imagePreview, setImagePreview] = useState<string | null>(product?.image || null);
-  const [isCategoryPopoverOpen, setIsCategoryPopoverOpen] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -260,66 +256,29 @@ export function ProductForm({
           control={form.control}
           name="categoryIds"
           render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Categories</FormLabel>
-              <Popover open={isCategoryPopoverOpen} onOpenChange={setIsCategoryPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className={cn(
-                        "w-full justify-between",
-                        !(field.value && field.value.length > 0) && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value && field.value.length > 0
-                        ? categories
-                            .filter(c => field.value.includes(c.id))
-                            .map(c => c.name)
-                            .join(", ")
-                        : "Select categories"}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0 z-50 pointer-events-auto" align="start">
-                  <Command shouldFilter={true}>
-                    <CommandInput placeholder="Search categories..." />
-                    <CommandList>
-                        <CommandEmpty>No categories found.</CommandEmpty>
-                        <CommandGroup>
-                        {categories.map((category) => (
-                            <CommandItem
-                            key={category.id}
-                            value={category.name}
-                            className="cursor-pointer"
-                            onSelect={() => {
-                                console.log("Category clicked:", category.name, category.id);
-                                const selected = field.value || [];
-                                const isSelected = selected.includes(category.id);
-                                const newValue = isSelected
-                                ? selected.filter((id) => id !== category.id)
-                                : [...selected, category.id];
-                                field.onChange(newValue);
-                                // For better UX, we only close if needed, 
-                                // but for multi-select we usually keep it open.
-                            }}
-                            >
-                            <Check
-                                className={cn(
-                                "mr-2 h-4 w-4",
-                                (field.value || []).includes(category.id) ? "opacity-100" : "opacity-0"
-                                )}
-                            />
-                            {category.name}
-                            </CommandItem>
-                        ))}
-                        </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+            <FormItem>
+              <FormLabel>Category</FormLabel>
+              <FormControl>
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={field.value?.[0] || ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    console.log("Selected Category ID:", val);
+                    field.onChange(val ? [val] : []);
+                  }}
+                >
+                  <option value="" disabled>Select a category</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </FormControl>
+              <FormDescription>
+                Categorize your product for easier discovery.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
