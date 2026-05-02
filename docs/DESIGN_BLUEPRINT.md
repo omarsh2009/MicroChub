@@ -1,106 +1,110 @@
-# MICROCHUB STRICT DESIGN BLUEPRINT
+# MICROCHUB FINAL EXECUTION BLUEPRINT
 
-## A) DESIGN TOKENS
-### Colors (HEX)
-- `primary`: #7A33CC
-- `background`: #18151B
-- `surface`: #1f1d24
-- `accent`: #8CA8FF
-- `text-high`: #f8fafc
-- `text-low`: #94a3b8
-- `border`: #27272a
-- `status-success`: #22c55e
-- `status-warning`: #eab308
-- `status-error`: #ef4444
+## A) DESIGN TOKENS (STRICT)
+- `PRIMARY`: #7A33CC
+- `BACKGROUND`: #18151B
+- `SURFACE`: #1f1d24
+- `ACCENT`: #8CA8FF
+- `TEXT_HIGH`: #f8fafc
+- `TEXT_LOW`: #94a3b8
+- `BORDER`: #27272a
+- `STATUS_SUCCESS`: #22c55e
+- `STATUS_ERROR`: #ef4444
+- `RADIUS_CARD`: 8px
+- `RADIUS_CONTROL`: 6px
+- `SPACING_BASE`: 4px
+- `FONT_HEADLINE`: 'Space Grotesk'
+- `FONT_BODY`: 'Inter'
+- `FONT_CODE`: 'Source Code Pro'
 
-### Typography
-- `font-headline`: 'Space Grotesk', sans-serif
-- `font-body`: 'Inter', sans-serif
-- `font-code`: 'Source Code Pro', monospace
-- `h1-desktop`: 72px / 1.1 LH / -0.05 tracking
-- `h1-mobile`: 36px / 1.2 LH
-- `body-standard`: 16px / 1.5 LH
-- `label-small`: 14px / 1.2 LH / uppercase-tracking
-- `mono-id`: 12px / 1.0 LH
+## B) GLOBAL LAYOUT HIERARCHY
+Root
+ └── GlobalBanner (Height: 36px | Visible IF store.isOpen = false)
+ └── Header (Height: 64px | Sticky | Z-index: 50)
+      ├── Logo (Width: 24px | Height: 24px)
+      ├── Nav (Gap: 24px | Hidden on Mobile)
+      └── ActionIcons (Gap: 8px)
+ └── Main (Flex: 1 | Max-Width: 1400px | Padding-X: 16px (Mobile) / 32px (Desktop))
+ └── Footer (Padding-Y: 32px | Border-Top: 1px)
 
-### Spacing Scale (4px Base)
-- `4px`, `8px`, `12px`, `16px`, `24px`, `32px`, `48px`, `64px`
+## C) PAGE TREES & DIMENSIONS
 
-### Geometry
-- `radius-card`: 8px
-- `radius-control`: 6px
-- `border-width`: 1px
+### 1. Home Page
+Home
+ └── HeroSection (Padding-Y: 96px)
+      └── TextStack (Gap: 16px | Center Aligned)
+           ├── H1 (Size: 72px Desktop / 36px Mobile)
+           ├── Subtext (Size: 20px | Width: 700px)
+           └── ButtonGroup (Flex | Gap: 16px)
+ └── CategoriesGrid (Grid: 4-Col Desktop / 2-Col Mobile | Gap: 24px)
+ └── FeaturedGear (Grid: 4-Col Desktop / 1-Col Mobile | Gap: 24px)
 
----
+### 2. Product Detail Page
+ProductPage
+ └── SplitLayout (Grid: 2-Col Desktop / 1-Col Mobile | Gap: 48px)
+      ├── ImageGallery (Width: 100% | Aspect: 1:1)
+      └── InfoPanel (Flex-Col | Gap: 24px)
+           ├── HeaderGroup
+           │    ├── BadgeStack (Flex | Gap: 8px)
+           │    └── Title (Size: 48px | Weight: 700)
+           ├── PriceDisplay (Flex | Align: Baseline | Gap: 16px)
+           ├── CustomizationStack (Flex-Col | Gap: 16px)
+           │    └── CustomCard (Padding: 16px | Radius: 8px | Border: 1px)
+           ├── QuantitySelector (Width: 140px | Flex | Align: Center)
+           └── ActionButtons (Flex-Col Mobile / Flex-Row Desktop | Gap: 16px)
 
-## B) LAYOUT BLUEPRINTS
-### Global Header
-- `Height`: 64px
-- `Alignment`: Left (Logo), Center-Right (Nav), Right (Icons)
-- `Behavior`: Sticky, z-index 50, backdrop-filter: blur(8px)
+### 3. Admin Layout
+AdminLayout
+ └── Sidebar (Width: 280px | Fixed | Hidden on Mobile)
+      ├── Header (Height: 64px | Border-Bottom)
+      └── NavStack (Padding: 16px | Gap: 8px)
+ └── ContentArea (Flex: 1 | Overflow-X: Hidden)
+      ├── Header (Height: 64px | Padding-X: 24px)
+      └── MainContent (Padding: 24px | Gap: 24px)
 
-### Main Container
-- `Max-Width`: 1400px
-- `Gutter`: 16px (mobile), 32px (desktop)
+## D) COMPONENT SPECIFICATIONS
 
-### Admin Sidebar
-- `Width`: 280px (fixed)
-- `Mobile`: overlay Sheet (left)
-- `Internal-Spacing`: 16px gap between items
+### ProductCard
+- `Container`: Width: 100% | Padding: 0px | Border: 1px | Radius: 8px
+- `ImageBox`: Aspect: 16:9 | Overflow: Hidden
+- `ContentBox`: Padding: 16px | Gap: 8px
+- `PriceArea`: Padding: 16px | Border-Top: 1px
+- `Hover`: TranslateY: -4px | Shadow: 0 10px 15px -3px rgba(122, 51, 204, 0.2)
 
----
+### AdminDataTable
+- `Wrapper`: Width: 100% | Overflow-X: Auto
+- `Table`: Width: 100% | Border-Collapse: Collapse
+- `Cell`: Padding: 16px | Border-Bottom: 1px
+- `Typography`: Mono for IDs and Prices (Size: 12px)
 
-## C) COMPONENT DEFINITIONS
-### Product Card
-- `Hierarchy`: Container > ImageBox > BadgeStack > ContentBox > FooterActions
-- `Spacing`: 16px internal padding
-- `Transition`: 300ms ease (shadow, transform)
-- `Variants`: 
-  - `Default`: border-color #27272a
-  - `Hover`: border-color #7A33CC, shadow #7A33CC (20% opacity)
+## E) INTERACTION & STATE LOGIC (STRICT)
 
-### Admin Data Table
-- `Structure`: div(overflow-x-auto) > table > (thead > tr > th) + (tbody > tr > td)
-- `Padding`: 16px cell padding
-- `Font`: Mono for IDs and Prices
+### 1. Store Closed State
+- `CONDITION`: `store.isOpen === false`
+- `RESULT`:
+  - GlobalBanner: Display Block (Color: #ef4444)
+  - Buttons (AddToCart, Checkout, Quote):
+    - Pointer-Events: None
+    - Opacity: 0.5
+    - Label: "Store is temporarily closed"
 
----
+### 2. Stock Override State
+- `CONDITION`: `product.inStock === true` AND `product.stockQuantity === 0`
+- `RESULT`:
+  - Badge: "Out of Stock" (Color: #ef4444)
+  - Button: Disabled
+- `CONDITION`: `product.inStock === false`
+- `RESULT`:
+  - Badge: "Made on Order" (Color: #eab308)
+  - Button: Enabled
 
-## D) RESPONSIVE RULES
-### Breakpoints
-- `Mobile`: < 768px
-- `Tablet`: 768px - 1023px
-- `Desktop`: >= 1024px
+### 3. Responsive Constraints
+- `TABLES`: Must NOT expand parent. Use `display: block; overflow-x: auto;`
+- `FORMS`: All Inputs `width: 100%`. Group into 2-cols on Desktop, 1-col on Mobile.
+- `SIDEBAR`: Mobile use `Sheet` component (Overlay). Desktop fixed at 280px.
 
-### Grid Mapping
-- `Products`: 1-col (mobile), 2-col (tablet), 4-col (desktop)
-- `Categories`: 2-col (mobile), 4-col (desktop)
-- `Checkout`: 1-col (stacked mobile), 2-col (70/30 desktop)
-
----
-
-## E) INTERACTION MAPPING
-- `Trigger: Hover(Card)` -> `Result: TranslateY(-4px), ScaleImage(1.05)`
-- `Trigger: Click(Hamburger)` -> `Result: OpenDrawer(280px)`
-- `Trigger: Scroll` -> `Result: HeaderBlurOpacity(95%)`
-
----
-
-## F) STATE CONDITIONS
-### Store Status Logic
-- `RULE`: IF `store.isOpen == false`
-  - `Banner`: Display #ef4444 fixed top
-  - `Buttons`: Set `pointer-events: none`, `opacity: 0.5`, Label "Store Closed"
-
-### Stock Status Logic
-- `RULE`: IF `isInStock == true` AND `quantity == 0`
-  - `StatusBadge`: #ef4444 (Out of Stock)
-  - `CartButton`: Disabled
-- `RULE`: IF `isInStock == false`
-  - `StatusBadge`: #eab308 (Made on Order)
-  - `CartButton`: Enabled
-
-### Discount Logic
-- `RULE`: IF `discountPrice` EXISTS
-  - `MainPrice`: Large Bold #f8fafc
-  - `OldPrice`: Strikethrough #94a3b8 (adjacent)
+## F) TRANSITION HOOKS
+- `ACCORDION`: Expand 200ms ease-out
+- `HOVER_CARD`: Scale 1.05 (Image) + Shadow 300ms
+- `DRAWER`: Slide-in-from-left 300ms
+- `TOAST`: Fade/Slide-in-from-bottom 200ms
