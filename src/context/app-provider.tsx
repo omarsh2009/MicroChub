@@ -108,6 +108,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             setPolicies(mockPolicies);
             setFaqs(mockFaqs);
             setContactInfo(mockContactInfo);
+            // Default login for demo convenience
             setCurrentUser(mockUsers.find(u => u.id === 'user-super-admin') || null);
         }
         setIsInitialized(true);

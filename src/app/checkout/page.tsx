@@ -9,20 +9,26 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, Ticket, AlertCircle, MapPin, Truck } from 'lucide-react';
+import { Copy, Ticket, AlertCircle, MapPin, Truck, Store, Clock } from 'lucide-react';
 import { useAppContext } from '@/context/app-provider';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 export default function CheckoutPage() {
   const { toast } = useToast();
   const { contactInfo, cart, currentUser } = useAppContext();
+  
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
+  const [deliveryOption, setDeliveryOption] = useState<string>('pickup_meeting');
+
   const isStoreClosed = contactInfo.storeStatus === 'closed';
   const isOnlineMode = contactInfo.storeMode === 'online';
+  const isPhysicalMode = contactInfo.storeMode === 'physical';
 
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const shipping = isOnlineMode ? contactInfo.shippingPrice : 0;
-  const total = subtotal + shipping;
+  const isShippingSelected = deliveryOption === 'shipping';
+  const shippingPrice = contactInfo.shippingPrice || 0;
+  const total = subtotal + (isShippingSelected ? shippingPrice : 0);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -32,6 +38,10 @@ export default function CheckoutPage() {
   const handlePlaceOrder = () => {
       if (cart.length === 0) {
           toast({ variant: 'destructive', title: 'Cart is empty', description: 'Please add items to your cart before checking out.' });
+          return;
+      }
+      if (isShippingSelected && !contactInfo.shippingCompany) {
+          toast({ variant: 'destructive', title: 'Shipping Error', description: 'Shipping is currently unavailable. Please choose another option.' });
           return;
       }
       toast({
@@ -59,36 +69,103 @@ export default function CheckoutPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            {isOnlineMode ? <Truck className="w-5 h-5 text-primary" /> : <MapPin className="w-5 h-5 text-primary" />}
-                            {isOnlineMode ? '1. Shipping Address' : '1. Delivery / Pickup'}
+                            <Truck className="w-5 h-5 text-primary" />
+                            1. Delivery & Pickup Options
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {!isOnlineMode && (
-                            <div className="md:col-span-2 p-4 bg-muted/50 rounded-lg border mb-4">
-                                <h4 className="font-bold text-sm mb-2">Pickup Location:</h4>
-                                <p className="text-sm text-muted-foreground">{contactInfo.pickupInstructions}</p>
+                    <CardContent className="space-y-6">
+                        <RadioGroup 
+                          onValueChange={setDeliveryOption} 
+                          defaultValue={deliveryOption} 
+                          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+                        >
+                            {isPhysicalMode && (
+                                <Label 
+                                  htmlFor="pickup_store" 
+                                  className={cn(
+                                    "flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 cursor-pointer hover:bg-accent hover:text-accent-foreground text-center gap-2",
+                                    deliveryOption === 'pickup_store' && "border-primary bg-accent"
+                                  )}
+                                >
+                                    <RadioGroupItem value="pickup_store" id="pickup_store" className="sr-only" />
+                                    <Store className="w-5 h-5" />
+                                    <span className="font-bold">Pickup from Store</span>
+                                </Label>
+                            )}
+                            <Label 
+                              htmlFor="pickup_meeting" 
+                              className={cn(
+                                "flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 cursor-pointer hover:bg-accent hover:text-accent-foreground text-center gap-2",
+                                deliveryOption === 'pickup_meeting' && "border-primary bg-accent"
+                              )}
+                            >
+                                <RadioGroupItem value="pickup_meeting" id="pickup_meeting" className="sr-only" />
+                                <MapPin className="w-5 h-5" />
+                                <span className="font-bold">Meeting Point</span>
+                            </Label>
+                            <Label 
+                              htmlFor="shipping" 
+                              className={cn(
+                                "flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 cursor-pointer hover:bg-accent hover:text-accent-foreground text-center gap-2",
+                                deliveryOption === 'shipping' && "border-primary bg-accent"
+                              )}
+                            >
+                                <RadioGroupItem value="shipping" id="shipping" className="sr-only" />
+                                <Truck className="w-5 h-5" />
+                                <span className="font-bold">Shipping</span>
+                            </Label>
+                        </RadioGroup>
+
+                        {/* Detail Cards */}
+                        {deliveryOption === 'pickup_store' && (
+                            <div className="p-4 bg-muted/50 rounded-lg border space-y-2">
+                                <div className="flex items-center gap-2 font-bold text-sm">
+                                    <MapPin className="w-4 h-4 text-primary" /> Location
+                                </div>
+                                <p className="text-sm text-muted-foreground">{contactInfo.location}</p>
+                                <div className="flex items-center gap-2 font-bold text-sm pt-2">
+                                    <Clock className="w-4 h-4 text-primary" /> Hours
+                                </div>
+                                <p className="text-sm text-muted-foreground">{contactInfo.workingDays}, {contactInfo.workingHours}</p>
                             </div>
                         )}
-                        <div className="md:col-span-2 space-y-2">
-                            <Label htmlFor="fullName">Full Name</Label>
-                            <Input id="fullName" placeholder="Your full name" defaultValue={currentUser?.name || "Demo User"} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="phoneNumber">Phone Number</Label>
-                            <Input id="phoneNumber" placeholder="Your phone number" defaultValue={currentUser?.phoneNumber || "01234567890"} />
-                        </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="city">City</Label>
-                            <Input id="city" placeholder="e.g. Cairo" defaultValue="Cairo" />
-                        </div>
-                        <div className="md:col-span-2 space-y-2">
-                            <Label htmlFor="address">Address</Label>
-                            <Textarea id="address" placeholder="Your full street address" defaultValue="123 Demo Street, Nasr City" />
-                        </div>
-                        <div className="md:col-span-2 space-y-2">
-                            <Label htmlFor="notes">Order Notes (Optional)</Label>
-                            <Textarea id="notes" placeholder="Any special instructions for your order?" />
+
+                        {deliveryOption === 'pickup_meeting' && (
+                            <div className="p-4 bg-muted/50 rounded-lg border space-y-2">
+                                <div className="flex items-center gap-2 font-bold text-sm">
+                                    <AlertCircle className="w-4 h-4 text-primary" /> Pickup Instructions
+                                </div>
+                                <p className="text-sm text-muted-foreground">{contactInfo.pickupInstructions || "We will coordinate a meeting point with you after the order is placed."}</p>
+                            </div>
+                        )}
+
+                        {deliveryOption === 'shipping' && (
+                            <div className="p-4 bg-muted/50 rounded-lg border space-y-2">
+                                <div className="flex items-center gap-2 font-bold text-sm">
+                                    <Truck className="w-4 h-4 text-primary" /> Shipping via {contactInfo.shippingCompany || "Aramex"}
+                                </div>
+                                <p className="text-sm text-muted-foreground">Standard flat rate: <strong>EGP {shippingPrice}</strong></p>
+                                <p className="text-xs text-muted-foreground">Delivery usually takes 2-5 business days.</p>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                            <div className="md:col-span-2 space-y-2">
+                                <Label htmlFor="fullName">Full Name</Label>
+                                <Input id="fullName" placeholder="Your full name" defaultValue={currentUser?.name || ""} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="phoneNumber">Phone Number</Label>
+                                <Input id="phoneNumber" placeholder="Your phone number" defaultValue={currentUser?.phoneNumber || ""} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="city">City</Label>
+                                <Input id="city" placeholder="e.g. Cairo" />
+                            </div>
+                            <div className="md:col-span-2 space-y-2">
+                                <Label htmlFor="address">{deliveryOption === 'shipping' ? 'Shipping Address' : 'Additional Location Details (Optional)'}</Label>
+                                <Textarea id="address" placeholder="Building, Street, Area..." />
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
@@ -97,17 +174,17 @@ export default function CheckoutPage() {
                     <CardHeader><CardTitle>2. Payment Method</CardTitle></CardHeader>
                     <CardContent className="space-y-6">
                         <RadioGroup onValueChange={setSelectedPaymentMethod} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Label htmlFor="pm-3" className={`flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 cursor-pointer hover:bg-accent hover:text-accent-foreground ${selectedPaymentMethod === 'pm-3' ? 'border-primary bg-accent' : ''}`}>
-                                <RadioGroupItem value="pm-3" id="pm-3" className="sr-only" />
+                            <Label htmlFor="pm-vodafone" className={cn("flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 cursor-pointer hover:bg-accent hover:text-accent-foreground", selectedPaymentMethod === 'pm-vodafone' && "border-primary bg-accent")}>
+                                <RadioGroupItem value="pm-vodafone" id="pm-vodafone" className="sr-only" />
                                 Vodafone Cash
                             </Label>
-                            <Label htmlFor="pm-1" className={`flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 cursor-pointer hover:bg-accent hover:text-accent-foreground ${selectedPaymentMethod === 'pm-1' ? 'border-primary bg-accent' : ''}`}>
-                                <RadioGroupItem value="pm-1" id="pm-1" className="sr-only" />
+                            <Label htmlFor="pm-cod" className={cn("flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 cursor-pointer hover:bg-accent hover:text-accent-foreground", selectedPaymentMethod === 'pm-cod' && "border-primary bg-accent")}>
+                                <RadioGroupItem value="pm-cod" id="pm-cod" className="sr-only" />
                                 Cash on Delivery
                             </Label>
                         </RadioGroup>
 
-                        {selectedPaymentMethod === 'pm-3' && (
+                        {selectedPaymentMethod === 'pm-vodafone' && (
                           <Card className="bg-muted/50 border-primary/20">
                             <CardHeader>
                               <CardTitle className="text-lg">Pay with Vodafone Cash</CardTitle>
@@ -164,8 +241,10 @@ export default function CheckoutPage() {
                             <span>EGP {subtotal.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                            <span>Shipping</span>
-                            <span>{isOnlineMode ? `EGP ${shipping.toLocaleString()}` : 'Free Pickup'}</span>
+                            <span>Shipping / Delivery</span>
+                            <span className={cn(isShippingSelected ? "text-foreground font-medium" : "text-muted-foreground")}>
+                                {isShippingSelected ? `EGP ${shippingPrice.toLocaleString()}` : 'Free'}
+                            </span>
                         </div>
                         <Separator />
                         <div className="flex justify-between font-bold text-lg">
