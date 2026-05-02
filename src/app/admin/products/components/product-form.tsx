@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -64,7 +63,7 @@ export function ProductForm({
 }: {
   product?: Product;
   categories: Category[];
-  onFinished: () => void;
+  onFinished: (values: any) => void;
 }) {
   const [imagePreview, setImagePreview] = useState<string | null>(product?.image || null);
 
@@ -108,7 +107,7 @@ export function ProductForm({
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("Form Submitted (Demo):", values);
-    onFinished();
+    onFinished(values);
   }
 
   return (
@@ -417,7 +416,7 @@ export function ProductForm({
         </Card>
         
         <div className="flex justify-end gap-2 pt-4">
-             <Button type="button" variant="outline" onClick={onFinished}>Cancel</Button>
+             <Button type="button" variant="outline" onClick={() => onFinished(null)}>Cancel</Button>
             <Button type="submit">
                 {product ? 'Save Changes' : 'Create Product'}
             </Button>
@@ -495,5 +494,3 @@ function OptionFieldArray({ groupIndex }: { groupIndex: number }) {
     </div>
   )
 }
-
-    

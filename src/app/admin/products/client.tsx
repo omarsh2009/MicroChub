@@ -1,4 +1,3 @@
-
 'use client';
 import { useState } from 'react';
 import { PlusCircle } from 'lucide-react';
@@ -48,13 +47,19 @@ export function ProductClientPage() {
   }
   
   const handleFormFinished = (values: any) => {
+      if (!values) {
+          setOpen(false);
+          return;
+      }
+
       if (selectedProduct) {
           setProducts(products.map(p => p.id === selectedProduct.id ? { ...p, ...values } : p));
       } else {
+          const name = values.name || 'New Product';
           const newProduct: Product = {
               ...values,
               id: `prod-${Date.now()}`,
-              slug: values.name.toLowerCase().replace(/ /g, '-'),
+              slug: name.toLowerCase().replace(/ /g, '-'),
               specs: {}, // In a real app we'd parse the technicalSpecs string
               useCases: [],
           };
