@@ -22,6 +22,7 @@ interface AppContextType {
     setCategories: (categories: Category[]) => void;
     users: UserWithId[];
     setUsers: (users: UserWithId[]) => void;
+    deleteUser: (userId: string) => void;
     paymentMethods: PaymentMethod[];
     setPaymentMethods: (methods: PaymentMethod[]) => void;
     orders: OrderWithUserData[];
@@ -42,6 +43,7 @@ interface AppContextType {
     currentUser: UserWithId | null;
     login: (user: UserWithId) => void;
     logout: () => void;
+    toggleWishlist: (productId: string) => void;
     // Cart Logic
     cart: CartItem[];
     addToCart: (item: CartItem) => void;
@@ -52,20 +54,73 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const STORAGE_KEY = 'microchub_storage_v2';
+
 export function AppProvider({ children }: { children: ReactNode }) {
-    const [products, setProducts] = useState<Product[]>(mockProducts);
-    const [categories, setCategories] = useState<Category[]>(mockCategories);
-    const [users, setUsers] = useState<UserWithId[]>(mockUsers);
-    const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(mockPaymentMethods);
-    const [orders, setOrders] = useState<OrderWithUserData[]>(mockOrders);
-    const [quotes, setQuotes] = useState<QuoteRequestWithUserData[]>(mockQuotes);
-    const [coupons, setCoupons] = useState<Coupon[]>(mockCoupons);
-    const [socialLinks, setSocialLinks] = useState<SocialLink[]>(mockSocialLinks);
-    const [policies, setPolicies] = useState<PolicySection[]>(mockPolicies);
-    const [faqs, setFaqs] = useState<FaqItem[]>(mockFaqs);
+    // State Initialization
+    const [products, setProducts] = useState<Product[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [users, setUsers] = useState<UserWithId[]>([]);
+    const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+    const [orders, setOrders] = useState<OrderWithUserData[]>([]);
+    const [quotes, setQuotes] = useState<QuoteRequestWithUserData[]>([]);
+    const [coupons, setCoupons] = useState<Coupon[]>([]);
+    const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
+    const [policies, setPolicies] = useState<PolicySection[]>([]);
+    const [faqs, setFaqs] = useState<FaqItem[]>([]);
     const [contactInfo, setContactInfo] = useState<ContactInfo>(mockContactInfo);
-    const [currentUser, setCurrentUser] = useState<UserWithId | null>(mockUsers.find(u => u.id === 'user-super-admin') || null);
+    const [currentUser, setCurrentUser] = useState<UserWithId | null>(null);
     const [cart, setCart] = useState<CartItem[]>([]);
+    const [isInitialized, setIsInitialized] = useState(false);
+
+    // Hydrate state from LocalStorage on mount
+    useEffect(() => {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+            try {
+                const data = JSON.parse(stored);
+                setProducts(data.products || mockProducts);
+                setCategories(data.categories || mockCategories);
+                setUsers(data.users || mockUsers);
+                setPaymentMethods(data.paymentMethods || mockPaymentMethods);
+                setOrders(data.orders || mockOrders);
+                setQuotes(data.quotes || mockQuotes);
+                setCoupons(data.coupons || mockCoupons);
+                setSocialLinks(data.socialLinks || mockSocialLinks);
+                setPolicies(data.policies || mockPolicies);
+                setFaqs(data.faqs || mockFaqs);
+                setContactInfo(data.contactInfo || mockContactInfo);
+                setCurrentUser(data.currentUser || null);
+                setCart(data.cart || []);
+            } catch (e) {
+                console.error("Failed to load state", e);
+            }
+        } else {
+            // Use defaults
+            setProducts(mockProducts);
+            setCategories(mockCategories);
+            setUsers(mockUsers);
+            setPaymentMethods(mockPaymentMethods);
+            setOrders(mockOrders);
+            setQuotes(mockQuotes);
+            setCoupons(mockCoupons);
+            setSocialLinks(mockSocialLinks);
+            setPolicies(mockPolicies);
+            setFaqs(mockFaqs);
+            setContactInfo(mockContactInfo);
+            setCurrentUser(mockUsers.find(u => u.id === 'user-super-admin') || null);
+        }
+        setIsInitialized(true);
+    }, []);
+
+    // Persist state to LocalStorage on changes
+    useEffect(() => {
+        if (!isInitialized) return;
+        const state = {
+            products, categories, users, paymentMethods, orders, quotes, coupons, socialLinks, policies, faqs, contactInfo, currentUser, cart
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }, [products, categories, users, paymentMethods, orders, quotes, coupons, socialLinks, policies, faqs, contactInfo, currentUser, cart, isInitialized]);
 
     const login = (user: UserWithId) => {
         setCurrentUser(user);
@@ -73,6 +128,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const logout = () => {
         setCurrentUser(null);
+    };
+
+    const toggleWishlist = (productId: string) => {
+        if (!currentUser) return;
+        const newWishlist = currentUser.wishlist.includes(productId)
+            ? currentUser.wishlist.filter(id => id !== productId)
+            : [...currentUser.wishlist, productId];
+        
+        const updatedUser = { ...currentUser, wishlist: newWishlist };
+        setCurrentUser(updatedUser);
+        setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+    };
+
+    const deleteUser = (userId: string) => {
+        setUsers(prev => prev.filter(u => u.id !== userId));
+        if (currentUser?.id === userId) {
+            setCurrentUser(null);
+        }
     };
 
     const addToCart = (item: CartItem) => {
@@ -104,6 +177,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setCategories,
         users,
         setUsers,
+        deleteUser,
         paymentMethods,
         setPaymentMethods,
         orders,
@@ -124,12 +198,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         currentUser,
         login,
         logout,
+        toggleWishlist,
         cart,
         addToCart,
         removeFromCart,
         updateCartQuantity,
         clearCart,
     };
+
+    if (!isInitialized) return null; // Prevent hydration mismatch
 
     return (
         <AppContext.Provider value={value}>

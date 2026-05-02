@@ -28,11 +28,10 @@ import { useAppContext } from "@/context/app-provider";
 
 export function ProductClientPage({ product }: { product: Product }) {
   const { toast } = useToast();
-  const { allProducts, categories, contactInfo, addToCart } = useAppContext();
+  const { allProducts, categories, contactInfo, addToCart, currentUser, toggleWishlist } = useAppContext();
   const isStoreClosed = contactInfo.storeStatus === 'closed';
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string | string[]>>({});
-  const [inWishlist, setInWishlist] = useState(false);
   const [quantity, setQuantity] = useState(1);
   
   const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
@@ -40,6 +39,8 @@ export function ProductClientPage({ product }: { product: Product }) {
   const maxQuantity = useMemo(() => {
     return product.inStock ? product.stockQuantity : 99; // Arbitrary high number for made-to-order
   }, [product]);
+
+  const inWishlist = currentUser?.wishlist.includes(product.id) || false;
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       let value = parseInt(e.target.value, 10);
@@ -88,6 +89,7 @@ export function ProductClientPage({ product }: { product: Product }) {
   }, [selectedOptions, product]);
   
   const needsQuote = useMemo(() => {
+    if (product.orderType === 'quote') return true;
     if (!product.customizationGroups) return false;
 
     return Object.entries(selectedOptions).some(([groupName, selection]) => {
@@ -106,7 +108,7 @@ export function ProductClientPage({ product }: { product: Product }) {
       }
       return false;
     });
-  }, [selectedOptions, product.customizationGroups]);
+  }, [selectedOptions, product.customizationGroups, product.orderType]);
 
   const handleSingleSelectChange = (groupName: string, optionName: string) => {
     setSelectedOptions(prev => ({
@@ -174,9 +176,13 @@ export function ProductClientPage({ product }: { product: Product }) {
   };
   
   const handleWishlistToggle = () => {
-    setInWishlist(!inWishlist);
+    if (!currentUser) {
+        toast({ title: 'Login Required', description: 'Please login to manage your wishlist.' });
+        return;
+    }
+    toggleWishlist(product.id);
     toast({
-      title: inWishlist ? 'Removed from Wishlist (Demo)' : 'Added to Wishlist (Demo)',
+      title: inWishlist ? 'Removed from Wishlist' : 'Added to Wishlist',
     });
   };
 

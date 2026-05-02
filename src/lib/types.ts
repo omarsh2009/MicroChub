@@ -45,6 +45,7 @@ export type Product = {
   discountType?: 'fixed' | 'percentage' | 'none';
   inStock: boolean;
   stockQuantity: number;
+  orderType: 'cart' | 'quote';
 };
 
 export type UserProfile = {
@@ -200,4 +201,5 @@ export type ContactInfo = {
     storeMode: 'online' | 'physical';
     pickupInstructions: string;
     shippingCompany?: string;
+    shippingPrice: number;
 };

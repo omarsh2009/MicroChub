@@ -1,4 +1,3 @@
-
 'use client';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -26,6 +25,7 @@ const contactFormSchema = z.object({
   storeMode: z.enum(['online', 'physical']),
   pickupInstructions: z.string(),
   shippingCompany: z.string(),
+  shippingPrice: z.coerce.number().min(0),
   googleMapsLink: z.string().optional(),
 });
 
@@ -111,7 +111,7 @@ export function ContactInfoClientPage() {
                                     </FormItem>
                                     <FormItem className="flex items-center space-x-3 space-y-0 border p-4 rounded-lg bg-background">
                                       <FormControl><RadioGroupItem value="physical" /></FormControl>
-                                      <FormLabel className="font-normal cursor-pointer">Physical Store</FormLabel>
+                                      <FormLabel className="font-normal cursor-pointer">Physical Store (Pickup Only)</FormLabel>
                                     </FormItem>
                                   </RadioGroup>
                                 </FormControl>
@@ -124,47 +124,65 @@ export function ContactInfoClientPage() {
 
               <Card className="p-4">
                   <CardHeader className="p-2">
-                      <CardTitle className="text-xl">Contact Details</CardTitle>
+                      <CardTitle className="text-xl">Shipping & Pickup Details</CardTitle>
                   </CardHeader>
                   <CardContent className="p-2 space-y-6">
-                      {watchMode === 'online' ? (
-                         <div className="grid gap-6">
-                              <FormField
-                                control={form.control}
-                                name="pickupInstructions"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Pickup Instructions</FormLabel>
-                                    <FormControl><Textarea {...field} placeholder="e.g. Pickup from our partner location..." /></FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                               <FormField
-                                control={form.control}
-                                name="shippingCompany"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Shipping Company</FormLabel>
-                                    <FormControl><Input {...field} placeholder="e.g. Aramex, Bosta" /></FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                          </div>
-                      ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <FormField
                             control={form.control}
-                            name="location"
+                            name="shippingPrice"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Store Location</FormLabel>
-                                <FormControl><Input {...field} /></FormControl>
+                                <FormLabel>Shipping Price (EGP)</FormLabel>
+                                <FormControl><Input type="number" {...field} /></FormControl>
+                                <FormDescription>Standard flat rate for online orders.</FormDescription>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
-                      )}
+                          <FormField
+                            control={form.control}
+                            name="shippingCompany"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Shipping Company</FormLabel>
+                                <FormControl><Input {...field} placeholder="e.g. Aramex, Bosta" /></FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                      </div>
+                      <FormField
+                        control={form.control}
+                        name="pickupInstructions"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Pickup Instructions</FormLabel>
+                            <FormControl><Textarea {...field} placeholder="e.g. Pickup from our partner location..." /></FormControl>
+                            <FormDescription>Visible to users when Store Mode is set to Physical.</FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                  </CardContent>
+              </Card>
+
+              <Card className="p-4">
+                  <CardHeader className="p-2">
+                      <CardTitle className="text-xl">Contact Details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-2 space-y-6">
+                      <FormField
+                        control={form.control}
+                        name="location"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Store Location</FormLabel>
+                            <FormControl><Input {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <FormField

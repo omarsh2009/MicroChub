@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, Ticket, AlertCircle } from 'lucide-react';
+import { Copy, Ticket, AlertCircle, MapPin, Truck } from 'lucide-react';
 import { useAppContext } from '@/context/app-provider';
 import Link from 'next/link';
 
@@ -18,9 +18,10 @@ export default function CheckoutPage() {
   const { contactInfo, cart, currentUser } = useAppContext();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
   const isStoreClosed = contactInfo.storeStatus === 'closed';
+  const isOnlineMode = contactInfo.storeMode === 'online';
 
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const shipping = cart.length > 0 ? 50 : 0; // Simple flat rate demo
+  const shipping = isOnlineMode ? contactInfo.shippingPrice : 0;
   const total = subtotal + shipping;
 
   const copyToClipboard = (text: string) => {
@@ -56,8 +57,19 @@ export default function CheckoutPage() {
         <form onSubmit={(e) => e.preventDefault()} className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2 space-y-8">
                 <Card>
-                    <CardHeader><CardTitle>1. Shipping Address</CardTitle></CardHeader>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            {isOnlineMode ? <Truck className="w-5 h-5 text-primary" /> : <MapPin className="w-5 h-5 text-primary" />}
+                            {isOnlineMode ? '1. Shipping Address' : '1. Delivery / Pickup'}
+                        </CardTitle>
+                    </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {!isOnlineMode && (
+                            <div className="md:col-span-2 p-4 bg-muted/50 rounded-lg border mb-4">
+                                <h4 className="font-bold text-sm mb-2">Pickup Location:</h4>
+                                <p className="text-sm text-muted-foreground">{contactInfo.pickupInstructions}</p>
+                            </div>
+                        )}
                         <div className="md:col-span-2 space-y-2">
                             <Label htmlFor="fullName">Full Name</Label>
                             <Input id="fullName" placeholder="Your full name" defaultValue={currentUser?.name || "Demo User"} />
@@ -104,8 +116,8 @@ export default function CheckoutPage() {
                               <p className="text-sm">Send the total amount to this number and enter the transaction ID.</p>
                               <div className="flex items-center gap-2 rounded-md bg-background p-3 border">
                                 <strong className="text-sm">Number:</strong>
-                                <span className="font-mono flex-1 truncate">01012345678</span>
-                                <Button type="button" size="icon" variant="ghost" onClick={() => copyToClipboard('01012345678')}>
+                                <span className="font-mono flex-1 truncate">{contactInfo.phone}</span>
+                                <Button type="button" size="icon" variant="ghost" onClick={() => copyToClipboard(contactInfo.phone)}>
                                   <Copy className="h-4 w-4" />
                                 </Button>
                               </div>
@@ -153,7 +165,7 @@ export default function CheckoutPage() {
                         </div>
                         <div className="flex justify-between text-sm">
                             <span>Shipping</span>
-                            <span>EGP {shipping.toLocaleString()}</span>
+                            <span>{isOnlineMode ? `EGP ${shipping.toLocaleString()}` : 'Free Pickup'}</span>
                         </div>
                         <Separator />
                         <div className="flex justify-between font-bold text-lg">

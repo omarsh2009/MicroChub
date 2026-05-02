@@ -17,7 +17,19 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import type { UserWithId, UserProfile } from '@/lib/types';
-import { Eye } from 'lucide-react';
+import { Eye, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useAppContext } from '@/context/app-provider';
 
 export function UsersTable({
   users,
@@ -26,7 +38,8 @@ export function UsersTable({
   users: UserWithId[];
   onRoleChange: (userId: string, newRole: UserProfile['role']) => void;
 }) {
-  const roles: UserProfile['role'][] = ['user', 'admin']; // Super admins can only be set manually
+  const roles: UserProfile['role'][] = ['user', 'admin'];
+  const { deleteUser } = useAppContext();
 
   return (
     <Table>
@@ -54,16 +67,40 @@ export function UsersTable({
                       {roles.map(role => (
                           <SelectItem key={role} value={role}>{role.charAt(0).toUpperCase() + role.slice(1)}</SelectItem>
                       ))}
+                      <SelectItem value="super_admin" disabled>Super Admin</SelectItem>
                   </SelectContent>
               </Select>
             </TableCell>
             <TableCell>
-                <Button asChild variant="outline" size="sm">
-                    <Link href={`/admin/users/${user.id}`}>
-                        <Eye className="mr-2 h-4 w-4" />
-                        View
-                    </Link>
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button asChild variant="outline" size="sm">
+                        <Link href={`/admin/users/${user.id}`}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            View
+                        </Link>
+                    </Button>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10">
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Delete User?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This will permanently remove <b>{user.name}</b> from the system. This action cannot be undone.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => deleteUser(user.id)} className="bg-destructive hover:bg-destructive/90">
+                                    Delete
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </div>
             </TableCell>
           </TableRow>
         ))}

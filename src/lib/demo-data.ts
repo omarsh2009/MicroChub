@@ -21,6 +21,7 @@ export const mockProducts: Product[] = [
     featured: true,
     inStock: true,
     stockQuantity: 50,
+    orderType: 'cart',
   },
   {
     id: 'prod-2',
@@ -36,6 +37,7 @@ export const mockProducts: Product[] = [
     inStock: false,
     stockQuantity: 0,
     isRestricted: true,
+    orderType: 'quote',
     customizationGroups: [
         {
             name: 'Spindle Upgrade',
@@ -71,6 +73,7 @@ export const mockProducts: Product[] = [
     featured: true,
     inStock: true,
     stockQuantity: 120,
+    orderType: 'cart',
   },
   {
     id: 'prod-4',
@@ -85,6 +88,7 @@ export const mockProducts: Product[] = [
     inStock: true,
     stockQuantity: 0,
     featured: true,
+    orderType: 'cart',
     customizationGroups: [
         {
             name: 'Header Options',
@@ -111,6 +115,7 @@ export const mockProducts: Product[] = [
     featured: false,
     inStock: true,
     stockQuantity: 30,
+    orderType: 'cart',
   },
   {
     id: 'prod-6',
@@ -125,6 +130,7 @@ export const mockProducts: Product[] = [
     featured: false,
     inStock: true,
     stockQuantity: 500,
+    orderType: 'cart',
   },
   {
     id: 'prod-7',
@@ -138,6 +144,7 @@ export const mockProducts: Product[] = [
     useCases: ['Learning about wearables', 'Customizing your own watch faces', 'IoT notifications on your wrist'],
     inStock: false,
     stockQuantity: 0,
+    orderType: 'quote',
     customizationGroups: [
         {
             name: 'Case Color',
@@ -182,6 +189,7 @@ export const mockProducts: Product[] = [
     featured: false,
     inStock: true,
     stockQuantity: 80,
+    orderType: 'cart',
   },
 ];
 
@@ -368,4 +376,5 @@ export const mockContactInfo: ContactInfo = {
     storeMode: 'online',
     pickupInstructions: 'Pickup is available from our partner location in Nasr City. We will contact you with the full address and arrange a time after you place your order.',
     shippingCompany: 'Aramex (Demo)',
+    shippingPrice: 50,
 };

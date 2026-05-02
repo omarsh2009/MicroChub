@@ -1,7 +1,7 @@
-
+'use client';
 import Image from "next/image";
 import Link from "next/link";
-
+import { Heart } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -13,6 +13,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { type Product, type Category } from "@/lib/types";
+import { useAppContext } from "@/context/app-provider";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProductCardProps {
   product: Product;
@@ -20,8 +23,12 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, categories }: ProductCardProps) {
+  const { currentUser, toggleWishlist } = useAppContext();
+  const { toast } = useToast();
   const primaryImage = product.image;
   const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
+
+  const inWishlist = currentUser?.wishlist.includes(product.id) || false;
 
   let discountedPrice: number | null = null;
   if (product.discountValue && product.discountType && product.discountType !== 'none') {
@@ -44,6 +51,16 @@ export function ProductCard({ product, categories }: ProductCardProps) {
   }
   
   const stockStatus = getStockStatus(product);
+
+  const handleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!currentUser) {
+        toast({ title: 'Login Required', description: 'Please login to manage your wishlist.' });
+        return;
+    }
+    toggleWishlist(product.id);
+  };
 
   return (
     <Card className="flex flex-col overflow-hidden group transition-all duration-300 hover:shadow-primary/20 hover:shadow-lg hover:-translate-y-1">
@@ -68,6 +85,14 @@ export function ProductCard({ product, categories }: ProductCardProps) {
           </div>
         </Link>
          <Badge variant={stockStatus.variant} className="absolute top-2 right-2">{stockStatus.text}</Badge>
+         <Button 
+            variant="ghost" 
+            size="icon" 
+            className="absolute top-2 left-2 bg-background/50 backdrop-blur hover:bg-background/80 rounded-full"
+            onClick={handleWishlist}
+         >
+             <Heart className={cn("h-4 w-4", inWishlist && "fill-primary text-primary")} />
+         </Button>
       </CardHeader>
       <CardContent className="p-4 flex-grow">
         <CardTitle className="text-lg font-headline">
@@ -110,5 +135,3 @@ export function ProductCard({ product, categories }: ProductCardProps) {
     </Card>
   );
 }
-
-    

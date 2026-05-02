@@ -24,7 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
@@ -51,6 +51,7 @@ const formSchema = z.object({
   customizationGroups: z.array(customizationGroupSchema).optional(),
   inStock: z.boolean().default(true),
   stockQuantity: z.coerce.number().min(0).default(0),
+  orderType: z.enum(['cart', 'quote']).default('cart'),
   image: z.string().optional(),
   discountType: z.enum(['fixed', 'percentage', 'none']).optional(),
   discountValue: z.coerce.number().optional(),
@@ -79,6 +80,7 @@ export function ProductForm({
       customizationGroups: product?.customizationGroups || [],
       inStock: product?.inStock ?? true,
       stockQuantity: product?.stockQuantity || 0,
+      orderType: product?.orderType || 'cart',
       image: product?.image || '',
       discountType: product?.discountType || 'none',
       discountValue: product?.discountValue || 0,
@@ -106,7 +108,6 @@ export function ProductForm({
   };
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Form Submitted (Demo):", values);
     onFinished(values);
   }
 
@@ -142,13 +143,35 @@ export function ProductForm({
             />
              <FormField
                 control={form.control}
+                name="orderType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ordering Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="cart">Standard (Add to Cart)</SelectItem>
+                        <SelectItem value="quote">Bespoke (Request Quote)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <FormField
+                control={form.control}
                 name="inStock"
                 render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                         <div className="space-y-0.5">
                             <FormLabel>Item is In Stock</FormLabel>
                              <FormDescription>
-                                If unchecked, item is made on demand.
+                                Unchecked = made on demand.
                             </FormDescription>
                         </div>
                         <FormControl>
@@ -160,23 +183,23 @@ export function ProductForm({
                     </FormItem>
                 )}
                 />
+            { watchInStock && (
+                <FormField
+                    control={form.control}
+                    name="stockQuantity"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Stock Quantity</FormLabel>
+                        <FormControl>
+                            <Input type="number" {...field} value={field.value ?? 0} onChange={e => field.onChange(Number(e.target.value))} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            )}
         </div>
-        { watchInStock && (
-             <FormField
-              control={form.control}
-              name="stockQuantity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Stock Quantity</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} value={field.value ?? 0} onChange={e => field.onChange(Number(e.target.value))} />
-                  </FormControl>
-                  <FormDescription>Number of items available for immediate shipping.</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-        )}
+
          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
                 control={form.control}
@@ -259,30 +282,32 @@ export function ProductForm({
                 <PopoverContent className="w-full p-0">
                   <Command>
                     <CommandInput placeholder="Search categories..." />
-                    <CommandEmpty>No categories found.</CommandEmpty>
-                    <CommandGroup>
-                      {categories.map((category) => (
-                        <CommandItem
-                          key={category.id}
-                          onSelect={() => {
-                            const selected = field.value || [];
-                            const isSelected = selected.includes(category.id);
-                            const newValue = isSelected
-                              ? selected.filter((id) => id !== category.id)
-                              : [...selected, category.id];
-                            field.onChange(newValue);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              (field.value || []).includes(category.id) ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {category.name}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
+                    <CommandList>
+                        <CommandEmpty>No categories found.</CommandEmpty>
+                        <CommandGroup>
+                        {categories.map((category) => (
+                            <CommandItem
+                            key={category.id}
+                            onSelect={() => {
+                                const selected = field.value || [];
+                                const isSelected = selected.includes(category.id);
+                                const newValue = isSelected
+                                ? selected.filter((id) => id !== category.id)
+                                : [...selected, category.id];
+                                field.onChange(newValue);
+                            }}
+                            >
+                            <Check
+                                className={cn(
+                                "mr-2 h-4 w-4",
+                                (field.value || []).includes(category.id) ? "opacity-100" : "opacity-0"
+                                )}
+                            />
+                            {category.name}
+                            </CommandItem>
+                        ))}
+                        </CommandGroup>
+                    </CommandList>
                   </Command>
                 </PopoverContent>
               </Popover>
