@@ -1,9 +1,9 @@
+
 'use client';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Product, Category } from '@/lib/types';
+import { Product } from '@/lib/types';
 import {
   Dialog,
   DialogContent,
@@ -21,8 +21,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
+import { useAppContext } from '@/context/app-provider';
 
-export function ProductClientPage({ products, categories }: { products: Product[], categories: Category[] }) {
+export function ProductClientPage() {
+  const { products, setProducts, categories } = useAppContext();
   const [open, setOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | undefined>(undefined);
   const { toast } = useToast();
@@ -38,18 +40,30 @@ export function ProductClientPage({ products, categories }: { products: Product[
   };
 
   const handleDelete = (productId: string) => {
+    setProducts(products.filter(p => p.id !== productId));
     toast({
-      variant: 'destructive',
-      title: 'Delete Action (Demo)',
-      description: 'This action is disabled in the static UI demo.',
+      title: 'Product Deleted',
+      description: 'The product has been removed successfully.',
     });
   }
   
-  const handleFormFinished = () => {
+  const handleFormFinished = (values: any) => {
+      if (selectedProduct) {
+          setProducts(products.map(p => p.id === selectedProduct.id ? { ...p, ...values } : p));
+      } else {
+          const newProduct: Product = {
+              ...values,
+              id: `prod-${Date.now()}`,
+              slug: values.name.toLowerCase().replace(/ /g, '-'),
+              specs: {}, // In a real app we'd parse the technicalSpecs string
+              useCases: [],
+          };
+          setProducts([...products, newProduct]);
+      }
       setOpen(false);
       toast({
-        title: 'Saved (Demo)',
-        description: 'Product changes would be saved in a real application.',
+        title: 'Saved Successfully',
+        description: 'Product changes have been applied.',
       });
   }
 

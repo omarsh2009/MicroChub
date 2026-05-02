@@ -20,10 +20,11 @@ import { useToast } from '@/hooks/use-toast';
 import type { Category } from '@/lib/types';
 import { CategoriesTable } from './components/categories-table';
 import { CategoryForm } from './components/category-form';
+import { useAppContext } from '@/context/app-provider';
 
-export function CategoriesClientPage({ categories: initialCategories }: { categories: Category[]}) {
+export function CategoriesClientPage() {
+  const { categories, setCategories } = useAppContext();
   const { toast } = useToast();
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [open, setOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | undefined>(undefined);
 
@@ -38,17 +39,27 @@ export function CategoriesClientPage({ categories: initialCategories }: { catego
   };
   
   const handleDelete = (categoryId: string) => {
+    setCategories(categories.filter(c => c.id !== categoryId));
     toast({
-        variant: 'destructive',
-        title: 'Delete Action (Demo)',
-        description: 'This action is disabled in the static UI demo.',
+        title: 'Category Deleted',
+        description: 'The category has been removed.',
     });
   }
 
-  const onFormSubmit = async (values: Omit<Category, 'id' | 'slug'>, id?: string) => {
+  const onFormSubmit = async (values: { name: string }, id?: string) => {
+    if (id) {
+        setCategories(categories.map(c => c.id === id ? { ...c, name: values.name, slug: values.name.toLowerCase().replace(/ /g, '-') } : c));
+    } else {
+        const newCat: Category = {
+            id: `cat-${Date.now()}`,
+            name: values.name,
+            slug: values.name.toLowerCase().replace(/ /g, '-'),
+        };
+        setCategories([...categories, newCat]);
+    }
     toast({
-        title: 'Saved (Demo)',
-        description: 'Category changes would be saved in a real application.',
+        title: 'Saved',
+        description: 'Category changes updated successfully.',
     });
     setOpen(false);
   };
