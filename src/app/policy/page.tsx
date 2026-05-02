@@ -1,4 +1,4 @@
-
+'use client';
 import { Badge } from '@/components/ui/badge';
 import {
   Accordion,
@@ -6,10 +6,11 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { mockPolicies } from '@/lib/demo-data';
+import { useAppContext } from '@/context/app-provider';
 
 export default function PolicyPage() {
-    const visiblePolicies = mockPolicies.filter(p => p.isVisible);
+    const { policies } = useAppContext();
+    const visiblePolicies = policies.filter(p => p.isVisible);
 
     return (
         <div className="bg-background text-foreground">
@@ -51,5 +52,3 @@ export default function PolicyPage() {
         </div>
     );
 }
-
-    

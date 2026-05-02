@@ -1,6 +1,8 @@
+'use client';
 import { CouponsClientPage } from './client';
-import { mockCoupons } from '@/lib/demo-data';
+import { useAppContext } from '@/context/app-provider';
 
 export default function AdminCouponsPage() {
-  return <CouponsClientPage coupons={mockCoupons} />;
+  const { coupons } = useAppContext();
+  return <CouponsClientPage coupons={coupons} />;
 }

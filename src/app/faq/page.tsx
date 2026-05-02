@@ -1,3 +1,4 @@
+'use client';
 import { Badge } from '@/components/ui/badge';
 import {
   Accordion,
@@ -5,10 +6,11 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { mockFaqs } from '@/lib/demo-data';
+import { useAppContext } from '@/context/app-provider';
 
 export default function FaqPage() {
-    const publishedFaqs = mockFaqs.filter(faq => faq.isPublished);
+    const { faqs } = useAppContext();
+    const publishedFaqs = faqs.filter(faq => faq.isPublished);
 
     return (
         <div className="bg-background text-foreground">

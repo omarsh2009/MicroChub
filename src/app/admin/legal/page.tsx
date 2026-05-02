@@ -1,7 +1,8 @@
-
+'use client';
 import { PolicyClientPage } from './client';
-import { mockPolicies } from '@/lib/demo-data';
+import { useAppContext } from '@/context/app-provider';
 
 export default function AdminPolicyPage() {
-  return <PolicyClientPage policies={mockPolicies} />;
+  const { policies } = useAppContext();
+  return <PolicyClientPage policies={policies} />;
 }

@@ -1,7 +1,8 @@
+'use client';
 import { QuotesClientPage } from './client';
-import { mockQuotes } from '@/lib/demo-data';
+import { useAppContext } from '@/context/app-provider';
 
 export default function AdminQuotesPage() {
-  const quotes = mockQuotes;
+  const { quotes } = useAppContext();
   return <QuotesClientPage initialQuotes={quotes || []} />;
 }

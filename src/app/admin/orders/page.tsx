@@ -1,7 +1,8 @@
+'use client';
 import { OrdersClientPage } from './client';
-import { mockOrders } from '@/lib/demo-data';
+import { useAppContext } from '@/context/app-provider';
 
 export default function AdminOrdersPage() {
-  const orders = mockOrders;
+  const { orders } = useAppContext();
   return <OrdersClientPage initialOrders={orders || []} />;
 }

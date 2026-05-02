@@ -1,6 +1,8 @@
+'use client';
 import { FaqClientPage } from './client';
-import { mockFaqs } from '@/lib/demo-data';
+import { useAppContext } from '@/context/app-provider';
 
 export default function AdminFaqPage() {
-  return <FaqClientPage faqs={mockFaqs} />;
+  const { faqs } = useAppContext();
+  return <FaqClientPage faqs={faqs} />;
 }

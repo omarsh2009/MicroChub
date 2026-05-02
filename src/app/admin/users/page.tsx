@@ -1,7 +1,8 @@
+'use client';
 import { UsersClientPage } from './client';
-import { mockUsers } from '@/lib/demo-data';
+import { useAppContext } from '@/context/app-provider';
 
 export default function AdminUsersPage() {
-  const users = mockUsers;
+  const { users } = useAppContext();
   return <UsersClientPage users={users} />;
 }

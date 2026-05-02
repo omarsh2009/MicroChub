@@ -7,6 +7,7 @@ import {Textarea} from '@/components/ui/textarea';
 import {useToast} from '@/hooks/use-toast';
 import {Badge} from '@/components/ui/badge';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
+import {Label} from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import { useAppContext } from '@/context/app-provider';
 
@@ -84,6 +85,3 @@ export default function CustomServicesPage() {
     </div>
   );
 }
-
-// Dummy Label component to satisfy TS
-const Label = (props: React.LabelHTMLAttributes<HTMLLabelElement>) => <label {...props} />;

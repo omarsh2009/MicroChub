@@ -1,6 +1,8 @@
+'use client';
 import { SocialLinksClientPage } from './client';
-import { mockSocialLinks } from '@/lib/demo-data';
+import { useAppContext } from '@/context/app-provider';
 
 export default function AdminSocialLinksPage() {
-  return <SocialLinksClientPage links={mockSocialLinks} />;
+  const { socialLinks } = useAppContext();
+  return <SocialLinksClientPage links={socialLinks} />;
 }
