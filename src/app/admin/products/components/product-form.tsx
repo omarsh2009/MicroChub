@@ -67,6 +67,7 @@ export function ProductForm({
   onFinished: (values: any) => void;
 }) {
   const [imagePreview, setImagePreview] = useState<string | null>(product?.image || null);
+  const [isCategoryPopoverOpen, setIsCategoryPopoverOpen] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -261,7 +262,7 @@ export function ProductForm({
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Categories</FormLabel>
-              <Popover>
+              <Popover open={isCategoryPopoverOpen} onOpenChange={setIsCategoryPopoverOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
@@ -273,14 +274,17 @@ export function ProductForm({
                       )}
                     >
                       {field.value && field.value.length > 0
-                        ? `${field.value.length} categor${field.value.length > 1 ? 'ies' : 'y'} selected`
+                        ? categories
+                            .filter(c => field.value.includes(c.id))
+                            .map(c => c.name)
+                            .join(", ")
                         : "Select categories"}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
-                <PopoverContent className="w-full p-0 z-50">
-                  <Command>
+                <PopoverContent className="w-full p-0 z-50 pointer-events-auto" align="start">
+                  <Command shouldFilter={true}>
                     <CommandInput placeholder="Search categories..." />
                     <CommandList>
                         <CommandEmpty>No categories found.</CommandEmpty>
@@ -289,14 +293,17 @@ export function ProductForm({
                             <CommandItem
                             key={category.id}
                             value={category.name}
+                            className="cursor-pointer"
                             onSelect={() => {
-                                console.log("clicked", category.id);
+                                console.log("Category clicked:", category.name, category.id);
                                 const selected = field.value || [];
                                 const isSelected = selected.includes(category.id);
                                 const newValue = isSelected
                                 ? selected.filter((id) => id !== category.id)
                                 : [...selected, category.id];
                                 field.onChange(newValue);
+                                // For better UX, we only close if needed, 
+                                // but for multi-select we usually keep it open.
                             }}
                             >
                             <Check
