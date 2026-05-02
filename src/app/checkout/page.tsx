@@ -20,9 +20,20 @@ export default function CheckoutPage() {
   
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
   const [deliveryOption, setDeliveryOption] = useState<string>('pickup_meeting');
+  
+  // Form State
+  const [formData, setFormData] = useState({
+    fullName: currentUser?.name || '',
+    phoneNumber: currentUser?.phoneNumber || '',
+    city: '',
+    address: '',
+    transactionId: '',
+  });
+
+  // Error State
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const isStoreClosed = contactInfo.storeStatus === 'closed';
-  const isOnlineMode = contactInfo.storeMode === 'online';
   const isPhysicalMode = contactInfo.storeMode === 'physical';
 
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
@@ -30,25 +41,69 @@ export default function CheckoutPage() {
   const shippingPrice = contactInfo.shippingPrice || 0;
   const total = subtotal + (isShippingSelected ? shippingPrice : 0);
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({ ...prev, [id]: value }));
+    // Clear error when user starts typing
+    if (errors[id]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[id];
+        return newErrors;
+      });
+    }
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({ title: 'Copied to clipboard!' });
   };
   
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.fullName.trim()) newErrors.fullName = "Full name is required";
+    if (!formData.phoneNumber.trim()) newErrors.phoneNumber = "Phone number is required";
+
+    if (isShippingSelected) {
+      if (!formData.city.trim()) newErrors.city = "City is required for shipping";
+      if (!formData.address.trim()) newErrors.address = "Address is required for shipping";
+    }
+
+    if (selectedPaymentMethod === 'pm-vodafone') {
+      if (!formData.transactionId.trim()) newErrors.transactionId = "Payment reference is required";
+    }
+
+    if (!selectedPaymentMethod) {
+      toast({ variant: 'destructive', title: 'Payment Method Required', description: 'Please select a payment method.' });
+      return false;
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handlePlaceOrder = () => {
       if (cart.length === 0) {
           toast({ variant: 'destructive', title: 'Cart is empty', description: 'Please add items to your cart before checking out.' });
           return;
       }
+
+      if (!validateForm()) {
+        toast({ variant: 'destructive', title: 'Validation Error', description: 'Please check the required fields.' });
+        return;
+      }
+
       if (isShippingSelected && !contactInfo.shippingCompany) {
           toast({ variant: 'destructive', title: 'Shipping Error', description: 'Shipping is currently unavailable. Please choose another option.' });
           return;
       }
+
       toast({
           title: 'Order Placed (Demo)',
           description: "This is a static demo. No order was actually placed."
-      })
-  }
+      });
+  };
 
   if (cart.length === 0) {
       return (
@@ -151,20 +206,50 @@ export default function CheckoutPage() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                             <div className="md:col-span-2 space-y-2">
-                                <Label htmlFor="fullName">Full Name</Label>
-                                <Input id="fullName" placeholder="Your full name" defaultValue={currentUser?.name || ""} />
+                                <Label htmlFor="fullName" className={errors.fullName ? "text-destructive" : ""}>Full Name *</Label>
+                                <Input 
+                                  id="fullName" 
+                                  placeholder="Your full name" 
+                                  value={formData.fullName} 
+                                  onChange={handleInputChange}
+                                  className={errors.fullName ? "border-destructive focus-visible:ring-destructive" : ""}
+                                />
+                                {errors.fullName && <p className="text-xs text-destructive">{errors.fullName}</p>}
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="phoneNumber">Phone Number</Label>
-                                <Input id="phoneNumber" placeholder="Your phone number" defaultValue={currentUser?.phoneNumber || ""} />
+                                <Label htmlFor="phoneNumber" className={errors.phoneNumber ? "text-destructive" : ""}>Phone Number *</Label>
+                                <Input 
+                                  id="phoneNumber" 
+                                  placeholder="Your phone number" 
+                                  value={formData.phoneNumber} 
+                                  onChange={handleInputChange}
+                                  className={errors.phoneNumber ? "border-destructive focus-visible:ring-destructive" : ""}
+                                />
+                                {errors.phoneNumber && <p className="text-xs text-destructive">{errors.phoneNumber}</p>}
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="city">City</Label>
-                                <Input id="city" placeholder="e.g. Cairo" />
+                                <Label htmlFor="city" className={isShippingSelected && errors.city ? "text-destructive" : ""}>City {isShippingSelected && "*"}</Label>
+                                <Input 
+                                  id="city" 
+                                  placeholder="e.g. Cairo" 
+                                  value={formData.city}
+                                  onChange={handleInputChange}
+                                  className={errors.city ? "border-destructive focus-visible:ring-destructive" : ""}
+                                />
+                                {errors.city && <p className="text-xs text-destructive">{errors.city}</p>}
                             </div>
                             <div className="md:col-span-2 space-y-2">
-                                <Label htmlFor="address">{deliveryOption === 'shipping' ? 'Shipping Address' : 'Additional Location Details (Optional)'}</Label>
-                                <Textarea id="address" placeholder="Building, Street, Area..." />
+                                <Label htmlFor="address" className={isShippingSelected && errors.address ? "text-destructive" : ""}>
+                                  {isShippingSelected ? 'Shipping Address *' : 'Additional Location Details (Optional)'}
+                                </Label>
+                                <Textarea 
+                                  id="address" 
+                                  placeholder="Building, Street, Area..." 
+                                  value={formData.address}
+                                  onChange={handleInputChange}
+                                  className={errors.address ? "border-destructive focus-visible:ring-destructive" : ""}
+                                />
+                                {errors.address && <p className="text-xs text-destructive">{errors.address}</p>}
                             </div>
                         </div>
                     </CardContent>
@@ -199,8 +284,15 @@ export default function CheckoutPage() {
                                 </Button>
                               </div>
                                <div className="space-y-2">
-                                    <Label htmlFor="transactionId">Transaction ID / Reference Number</Label>
-                                    <Input id="transactionId" placeholder="Enter the ID from your payment confirmation" />
+                                    <Label htmlFor="transactionId" className={errors.transactionId ? "text-destructive" : ""}>Transaction ID / Reference Number *</Label>
+                                    <Input 
+                                      id="transactionId" 
+                                      placeholder="Enter the ID from your payment confirmation" 
+                                      value={formData.transactionId}
+                                      onChange={handleInputChange}
+                                      className={errors.transactionId ? "border-destructive focus-visible:ring-destructive" : ""}
+                                    />
+                                    {errors.transactionId && <p className="text-xs text-destructive">{errors.transactionId}</p>}
                                </div>
                             </CardContent>
                           </Card>
