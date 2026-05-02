@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { 
     mockProducts,
     mockCategories,
@@ -13,7 +13,7 @@ import {
     mockFaqs,
     mockContactInfo
 } from '@/lib/demo-data';
-import type { Product, Category, UserWithId, PaymentMethod, OrderWithUserData, QuoteRequestWithUserData, Coupon, SocialLink, PolicySection, FaqItem, ContactInfo } from '@/lib/types';
+import type { Product, Category, UserWithId, PaymentMethod, OrderWithUserData, QuoteRequestWithUserData, Coupon, SocialLink, PolicySection, FaqItem, ContactInfo, CartItem } from '@/lib/types';
 
 interface AppContextType {
     products: Product[];
@@ -42,6 +42,12 @@ interface AppContextType {
     currentUser: UserWithId | null;
     login: (user: UserWithId) => void;
     logout: () => void;
+    // Cart Logic
+    cart: CartItem[];
+    addToCart: (item: CartItem) => void;
+    removeFromCart: (itemId: string) => void;
+    updateCartQuantity: (itemId: string, quantity: number) => void;
+    clearCart: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -59,6 +65,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [faqs, setFaqs] = useState<FaqItem[]>(mockFaqs);
     const [contactInfo, setContactInfo] = useState<ContactInfo>(mockContactInfo);
     const [currentUser, setCurrentUser] = useState<UserWithId | null>(mockUsers.find(u => u.id === 'user-super-admin') || null);
+    const [cart, setCart] = useState<CartItem[]>([]);
 
     const login = (user: UserWithId) => {
         setCurrentUser(user);
@@ -67,6 +74,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const logout = () => {
         setCurrentUser(null);
     };
+
+    const addToCart = (item: CartItem) => {
+        setCart(prev => {
+            const existingIndex = prev.findIndex(i => i.id === item.id);
+            if (existingIndex > -1) {
+                const newCart = [...prev];
+                newCart[existingIndex].quantity += item.quantity;
+                return newCart;
+            }
+            return [...prev, item];
+        });
+    };
+
+    const removeFromCart = (itemId: string) => {
+        setCart(prev => prev.filter(item => item.id !== itemId));
+    };
+
+    const updateCartQuantity = (itemId: string, quantity: number) => {
+        setCart(prev => prev.map(item => item.id === itemId ? { ...item, quantity } : item));
+    };
+
+    const clearCart = () => setCart([]);
 
     const value = {
         products,
@@ -95,6 +124,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         currentUser,
         login,
         logout,
+        cart,
+        addToCart,
+        removeFromCart,
+        updateCartQuantity,
+        clearCart,
     };
 
     return (

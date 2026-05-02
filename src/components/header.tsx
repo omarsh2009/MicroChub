@@ -38,11 +38,12 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useAppContext } from "@/context/app-provider";
+import { Badge } from "@/components/ui/badge";
 
 export function Header() {
   const router = useRouter();
   const { toast } = useToast();
-  const { categories, contactInfo, currentUser, logout } = useAppContext();
+  const { categories, contactInfo, currentUser, logout, cart } = useAppContext();
   const storeStatus = contactInfo.storeStatus;
 
   const handleLogout = () => {
@@ -52,6 +53,7 @@ export function Header() {
   };
 
   const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'super_admin';
+  const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
     <>
@@ -121,6 +123,11 @@ export function Header() {
             <Button asChild variant="ghost" size="icon" aria-label="Cart" className="relative">
               <Link href="/cart">
                 <ShoppingCart className="h-5 w-5" />
+                {cartItemCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                        {cartItemCount}
+                    </span>
+                )}
               </Link>
             </Button>
             <DropdownMenu>

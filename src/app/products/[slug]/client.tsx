@@ -28,7 +28,7 @@ import { useAppContext } from "@/context/app-provider";
 
 export function ProductClientPage({ product }: { product: Product }) {
   const { toast } = useToast();
-  const { allProducts, categories, contactInfo } = useAppContext();
+  const { allProducts, categories, contactInfo, addToCart } = useAppContext();
   const isStoreClosed = contactInfo.storeStatus === 'closed';
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string | string[]>>({});
@@ -133,10 +133,35 @@ export function ProductClientPage({ product }: { product: Product }) {
           };
       });
   };
+
+  const discountedPrice = useMemo(() => {
+    if (!product.discountValue || !product.discountType || product.discountType === 'none') {
+      return calculatedPrice;
+    }
+    let discounted = calculatedPrice;
+    if (product.discountType === 'fixed') {
+      discounted = calculatedPrice - product.discountValue;
+    }
+    if (product.discountType === 'percentage') {
+      discounted = calculatedPrice * (1 - product.discountValue / 100);
+    }
+    return discounted > 0 ? discounted : 0;
+  }, [product, calculatedPrice]);
   
   const handleAddToCart = () => {
+    addToCart({
+        id: `${product.id}-${JSON.stringify(selectedOptions)}`,
+        productId: product.id,
+        name: product.name,
+        slug: product.slug,
+        image: product.image,
+        quantity: quantity,
+        price: discountedPrice,
+        configuration: selectedOptions
+    });
+
     toast({
-      title: 'Added to Cart (Demo)',
+      title: 'Added to Cart!',
       description: `${quantity} x ${product.name} has been added to your cart.`,
     });
   };
@@ -156,21 +181,6 @@ export function ProductClientPage({ product }: { product: Product }) {
   };
 
   const priceSuffix = needsQuote ? '+' : '';
-
-  const discountedPrice = useMemo(() => {
-    if (!product.discountValue || !product.discountType || product.discountType === 'none') {
-      return calculatedPrice;
-    }
-    let discounted = calculatedPrice;
-    if (product.discountType === 'fixed') {
-      discounted = calculatedPrice - product.discountValue;
-    }
-    if (product.discountType === 'percentage') {
-      discounted = calculatedPrice * (1 - product.discountValue / 100);
-    }
-    return discounted > 0 ? discounted : 0;
-  }, [product, calculatedPrice]);
-  
   const hasDiscount = discountedPrice !== calculatedPrice;
   
   const relatedProducts = useMemo(() => {
