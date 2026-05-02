@@ -279,7 +279,7 @@ export function ProductForm({
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
-                <PopoverContent className="w-full p-0">
+                <PopoverContent className="w-full p-0 z-50">
                   <Command>
                     <CommandInput placeholder="Search categories..." />
                     <CommandList>
@@ -288,7 +288,9 @@ export function ProductForm({
                         {categories.map((category) => (
                             <CommandItem
                             key={category.id}
+                            value={category.name}
                             onSelect={() => {
+                                console.log("clicked", category.id);
                                 const selected = field.value || [];
                                 const isSelected = selected.includes(category.id);
                                 const newValue = isSelected
