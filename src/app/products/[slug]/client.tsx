@@ -219,13 +219,19 @@ export function ProductClientPage({ product }: { product: Product }) {
           <div>
             <Card className="overflow-hidden">
                 <CardContent className="p-0">
-                <Image
+                {product.image ? (
+                  <Image
                     src={product.image}
                     alt={product.name}
                     width={600}
                     height={600}
                     className="aspect-square object-cover w-full"
-                />
+                  />
+                ) : (
+                  <div className="aspect-square bg-muted flex items-center justify-center text-muted-foreground">
+                    No Image Available
+                  </div>
+                )}
                 </CardContent>
             </Card>
           </div>
