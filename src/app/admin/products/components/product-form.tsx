@@ -40,7 +40,7 @@ const customizationGroupSchema = z.object({
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
-  categoryIds: z.array(z.string()).min(1, { message: 'At least one category is required.' }),
+  categoryId: z.string().min(1, { message: 'Category is required.' }),
   price: z.coerce.number().positive(),
   technicalSpecs: z.string().min(10, { message: 'Please provide some technical specs.' }),
   description: z.string().optional(),
@@ -69,7 +69,7 @@ export function ProductForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: product?.name || '',
-      categoryIds: product?.categoryIds || [],
+      categoryId: product?.categoryId || '',
       price: product?.price || 0,
       technicalSpecs: product ? Object.entries(product.specs).map(([k, v]) => `${k}: ${v}`).join('\n') : '',
       description: product?.description || '',
@@ -105,6 +105,7 @@ export function ProductForm({
   };
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log("Submitting Product Form:", values);
     onFinished(values);
   }
 
@@ -254,18 +255,18 @@ export function ProductForm({
 
         <FormField
           control={form.control}
-          name="categoryIds"
+          name="categoryId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Category</FormLabel>
               <FormControl>
                 <select
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  value={field.value?.[0] || ""}
+                  value={field.value || ""}
                   onChange={(e) => {
                     const val = e.target.value;
                     console.log("Selected Category ID:", val);
-                    field.onChange(val ? [val] : []);
+                    field.onChange(val);
                   }}
                 >
                   <option value="" disabled>Select a category</option>

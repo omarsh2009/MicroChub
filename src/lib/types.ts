@@ -35,7 +35,7 @@ export type Product = {
   description: string;
   price: number;
   image: string;
-  categoryIds: string[];
+  categoryId: string; // Simplified to single category
   specs: Record<string, string>;
   useCases: string[];
   featured?: boolean;

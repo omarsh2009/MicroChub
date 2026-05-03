@@ -62,6 +62,8 @@ export function ProductCard({ product, categories }: ProductCardProps) {
     toggleWishlist(product.id);
   };
 
+  const categoryName = categoryMap.get(product.categoryId) || 'Uncategorized';
+
   return (
     <Card className="flex flex-col overflow-hidden group transition-all duration-300 hover:shadow-primary/20 hover:shadow-lg hover:-translate-y-1">
       <CardHeader className="p-0 relative">
@@ -101,15 +103,11 @@ export function ProductCard({ product, categories }: ProductCardProps) {
         <CardDescription className="mt-2 text-sm line-clamp-2">
           {product.description}
         </CardDescription>
-        {product.categoryIds && product.categoryIds.length > 0 && (
-          <div className="flex gap-1 flex-wrap mt-2">
-            {product.categoryIds.map((catId) => (
-              <Badge key={catId} variant="secondary">
-                {categoryMap.get(catId) || catId}
-              </Badge>
-            ))}
-          </div>
-        )}
+        <div className="flex gap-1 flex-wrap mt-2">
+          <Badge variant="secondary">
+            {categoryName}
+          </Badge>
+        </div>
       </CardContent>
       <CardFooter className="p-4 pt-0 flex justify-between items-center">
         <div>

@@ -1,4 +1,3 @@
-
 'use client';
 import Image from 'next/image';
 import {
@@ -59,6 +58,7 @@ export function ProductTable({
   }
 
   return (
+    <div className="relative w-full overflow-x-auto">
     <Table>
       <TableHeader>
         <TableRow>
@@ -76,7 +76,7 @@ export function ProductTable({
       </TableHeader>
       <TableBody>
         {products.map((product) => {
-          const categoryName = categoryMap.get(product.categoryIds[0]) || 'Uncategorized';
+          const categoryName = categoryMap.get(product.categoryId) || 'Uncategorized';
           const stockStatus = getStockStatus(product);
           return (
             <TableRow key={product.id}>
@@ -155,7 +155,6 @@ export function ProductTable({
         })}
       </TableBody>
     </Table>
+    </div>
   );
 }
-
-    

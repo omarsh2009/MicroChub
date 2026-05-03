@@ -190,14 +190,14 @@ export function ProductClientPage({ product }: { product: Product }) {
   const hasDiscount = discountedPrice !== calculatedBasePrice;
   
   const relatedProducts = useMemo(() => {
-    if (!product || product.categoryIds.length === 0) {
+    if (!product || !product.categoryId) {
       return [];
     }
 
     return allProducts
       .filter(p => 
         p.id !== product.id &&
-        p.categoryIds.some(catId => product.categoryIds.includes(catId))
+        p.categoryId === product.categoryId
       )
       .slice(0, 4);
   }, [product, allProducts]);
@@ -211,6 +211,8 @@ export function ProductClientPage({ product }: { product: Product }) {
   const isOutOfStock = product.inStock && product.stockQuantity === 0;
   const canOrder = !isStoreClosed && !isOutOfStock;
   const cannotOrderReason = isStoreClosed ? "Store is temporarily closed" : isOutOfStock ? "Out of Stock" : "Add to Cart";
+
+  const currentCategoryName = categoryMap.get(product.categoryId) || 'Uncategorized';
 
   return (
     <div className="py-12 md:py-20">
@@ -241,7 +243,7 @@ export function ProductClientPage({ product }: { product: Product }) {
                 &larr; Back to Products
               </Link>
               <div className="flex items-center gap-2 mt-4 flex-wrap">
-                {product.categoryIds.map(catId => <Badge key={catId} variant="outline">{categoryMap.get(catId) || catId}</Badge>)}
+                <Badge variant="outline">{currentCategoryName}</Badge>
                 <Badge variant={stockStatus.variant} className={cn(stockStatus.variant === 'default' && 'bg-green-100 text-green-800')}>{stockStatus.text}</Badge>
               </div>
               <h1 className="font-headline text-4xl lg:text-5xl font-bold mt-2">{product.name}</h1>
@@ -264,9 +266,11 @@ export function ProductClientPage({ product }: { product: Product }) {
                     <AlertTitle>Restricted Product</AlertTitle>
                     <AlertDescription>
                         This product may be sensitive or regulated. You must complete and upload a signed legal agreement during checkout before purchase.
-                        <Button variant="link" asChild className="p-0 h-auto ml-1 text-inherit hover:underline">
-                            <a href="/MicroChub-Restricted-Item-Agreement.pdf" target="_blank" rel="noopener noreferrer" download>Download Agreement</a>
-                        </Button>
+                        {contactInfo.agreementTemplateUrl && (
+                             <Button variant="link" asChild className="p-0 h-auto ml-1 text-inherit hover:underline">
+                                <a href={contactInfo.agreementTemplateUrl} target="_blank" rel="noopener noreferrer" download>Download Agreement</a>
+                            </Button>
+                        )}
                     </AlertDescription>
                 </Alert>
             )}

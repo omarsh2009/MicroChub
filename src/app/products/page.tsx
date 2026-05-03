@@ -16,7 +16,7 @@ export default function ProductsPage() {
 
   const filteredProducts = selectedCategory
     ? products.filter((product) =>
-        product.categoryIds.includes(selectedCategory.id)
+        product.categoryId === selectedCategory.id
       )
     : products;
 

@@ -9,19 +9,20 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, Ticket, AlertCircle, MapPin, Truck, Store, Clock, Loader2, ShieldCheck, FileUp } from 'lucide-react';
+import { Copy, Ticket, AlertCircle, MapPin, Truck, Store, Clock, Loader2, ShieldCheck, FileUp, Download } from 'lucide-react';
 import { useAppContext } from '@/context/app-provider';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 export default function CheckoutPage() {
   const { toast } = useToast();
-  const { contactInfo, cart, currentUser } = useAppContext();
+  const { contactInfo, cart, currentUser, products } = useAppContext();
   
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
   const [deliveryOption, setDeliveryOption] = useState<string>('pickup_meeting');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [agreementFile, setAgreementFile] = useState<string | null>(null);
+  const [downloadedTemplate, setDownloadTemplate] = useState(false);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -37,15 +38,7 @@ export default function CheckoutPage() {
 
   const isStoreClosed = contactInfo.storeStatus === 'closed';
   const isPhysicalMode = contactInfo.storeMode === 'physical';
-  const hasRestrictedItems = cart.some(item => {
-    // We need the products array to check isRestricted
-    // In AppProvider, cart contains basic data. Let's assume it has isRestricted for convenience or look it up.
-    // Assuming CartItem has isRestricted or we can check via productId
-    return false; // Simplified for now, in a real app we'd lookup the product
-  });
   
-  // Let's actually find the restricted items
-  const { products } = useAppContext();
   const restrictedInCart = cart.filter(item => {
       const p = products.find(prod => prod.id === item.productId);
       return p?.isRestricted;
@@ -60,7 +53,6 @@ export default function CheckoutPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     setFormData(prev => ({ ...prev, [id]: value }));
-    // Clear error when user starts typing
     if (errors[id]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -84,6 +76,11 @@ export default function CheckoutPage() {
       }
   }
 
+  const handleDownloadTemplate = () => {
+      setDownloadTemplate(true);
+      toast({ title: 'Template Downloaded', description: 'Please sign and upload the agreement.' });
+  }
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({ title: 'Copied to clipboard!' });
@@ -92,22 +89,22 @@ export default function CheckoutPage() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    // 1. Basic User Info
     if (!formData.fullName.trim()) newErrors.fullName = "Full name is required";
     if (!formData.phoneNumber.trim()) newErrors.phoneNumber = "Phone number is required";
 
-    // 2. Shipping Data (Conditional)
     if (isShippingSelected) {
       if (!formData.city.trim()) newErrors.city = "City is required for shipping";
       if (!formData.address.trim()) newErrors.address = "Detailed address is required for shipping";
     }
 
-    // 3. Legal Agreement (Conditional)
-    if (needsAgreement && !agreementFile) {
-        newErrors.agreement = "Signed legal agreement is required for restricted items.";
+    if (needsAgreement) {
+        if (!downloadedTemplate) {
+            newErrors.agreement = "Please download the template first.";
+        } else if (!agreementFile) {
+            newErrors.agreement = "Signed legal agreement is required for restricted items.";
+        }
     }
 
-    // 4. Payment Method Selection
     if (!selectedPaymentMethod) {
       toast({ 
         variant: 'destructive', 
@@ -117,7 +114,6 @@ export default function CheckoutPage() {
       newErrors.paymentMethod = "Selection required";
     }
 
-    // 5. Payment Specific Data
     if (selectedPaymentMethod === 'pm-vodafone') {
       if (!formData.transactionId.trim()) {
         newErrors.transactionId = "Transaction ID / Reference Number is required for Vodafone Cash";
@@ -151,15 +147,11 @@ export default function CheckoutPage() {
       }
 
       setIsSubmitting(true);
-
-      // Simulate order processing delay
       await new Promise(resolve => setTimeout(resolve, 1500));
-
       toast({
           title: 'Order Received! (Demo)',
           description: "This is a static UI preview. In a production environment, your order would now be verified by our team."
       });
-      
       setIsSubmitting(false);
   };
 
@@ -188,22 +180,43 @@ export default function CheckoutPage() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <p className="text-sm">Your cart contains restricted items (<b>{restrictedInCart.map(i => i.name).join(', ')}</b>). You must download, sign, and upload the agreement to proceed.</p>
-                            <div className="flex flex-col sm:flex-row gap-4 items-center">
-                                <Button asChild variant="outline" className="w-full sm:w-auto">
-                                    <a href={contactInfo.agreementTemplateUrl || "/MicroChub-Restricted-Item-Agreement.pdf"} target="_blank" rel="noopener noreferrer">
-                                        Download Template
-                                    </a>
+                            <p className="text-sm">Your cart contains restricted items (<b>{restrictedInCart.map(i => i.name).join(', ')}</b>). You must download, sign, and upload our agreement template.</p>
+                            <div className="flex flex-col sm:flex-row gap-4 items-start">
+                                <Button 
+                                    type="button" 
+                                    variant={downloadedTemplate ? "secondary" : "outline"} 
+                                    className="w-full sm:w-auto"
+                                    onClick={handleDownloadTemplate}
+                                    asChild={!!contactInfo.agreementTemplateUrl}
+                                >
+                                    {contactInfo.agreementTemplateUrl ? (
+                                        <a href={contactInfo.agreementTemplateUrl} target="_blank" rel="noopener noreferrer" download>
+                                            <Download className="mr-2 h-4 w-4" />
+                                            Download Template
+                                        </a>
+                                    ) : (
+                                        <span>
+                                            <Download className="mr-2 h-4 w-4" />
+                                            Download Template
+                                        </span>
+                                    )}
                                 </Button>
                                 <div className="flex-1 w-full">
                                     <Label htmlFor="agreement-upload" className="cursor-pointer">
                                         <div className={cn(
                                             "border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center gap-2 transition-colors",
-                                            errors.agreement ? "border-destructive bg-destructive/5" : "border-muted hover:border-primary bg-muted/30"
+                                            errors.agreement ? "border-destructive bg-destructive/5" : "border-muted hover:border-primary bg-muted/30",
+                                            !downloadedTemplate && "opacity-50 cursor-not-allowed"
                                         )}>
                                             <FileUp className="w-6 h-6 text-muted-foreground" />
                                             <span className="text-sm font-medium">{agreementFile || "Upload Signed Agreement"}</span>
-                                            <Input id="agreement-upload" type="file" className="sr-only" onChange={handleFileChange} />
+                                            <Input 
+                                                id="agreement-upload" 
+                                                type="file" 
+                                                className="sr-only" 
+                                                onChange={handleFileChange} 
+                                                disabled={!downloadedTemplate}
+                                            />
                                         </div>
                                     </Label>
                                     {errors.agreement && <p className="text-xs text-destructive mt-1">{errors.agreement}</p>}
@@ -263,7 +276,6 @@ export default function CheckoutPage() {
                             </Label>
                         </RadioGroup>
 
-                        {/* Detail Cards */}
                         {deliveryOption === 'pickup_store' && (
                             <div className="p-4 bg-muted/50 rounded-lg border space-y-2">
                                 <div className="flex items-center gap-2 font-bold text-sm">
@@ -393,7 +405,6 @@ export default function CheckoutPage() {
                             </CardContent>
                           </Card>
                         )}
-                        {errors.paymentMethod && <p className="text-sm text-destructive text-center">Please select a payment method before proceeding.</p>}
                     </CardContent>
                 </Card>
             </div>
