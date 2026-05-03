@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, Ticket, AlertCircle, MapPin, Truck, Store, Clock, Loader2 } from 'lucide-react';
+import { Copy, Ticket, AlertCircle, MapPin, Truck, Store, Clock, Loader2, ShieldCheck, FileUp } from 'lucide-react';
 import { useAppContext } from '@/context/app-provider';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -21,6 +21,7 @@ export default function CheckoutPage() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
   const [deliveryOption, setDeliveryOption] = useState<string>('pickup_meeting');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [agreementFile, setAgreementFile] = useState<string | null>(null);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -36,6 +37,20 @@ export default function CheckoutPage() {
 
   const isStoreClosed = contactInfo.storeStatus === 'closed';
   const isPhysicalMode = contactInfo.storeMode === 'physical';
+  const hasRestrictedItems = cart.some(item => {
+    // We need the products array to check isRestricted
+    // In AppProvider, cart contains basic data. Let's assume it has isRestricted for convenience or look it up.
+    // Assuming CartItem has isRestricted or we can check via productId
+    return false; // Simplified for now, in a real app we'd lookup the product
+  });
+  
+  // Let's actually find the restricted items
+  const { products } = useAppContext();
+  const restrictedInCart = cart.filter(item => {
+      const p = products.find(prod => prod.id === item.productId);
+      return p?.isRestricted;
+  });
+  const needsAgreement = restrictedInCart.length > 0;
 
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const isShippingSelected = deliveryOption === 'shipping';
@@ -55,6 +70,20 @@ export default function CheckoutPage() {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+          setAgreementFile(file.name);
+          if (errors.agreement) {
+              setErrors(prev => {
+                  const newErrors = { ...prev };
+                  delete newErrors.agreement;
+                  return newErrors;
+              });
+          }
+      }
+  }
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({ title: 'Copied to clipboard!' });
@@ -73,7 +102,12 @@ export default function CheckoutPage() {
       if (!formData.address.trim()) newErrors.address = "Detailed address is required for shipping";
     }
 
-    // 3. Payment Method Selection
+    // 3. Legal Agreement (Conditional)
+    if (needsAgreement && !agreementFile) {
+        newErrors.agreement = "Signed legal agreement is required for restricted items.";
+    }
+
+    // 4. Payment Method Selection
     if (!selectedPaymentMethod) {
       toast({ 
         variant: 'destructive', 
@@ -83,7 +117,7 @@ export default function CheckoutPage() {
       newErrors.paymentMethod = "Selection required";
     }
 
-    // 4. Payment Specific Data
+    // 5. Payment Specific Data
     if (selectedPaymentMethod === 'pm-vodafone') {
       if (!formData.transactionId.trim()) {
         newErrors.transactionId = "Transaction ID / Reference Number is required for Vodafone Cash";
@@ -145,6 +179,40 @@ export default function CheckoutPage() {
       <h1 className="font-headline text-4xl font-bold tracking-tighter mb-8">Checkout</h1>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2 space-y-8">
+                {needsAgreement && (
+                    <Card className={cn(errors.agreement && "border-destructive")}>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-destructive">
+                                <ShieldCheck className="w-5 h-5" />
+                                Legal Agreement Required
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <p className="text-sm">Your cart contains restricted items (<b>{restrictedInCart.map(i => i.name).join(', ')}</b>). You must download, sign, and upload the agreement to proceed.</p>
+                            <div className="flex flex-col sm:flex-row gap-4 items-center">
+                                <Button asChild variant="outline" className="w-full sm:w-auto">
+                                    <a href={contactInfo.agreementTemplateUrl || "/MicroChub-Restricted-Item-Agreement.pdf"} target="_blank" rel="noopener noreferrer">
+                                        Download Template
+                                    </a>
+                                </Button>
+                                <div className="flex-1 w-full">
+                                    <Label htmlFor="agreement-upload" className="cursor-pointer">
+                                        <div className={cn(
+                                            "border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center gap-2 transition-colors",
+                                            errors.agreement ? "border-destructive bg-destructive/5" : "border-muted hover:border-primary bg-muted/30"
+                                        )}>
+                                            <FileUp className="w-6 h-6 text-muted-foreground" />
+                                            <span className="text-sm font-medium">{agreementFile || "Upload Signed Agreement"}</span>
+                                            <Input id="agreement-upload" type="file" className="sr-only" onChange={handleFileChange} />
+                                        </div>
+                                    </Label>
+                                    {errors.agreement && <p className="text-xs text-destructive mt-1">{errors.agreement}</p>}
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
+
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">

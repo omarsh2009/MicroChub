@@ -1,16 +1,15 @@
+'use client';
+
 import { ProductCard } from "@/components/product-card";
 import { Badge } from "@/components/ui/badge";
-import { mockProducts, mockCategories } from "@/lib/demo-data";
+import { useAppContext } from "@/context/app-provider";
+import { useSearchParams } from "next/navigation";
 
-export default function ProductsPage({
-  searchParams,
-}: {
-  searchParams?: { category?: string };
-}) {
-  const products = mockProducts;
-  const categories = mockCategories;
+export default function ProductsPage() {
+  const { products, categories } = useAppContext();
+  const searchParams = useSearchParams();
 
-  const selectedCategorySlug = searchParams?.category;
+  const selectedCategorySlug = searchParams.get('category');
   const selectedCategory = categories.find(
     (c) => c.slug === selectedCategorySlug
   );

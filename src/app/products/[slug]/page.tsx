@@ -1,11 +1,15 @@
+'use client';
 
-import { notFound } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import { ProductClientPage } from "./client";
-import { mockProducts } from "@/lib/demo-data";
+import { useAppContext } from "@/context/app-provider";
 
-export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const product = mockProducts.find(p => p.slug === slug);
+export default function ProductPage() {
+  const { products } = useAppContext();
+  const params = useParams();
+  const slug = params.slug as string;
+  
+  const product = products.find(p => p.slug === slug);
 
   if (!product) {
     notFound();

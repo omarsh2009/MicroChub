@@ -28,7 +28,7 @@ import { useAppContext } from "@/context/app-provider";
 
 export function ProductClientPage({ product }: { product: Product }) {
   const { toast } = useToast();
-  const { allProducts, categories, contactInfo, addToCart, currentUser, toggleWishlist } = useAppContext();
+  const { products: allProducts, categories, contactInfo, addToCart, currentUser, toggleWishlist } = useAppContext();
   const isStoreClosed = contactInfo.storeStatus === 'closed';
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string | string[]>>({});
@@ -61,7 +61,7 @@ export function ProductClientPage({ product }: { product: Product }) {
       setQuantity(prev => Math.max(1, prev - 1));
   };
 
-  const calculatedPrice = useMemo(() => {
+  const calculatedBasePrice = useMemo(() => {
     let price = product.price;
     if (!product.customizationGroups) {
       return price;
@@ -138,17 +138,17 @@ export function ProductClientPage({ product }: { product: Product }) {
 
   const discountedPrice = useMemo(() => {
     if (!product.discountValue || !product.discountType || product.discountType === 'none') {
-      return calculatedPrice;
+      return calculatedBasePrice;
     }
-    let discounted = calculatedPrice;
+    let discounted = calculatedBasePrice;
     if (product.discountType === 'fixed') {
-      discounted = calculatedPrice - product.discountValue;
+      discounted = calculatedBasePrice - product.discountValue;
     }
     if (product.discountType === 'percentage') {
-      discounted = calculatedPrice * (1 - product.discountValue / 100);
+      discounted = calculatedBasePrice * (1 - product.discountValue / 100);
     }
     return discounted > 0 ? discounted : 0;
-  }, [product, calculatedPrice]);
+  }, [product, calculatedBasePrice]);
   
   const handleAddToCart = () => {
     addToCart({
@@ -187,7 +187,7 @@ export function ProductClientPage({ product }: { product: Product }) {
   };
 
   const priceSuffix = needsQuote ? '+' : '';
-  const hasDiscount = discountedPrice !== calculatedPrice;
+  const hasDiscount = discountedPrice !== calculatedBasePrice;
   
   const relatedProducts = useMemo(() => {
     if (!product || product.categoryIds.length === 0) {
@@ -271,7 +271,7 @@ export function ProductClientPage({ product }: { product: Product }) {
               </span>
               {hasDiscount && (
                 <span className="text-2xl font-medium text-muted-foreground line-through">
-                  EGP {calculatedPrice.toLocaleString()}
+                  EGP {calculatedBasePrice.toLocaleString()}
                 </span>
               )}
             </div>

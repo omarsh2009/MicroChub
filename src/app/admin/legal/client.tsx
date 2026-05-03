@@ -1,7 +1,6 @@
-
 'use client';
 import { useState } from 'react';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, ShieldAlert, FileUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -20,11 +19,13 @@ import { useToast } from '@/hooks/use-toast';
 import type { PolicySection } from '@/lib/types';
 import { PolicyTable } from './components/policy-table';
 import { PolicyForm } from './components/policy-form';
-
+import { useAppContext } from '@/context/app-provider';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 export function PolicyClientPage({ policies: initialPolicies }: { policies: PolicySection[]}) {
   const { toast } = useToast();
-  const [policies, setPolicies] = useState<PolicySection[]>(initialPolicies);
+  const { policies, setPolicies, contactInfo, setContactInfo } = useAppContext();
   const [open, setOpen] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState<PolicySection | undefined>(undefined);
 
@@ -39,23 +40,35 @@ export function PolicyClientPage({ policies: initialPolicies }: { policies: Poli
   };
   
   const handleDelete = (policyId: string) => {
-    toast({
-        variant: 'destructive',
-        title: 'Delete Action (Demo)',
-        description: 'This action is disabled in the static UI demo.',
-    });
+    setPolicies(policies.filter(p => p.id !== policyId));
+    toast({ title: 'Policy Deleted' });
   }
 
   const onFormSubmit = async (values: Omit<PolicySection, 'id'>, id?: string) => {
-    toast({
-        title: 'Saved (Demo)',
-        description: 'Policy changes would be saved in a real application.',
-    });
+    if (id) {
+        setPolicies(policies.map(p => p.id === id ? { ...p, ...values } : p));
+    } else {
+        const newPolicy: PolicySection = {
+            id: `policy-${Date.now()}`,
+            ...values,
+        };
+        setPolicies([...policies, newPolicy]);
+    }
+    toast({ title: 'Policy Saved' });
     setOpen(false);
   };
 
+  const handleAgreementUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+          // In a real app we'd upload to Storage. For now, simulate.
+          setContactInfo({ ...contactInfo, agreementTemplateUrl: `/files/${file.name}` });
+          toast({ title: 'Agreement Template Updated', description: `Template set to ${file.name}` });
+      }
+  }
+
   return (
-    <>
+    <div className="space-y-8">
        <div className="flex items-center">
           <h1 className="text-lg font-semibold md:text-2xl">Our Policy</h1>
           <div className="ml-auto flex items-center gap-2">
@@ -65,6 +78,27 @@ export function PolicyClientPage({ policies: initialPolicies }: { policies: Poli
             </Button>
           </div>
         </div>
+
+      <Card className="border-destructive">
+          <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-destructive">
+                  <ShieldAlert className="w-5 h-5" />
+                  Restricted Items Agreement
+              </CardTitle>
+              <CardDescription>Upload the PDF template that users must download and sign for restricted products.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+              <div className="grid gap-2">
+                  <Label htmlFor="agreement-template">Agreement Template (PDF)</Label>
+                  <div className="flex gap-4 items-center">
+                      <Input id="agreement-template" type="file" accept=".pdf" onChange={handleAgreementUpload} className="max-w-sm" />
+                      {contactInfo.agreementTemplateUrl && (
+                          <span className="text-sm text-muted-foreground italic">Current: {contactInfo.agreementTemplateUrl.split('/').pop()}</span>
+                      )}
+                  </div>
+              </div>
+          </CardContent>
+      </Card>
       
       <Card>
         <CardHeader>
@@ -88,6 +122,6 @@ export function PolicyClientPage({ policies: initialPolicies }: { policies: Poli
           />
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }

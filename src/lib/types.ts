@@ -202,4 +202,5 @@ export type ContactInfo = {
     pickupInstructions: string;
     shippingCompany?: string;
     shippingPrice: number;
+    agreementTemplateUrl?: string;
 };
