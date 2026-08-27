@@ -7,7 +7,7 @@ export default function DiyKitsPage() {
   const { products, categories } = useAppContext();
 
   const diyKits = products.filter((product) =>
-    product.categoryIds.includes('cat-1')
+    product.categoryId === 'cat-1'
   );
 
   return (
