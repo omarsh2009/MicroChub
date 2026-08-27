@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/logo";
-import { useUser } from "@/auth";
+import { useAppContext } from "@/context/app-provider";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +44,7 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = useUser();
+  const { currentUser: user } = useAppContext();
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
@@ -54,7 +54,7 @@ export default function AdminLayout({
     router.push("/");
   };
 
-  if (!user || !user.profile?.role || !['admin', 'super_admin'].includes(user.profile.role)) {
+  if (!user || !user.role || !['admin', 'super_admin'].includes(user.role)) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <div className="text-center">
@@ -68,7 +68,7 @@ export default function AdminLayout({
     );
   }
 
-  const isSuperAdmin = user.profile.role === 'super_admin';
+  const isSuperAdmin = user.role === 'super_admin';
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
